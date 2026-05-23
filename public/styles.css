@@ -654,6 +654,11 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
   .stats { grid-template-columns: repeat(3, 1fr); }
   .grid > .panel,
   .grid > .edit-panel-wrap { grid-column: auto !important; }
+  /* Full-width hero widgets (assets/profile/journal — fixedSize.full → w=3)
+     must keep spanning every column, not collapse to one. The blanket
+     auto-reset above clobbers their inline span; re-assert it. They're w=3
+     with no same-row neighbours, so a full span never overlaps. */
+  .grid > .panel[data-size="fixed"] { grid-column: 1 / -1 !important; }
 }
 /* ── Mobile (≤768px): single column, sidebar becomes off-canvas drawer,
    topbar wraps, edit-mode entry points hidden (read-only on phone). The
