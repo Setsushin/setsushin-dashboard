@@ -1,5 +1,7 @@
 # setsushin-dashboard
 
+**[Live demo →](https://mydash-demo.setsushin.top)** — dummy data, runs entirely in your browser (nothing saved server-side).
+
 A personal start page — the handful of things worth checking in one place,
 plus a few that are annoying to look up anywhere else.
 
