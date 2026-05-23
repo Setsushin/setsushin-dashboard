@@ -83,7 +83,9 @@ function useLayout() {
   useEffect(() => {
     let cancelled = false;
     Promise.all([
-      fetch('layout.yml').then(r => r.ok ? r.text() : Promise.reject(new Error(`HTTP ${r.status}`))).then(t => jsyaml.load(t)),
+      // Bump ?v= whenever layout.yml changes — CF's edge caches it under the
+      // custom domain and there's no other cache-buster on this fetch.
+      fetch('layout.yml?v=2').then(r => r.ok ? r.text() : Promise.reject(new Error(`HTTP ${r.status}`))).then(t => jsyaml.load(t)),
       loadOverrides(),
       loadPagesMeta(),
     ])
