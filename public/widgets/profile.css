@@ -24,12 +24,23 @@
 /* ── Item row ─────────────────────────────────────────────────── */
 .profile-row {
   display: grid;
-  grid-template-columns: minmax(120px, 220px) minmax(0, 1fr) auto;
+  grid-template-columns: 18px minmax(120px, 220px) minmax(0, 1fr) auto;
   align-items: start; gap: 14px;
   padding: 7px 6px; border-radius: var(--r-xs);
   font-size: 13px;
 }
 .profile-row:hover { background: var(--bg-hover); }
+.profile-row.dragging { opacity: 0.4; }
+
+/* Drag handle — faded until row hover, grab cursor. */
+.profile-drag {
+  cursor: grab; user-select: none;
+  color: var(--fg-faded); font-size: 13px; line-height: 1.4;
+  text-align: center;
+  opacity: 0.15; transition: opacity 120ms ease;
+}
+.profile-row:hover .profile-drag { opacity: 0.6; }
+.profile-drag:active { cursor: grabbing; }
 .profile-row-label {
   color: var(--fg-faded); font-weight: 600;
   padding-top: 1px;
@@ -70,6 +81,24 @@
   background: var(--bg-card-soft);
 }
 .profile-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* Category combobox: input + caret + dropdown of existing categories. */
+.profile-combo { position: relative; }
+.profile-combo .af-input { width: 100%; padding-right: 24px; }
+.profile-combo-caret {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  border: none; background: transparent; cursor: pointer;
+  color: var(--fg-faded); font-size: 11px; line-height: 1; padding: 2px 4px;
+}
+.profile-combo-caret:hover { color: var(--fg); }
+.profile-combo-list {
+  position: absolute; z-index: 30; top: calc(100% + 2px); left: 0; right: 0;
+  max-height: 180px; overflow-y: auto;
+  background: var(--bg-card); border: 1px solid var(--border, var(--bg-hover));
+  border-radius: var(--r-sm); box-shadow: var(--shadow-card);
+}
+.profile-combo-opt { padding: 6px 10px; cursor: pointer; font-size: 13px; }
+.profile-combo-opt:hover { background: var(--bg-hover); }
 .profile-form-value {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
   resize: vertical; min-height: 38px;
@@ -78,7 +107,7 @@
 .profile-form-hint { flex: 1; font-size: 11px; color: var(--fg-faded); }
 
 @media (max-width: 720px) {
-  .profile-row { grid-template-columns: 1fr auto; }
-  .profile-row-label { grid-column: 1 / -1; padding-top: 0; }
+  .profile-row { grid-template-columns: 18px 1fr auto; }
+  .profile-row-label { grid-column: 2 / -1; padding-top: 0; }
   .profile-form-grid { grid-template-columns: 1fr; }
 }

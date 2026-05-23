@@ -22,6 +22,51 @@ function groupByCategory(items) {
   return order.map(cat => ({ cat, items: map.get(cat) }));
 }
 
+// Category combobox: free-form text input + a working caret that drops down
+// existing categories to pick from (the native <datalist> arrow was unreliable).
+function CategorySelect({ value, onChange, categories, onKeyDown }) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => { if (!wrapRef.current?.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  // Show every category on caret-open or while the field still holds an exact
+  // existing value (the edit case); only narrow once the user types something
+  // that isn't already a category.
+  const q = value.trim().toLowerCase();
+  const exact = categories.some(c => c.toLowerCase() === q);
+  const opts = (!q || exact) ? categories : categories.filter(c => c.toLowerCase().includes(q));
+
+  return (
+    <div className="profile-combo" ref={wrapRef}>
+      <input className="af-input" placeholder="Category" value={value}
+             onChange={e => { onChange(e.target.value); setOpen(true); }}
+             onFocus={() => setOpen(true)}
+             onKeyDown={(e) => {
+               if (e.key === 'Escape' && open) { e.stopPropagation(); setOpen(false); }
+               else onKeyDown?.(e);
+             }} />
+      {categories.length > 0 && (
+        <button type="button" className="profile-combo-caret" tabIndex={-1}
+                title="Pick a category" onClick={() => setOpen(o => !o)}>▾</button>
+      )}
+      {open && opts.length > 0 && (
+        <div className="profile-combo-list">
+          {opts.map(c => (
+            <div key={c} className="profile-combo-opt"
+                 onMouseDown={(e) => { e.preventDefault(); onChange(c); setOpen(false); }}>{c}</div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ProfileForm({ initial, categories, onSave, onCancel }) {
   const [category, setCategory] = useState(initial?.category ?? '');
   const [label,    setLabel]    = useState(initial?.label ?? '');
@@ -54,9 +99,8 @@ function ProfileForm({ initial, categories, onSave, onCancel }) {
   return (
     <div className="profile-form">
       <div className="profile-form-grid">
-        <input className="af-input" list="profile-cat-presets"
-               placeholder="Category" value={category}
-               onChange={e => setCategory(e.target.value)} onKeyDown={onKeyLine} />
+        <CategorySelect value={category} onChange={setCategory}
+                        categories={categories} onKeyDown={onKeyLine} />
         <input ref={labelRef} className="af-input"
                placeholder="Label *" value={label}
                onChange={e => setLabel(e.target.value)} onKeyDown={onKeyLine} />
@@ -67,9 +111,6 @@ function ProfileForm({ initial, categories, onSave, onCancel }) {
       <input className="af-input"
              placeholder="Note (optional)" value={note}
              onChange={e => setNote(e.target.value)} onKeyDown={onKeyLine} />
-      <datalist id="profile-cat-presets">
-        {categories.map(c => <option key={c} value={c} />)}
-      </datalist>
       <div className="profile-form-foot">
         <span className="profile-form-hint">⌘↵ to save · Esc to cancel</span>
         <button className="panel-action" onClick={onCancel}>Cancel</button>
@@ -79,8 +120,11 @@ function ProfileForm({ initial, categories, onSave, onCancel }) {
   );
 }
 
-function ProfileRow({ item, onEditStart, onDelete }) {
+function ProfileRow({ item, onEditStart, onDelete, dragId, setDragId, onReorder }) {
   const [copied, setCopied] = useState(false);
+  // draggable is armed only while the grip handle is held, so dragging never
+  // hijacks text selection elsewhere in the row.
+  const [armed, setArmed] = useState(false);
   React.useEffect(() => {
     if (!copied) return;
     const t = setTimeout(() => setCopied(false), 1400);
@@ -94,7 +138,15 @@ function ProfileRow({ item, onEditStart, onDelete }) {
   };
 
   return (
-    <div className="profile-row">
+    <div className={`profile-row ${dragId === item.id ? 'dragging' : ''}`}
+         draggable={armed}
+         onDragStart={(e) => { setDragId(item.id); e.dataTransfer.effectAllowed = 'move'; }}
+         onDragEnd={() => { setArmed(false); setDragId(null); }}
+         onDragOver={(e) => { if (dragId != null && dragId !== item.id) e.preventDefault(); }}
+         onDrop={(e) => { e.preventDefault(); onReorder(item.id); setArmed(false); }}>
+      <span className="profile-drag" title="Drag to reorder"
+            onMouseDown={() => setArmed(true)}
+            onMouseUp={() => setArmed(false)}>⠿</span>
       <div className="profile-row-label">{item.label}</div>
       <div className="profile-row-value">
         {item.value
@@ -118,6 +170,7 @@ function ProfileWidget() {
   const [items, setItems] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [adding, setAdding] = useState(false);
+  const [dragId, setDragId] = useState(null);
 
   const reload = React.useCallback(() => {
     return fetch('/api/profile')
@@ -173,6 +226,47 @@ function ProfileWidget() {
     );
   };
 
+  // Reorder within a category: drop `dragId` onto `targetId`, renumber that
+  // category's sort_order 0..n, optimistic-update, then PATCH the changed rows.
+  // Cross-category drops are ignored (use the category field to re-bucket).
+  const onReorder = (targetId) => {
+    const fromId = dragId;
+    if (fromId == null || fromId === targetId) { setDragId(null); return; }
+    const catOf = (it) => (it.category || '').trim() || PROFILE_OTHER;
+    const a = list.find(i => i.id === fromId);
+    const b = list.find(i => i.id === targetId);
+    if (!a || !b || catOf(a) !== catOf(b)) { setDragId(null); return; }
+
+    const slots = [];
+    list.forEach((it, i) => { if (catOf(it) === catOf(a)) slots.push(i); });
+    const catItems = slots.map(i => list[i]);
+    const ids = catItems.map(x => x.id);
+    const from = ids.indexOf(fromId), to = ids.indexOf(targetId);
+    const reordered = catItems.slice();
+    reordered.splice(to, 0, reordered.splice(from, 1)[0]);
+
+    const changed = [];
+    const renumbered = reordered.map((it, i) => {
+      if (it.sort_order === i) return it;
+      const n = { ...it, sort_order: i };
+      changed.push(n);
+      return n;
+    });
+    const slotSet = new Set(slots);
+    let k = 0;
+    setItems(list.map((it, i) => slotSet.has(i) ? renumbered[k++] : it));
+    setDragId(null);
+
+    if (changed.length) {
+      Promise.allSettled(changed.map(it => fetch(`/api/profile/${it.id}`, {
+        method: 'PATCH', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ sort_order: it.sort_order }),
+      }))).then(rs => {
+        if (rs.some(r => r.status === 'rejected' || (r.value && !r.value.ok))) reload();
+      });
+    }
+  };
+
   const action = !adding && (
     <button className="panel-action" onClick={() => { setEditingId(null); setAdding(true); }}>
       <PlusIcon /> Add
@@ -204,6 +298,7 @@ function ProfileWidget() {
                                onSave={(form) => update(it.id, form)}
                                onCancel={() => setEditingId(null)} />
                 : <ProfileRow key={it.id} item={it}
+                              dragId={dragId} setDragId={setDragId} onReorder={onReorder}
                               onEditStart={() => { setAdding(false); setEditingId(it.id); }}
                               onDelete={() => remove(it.id, it.label)} />
               )}
