@@ -58,9 +58,10 @@ const STATIC = [
   '/widgets/markets.jsx', '/widgets/calendar.jsx', '/widgets/feed.jsx',
   '/widgets/tasks.jsx', '/widgets/bookmarks.jsx', '/widgets/bookmarks-edit.jsx',
   '/widgets/agenda.jsx',
-  '/widgets/assets.jsx',
+  '/widgets/assets.jsx', '/widgets/profile.jsx',
   '/widgets/agenda.css', '/widgets/tasks.css', '/widgets/bookmarks.css',
   '/widgets/markets.css', '/widgets/feed.css', '/widgets/assets.css',
+  '/widgets/profile.css',
 ];
 console.log('  static assets');
 for (const p of STATIC) {
@@ -101,9 +102,10 @@ for (const p of ['/api/feed', '/api/calendar?source=primary&limit=2']) {
 // to index.html (status 200 but body is HTML), or 404.
 console.log('\n  source code is fenced off');
 for (const p of ['/migrations/0001_init.sql', '/migrations/0003_pages.sql',
+                 '/migrations/0007_profile.sql',
                  '/test/parseFeed.test.mjs',
                  '/package.json', '/wrangler.toml', '/functions/api/feed.js',
-                 '/functions/api/pages/[id].js']) {
+                 '/functions/api/pages/[id].js', '/functions/api/profile/[id].js']) {
   const r = await fetchOK(p);
   const isHtmlFallback = r.body.startsWith('<!DOCTYPE html>') || r.body.startsWith('<html');
   const is404 = r.status === 404;
@@ -404,6 +406,71 @@ console.log('\n  /api/assets CRUD round-trip');
     method: 'PATCH',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ jpy_man: 1 }),
+  });
+  check('PATCH non-existent → 404', nf.status === 404, `got ${nf.status}`);
+}
+
+// 8. /api/profile round-trip — POST → GET → PATCH → GET → DELETE → GET.
+// Scoped to what this run created so we don't trample real profile rows.
+console.log('\n  /api/profile CRUD round-trip');
+{
+  const before = await fetchJSON('/api/profile');
+  const beforeIds = new Set((before.json || []).map(p => p.id));
+
+  const created = await fetchJSON('/api/profile', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      category: 'Smoke', label: 'smoke-label', value: 'smoke-value', note: 'smoke-note',
+    }),
+  });
+  check('POST → row with id + value',
+        created.ok && Number.isInteger(created.json?.id)
+          && created.json.label === 'smoke-label'
+          && created.json.value === 'smoke-value'
+          && created.json.category === 'Smoke',
+        `got ${created.status} ${JSON.stringify(created.json)}`);
+  const id = created.json?.id;
+
+  const list = await fetchJSON('/api/profile');
+  const found = (list.json || []).find(p => p.id === id);
+  check('GET shows new item',
+        found && found.label === 'smoke-label' && found.note === 'smoke-note',
+        `got ${JSON.stringify(found)}`);
+
+  const patched = await fetchJSON(`/api/profile/${id}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ value: 'smoke-value-2', category: null }),
+  });
+  check('PATCH value + null category → ok', patched.ok && patched.json?.ok === true,
+        `got ${patched.status} ${JSON.stringify(patched.json)}`);
+
+  const list2 = await fetchJSON('/api/profile');
+  const after = (list2.json || []).find(p => p.id === id);
+  check('GET reflects PATCH (value updated, category cleared)',
+        after?.value === 'smoke-value-2' && after?.category == null,
+        `got ${JSON.stringify(after)}`);
+
+  const del = await fetchJSON(`/api/profile/${id}`, { method: 'DELETE' });
+  check('DELETE → ok', del.ok && del.json?.id === id, `got ${JSON.stringify(del.json)}`);
+
+  const list3 = await fetchJSON('/api/profile');
+  const remaining = (list3.json || []).filter(p => !beforeIds.has(p.id));
+  check('GET no smoke item remains', remaining.length === 0,
+        `leftover: ${JSON.stringify(remaining)}`);
+
+  const bad = await fetchJSON('/api/profile', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ value: 'no label' }),
+  });
+  check('POST missing label → 400', bad.status === 400, `got ${bad.status}`);
+
+  const nf = await fetchJSON('/api/profile/9999999', {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ value: 'x' }),
   });
   check('PATCH non-existent → 404', nf.status === 404, `got ${nf.status}`);
 }

@@ -1,0 +1,84 @@
+/* widgets/profile.css — Profile reference items: category sections, plaintext
+   value rows with hover-reveal copy/edit/delete, inline add/edit form.
+   Full-width via Panel className="panel-wide" (.panel.panel-wide rule lives
+   in assets.css, loaded alongside this). */
+
+.profile-body {
+  display: flex; flex-direction: column; gap: 18px;
+  flex: 1; min-height: 0; overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* ── Category section ─────────────────────────────────────────── */
+.profile-group { display: flex; flex-direction: column; }
+.profile-group-head {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--fg-faded);
+  padding: 0 6px 6px;
+  border-bottom: 1px solid var(--border, var(--bg-hover));
+  margin-bottom: 4px;
+}
+.profile-group-body { display: flex; flex-direction: column; gap: 2px; }
+
+/* ── Item row ─────────────────────────────────────────────────── */
+.profile-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 220px) minmax(0, 1fr) auto;
+  align-items: start; gap: 14px;
+  padding: 7px 6px; border-radius: var(--r-xs);
+  font-size: 13px;
+}
+.profile-row:hover { background: var(--bg-hover); }
+.profile-row-label {
+  color: var(--fg-faded); font-weight: 600;
+  padding-top: 1px;
+  overflow-wrap: anywhere;
+}
+.profile-row-value { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.profile-value-text {
+  color: var(--fg);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  white-space: pre-wrap; word-break: break-word;
+  user-select: text;
+}
+.profile-row-note { font-size: 11.5px; }
+
+/* Actions: present but faded, sharpen on row hover. */
+.profile-row-actions {
+  display: flex; gap: 4px; align-items: center;
+  opacity: 0.25; transition: opacity 120ms ease;
+}
+.profile-row:hover .profile-row-actions { opacity: 1; }
+.profile-row-act {
+  border: none; background: transparent; cursor: pointer;
+  color: var(--fg-faded);
+  font-size: 12px; line-height: 1;
+  padding: 3px 6px; border-radius: var(--r-xs);
+}
+.profile-row-act:hover { background: var(--bg-card-soft); color: var(--fg); }
+.profile-row-act.profile-row-del:hover { color: var(--danger, #c0584a); }
+.profile-row-act[data-ack='1'] { color: var(--accent); }
+
+/* ── Inline add/edit form ─────────────────────────────────────── */
+.profile-form {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px; margin: 2px 0 8px;
+  border: 1px solid var(--border, var(--bg-hover));
+  border-radius: var(--r-sm);
+  background: var(--bg-card-soft);
+}
+.profile-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.profile-form-value {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  resize: vertical; min-height: 38px;
+}
+.profile-form-foot { display: flex; align-items: center; gap: 8px; }
+.profile-form-hint { flex: 1; font-size: 11px; color: var(--fg-faded); }
+
+@media (max-width: 720px) {
+  .profile-row { grid-template-columns: 1fr auto; }
+  .profile-row-label { grid-column: 1 / -1; padding-top: 0; }
+  .profile-form-grid { grid-template-columns: 1fr; }
+}

@@ -20,6 +20,7 @@ nav:
   - { id: finance, label: Finance, icon: icons/points.svg }
   - { id: feed,    label: Feed,    icon: icons/library.svg }
   - { id: journal, label: Journal, icon: icons/book.svg }
+  - { id: profile, label: Profile, icon: icons/account.svg }
 
 pages:
   # ── Home: balanced overview ────────────────────────────────────────────
@@ -126,3 +127,10 @@ pages:
     title: Journal
     grid:
       - type: journal
+
+  # ── Profile: personal reference vault, single full-width widget ────────
+  - id: profile
+    title: Profile
+    subtitle: Numbers you always need but never remember
+    grid:
+      - type: profile
