@@ -1,0 +1,128 @@
+# Dashboard layout — single source of truth for what shows on the page.
+#
+# Two lego layers:
+#   1. nav.id ↔ pages[].id   → clicking a sidebar item routes to that page
+#   2. grid[].size           → 'compact' (1×1 cell) or 'large' (1×2 cell)
+#                              Default is 'large'. That's the entire size API.
+#
+# The grid is 3 columns × auto-rows of fixed height (--row-h). Variety
+# comes from arrangement, not size customization. `grid-auto-flow: dense`
+# is on, so a smaller widget after a larger one backfills earlier holes.
+#
+# Adding a page: append to `pages` with the same `id` you put in `nav`.
+# Adding a widget *type*: drop a widgets/<type>.jsx, registerWidget('<type>'…),
+# then list it in any page's `grid`.
+
+brand: Setsushin
+
+nav:
+  - { id: home,    label: Home,    icon: icons/home.svg }
+  - { id: finance, label: Finance, icon: icons/points.svg }
+  - { id: feed,    label: Feed,    icon: icons/library.svg }
+  - { id: journal, label: Journal, icon: icons/book.svg }
+
+pages:
+  # ── Home: balanced overview ────────────────────────────────────────────
+  - id: home
+    # Header strip — D1-backed bookmark row, edit via the +/× buttons in-UI.
+    # Bucket key conventionally matches the page id.
+    header:
+      - type: bookmarks
+        config: { layout: row, bucket: home }
+
+    grid:
+      - type: calendar
+        # large default
+        config:
+          endpoint: /api/calendar
+          source: primary
+          limit: 8
+
+      - type: tasks
+
+      - type: markets
+        size: compact
+        config:
+          endpoint: /api/markets
+          symbols:
+            - { symbol: SPY,     name: S&P 500 }
+            - { symbol: BTC-USD, name: Bitcoin }
+            - { symbol: JPY=X,   name: USD/JPY }
+            - { symbol: ^TNX,    name: US 10Y }
+            - { symbol: ^N225,   name: Nikkei 225 }
+
+      - type: bookmarks
+        size: compact
+        # In-grid bookmarks for the home page. Distinct bucket from the
+        # header strip (`home`) so the two strips can hold different sets.
+        config: { bucket: home_grid }
+
+      - type: feed
+        config:
+          endpoint: /api/feed
+          limit: 12
+
+  # ── Finance: portfolio is hero, header strip = bookmarks ──────────────
+  - id: finance
+    title: Portfolio
+    # No stats and no calendar on this page — assets is the whole story.
+    # Header bookmarks are now D1-backed (bucket=finance), edit in-UI.
+    header:
+      - type: bookmarks
+        config: { layout: row, bucket: finance }
+
+    grid:
+      - type: assets
+        # full-width (panel-wide); reads/writes /api/assets D1
+        config:
+          default_currency: JPY
+
+      - type: markets
+        size: compact
+        config:
+          endpoint: /api/markets
+          symbols:
+            - { symbol: SPY,     name: S&P 500 }
+            - { symbol: BTC-USD, name: Bitcoin }
+            - { symbol: JPY=X,   name: USD/JPY }
+            - { symbol: ^TNX,    name: US 10Y }
+            - { symbol: ^N225,   name: Nikkei 225 }
+
+      - type: tasks
+        size: compact
+
+  # ── Feed: feed is hero, everything else is context rail ────────────────
+  - id: feed
+    header:
+      - type: bookmarks
+        config: { layout: row, bucket: feed }
+
+    grid:
+      - type: feed
+        # One column per source — perSource caps each so high-volume
+        # finance feeds don't bury AI. Widget renders panel-wide.
+        config:
+          endpoint: /api/feed
+          columns: true
+          perSource: 6
+
+      - type: bookmarks
+        size: compact
+        # In-grid bookmarks for the feed page; distinct bucket from the
+        # header strip (`feed`) so the two strips can hold different sets.
+        config: { bucket: feed_grid }
+
+      - type: calendar
+        size: compact
+        config:
+          endpoint: /api/calendar
+          source: primary
+
+      - type: tasks
+        size: compact
+
+  # ── Journal: free-form writing space, single full-width widget ─────────
+  - id: journal
+    title: Journal
+    grid:
+      - type: journal

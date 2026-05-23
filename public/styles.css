@@ -1,0 +1,734 @@
+/* ============================================================
+   styles.css — shell + grid + edit mode + responsive.
+
+   Tokens / theme variants live in tokens.css (loaded first).
+   Per-widget styles live next to their JSX in widgets/<name>.css.
+   ============================================================ */
+
+/* ── reset ──────────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  font-family: var(--font-sans);
+  font-weight: var(--weight-light);
+  line-height: 1.45;
+  color: var(--fg);
+  background: var(--bg-app);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+button { font-family: inherit; }
+a { color: inherit; text-decoration: none; }
+
+/* Global keyboard focus ring — peach hairline, offset so it never
+   touches the element's own border. Mouse focus stays invisible. */
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+
+/* prefers-reduced-motion: collapse non-essential transitions to instant
+   transforms. PRODUCT.md commits to this; honor it cheaply by zeroing
+   durations everywhere. State-change colors still flip, just without
+   the easing window. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Label-mono utility — the editorial-grammar marker. Use anywhere a
+   piece of text is metadata: timestamps, IDs, ticker symbols, stat
+   labels, source chips, kbd hints. Small caps treatment via uppercase
+   transform + positive tracking. */
+.label-mono {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+/* ── App shell ──────────────────────────────────────────────── */
+.app {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  min-height: 100vh;
+  background: var(--bg-app);
+}
+
+/* ── Sidebar ────────────────────────────────────────────────── */
+.sidebar {
+  background: var(--bg-sidebar);
+  color: var(--fg-sidebar);
+  display: flex; flex-direction: column;
+  padding: 18px 14px;
+  position: sticky; top: 0; height: 100vh;
+  transition: transform 240ms cubic-bezier(.4, 0, .2, 1);
+}
+.sidebar-backdrop {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(20, 14, 8, 0.42);
+  z-index: 99;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 240ms ease;
+}
+.sb-brand {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px 14px;
+  border-bottom: 1px solid rgba(241, 230, 212, 0.08);
+  margin-bottom: 14px;
+}
+/* Brand mark — flat publisher's mark. A walnut tile with a serif glyph.
+   No gradient; the gradient version was inherited from a generic-SaaS
+   template and conflicted with the No-Decorative-Gradient rule. The
+   mark is set in the display serif at modest weight (500) so it reads
+   as a bookplate, not a logo. */
+.sb-brand-mark {
+  width: 30px; height: 30px;
+  border-radius: var(--r-md);
+  background: var(--bg-sidebar-active);
+  display: grid; place-items: center;
+  color: var(--fg-sidebar);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1;
+  letter-spacing: 0;
+  /* Optical centering — italic serifs sit a hair too high without nudge. */
+  padding-top: 1px;
+}
+.sb-brand-name {
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  flex: 1;
+}
+
+.sb-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.sb-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 12px;
+  border-radius: var(--r-md);
+  color: var(--fg-sidebar-muted);
+  font-size: 13.5px; font-weight: 400;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+  border: none; background: transparent; text-align: left;
+  width: 100%;
+}
+.sb-item:hover { color: var(--fg-sidebar); background: rgba(241, 230, 212, 0.05); }
+.sb-item.is-active {
+  background: var(--bg-sidebar-active);
+  color: var(--fg-sidebar);
+  font-weight: 500;
+}
+.sb-item .ico {
+  width: 18px; height: 18px;
+  filter: invert(1) brightness(0.95);
+  opacity: 0.75;
+}
+.sb-item.is-active .ico { opacity: 1; }
+/* Light sidebar: SVGs are already dark-on-light → undo the dark-mode flip. */
+body[data-sidebar="light"] .sb-item .ico,
+body[data-sidebar="light"] .sb-quick-capture .ico { filter: none; opacity: 0.55; }
+body[data-sidebar="light"] .sb-item.is-active .ico { opacity: 0.85; }
+.sb-item .badge {
+  margin-left: auto;
+  font-size: 11px; font-weight: 500;
+  padding: 1px 7px; border-radius: var(--r-pill);
+  background: rgba(241, 230, 212, 0.1);
+  color: var(--fg-sidebar-muted);
+}
+
+/* Quick-capture pad — sidebar's task-add affordance.  Label set in mono
+   small caps to read as metadata (matches the label-mono grammar pass);
+   the kbd hint already rides the same family. */
+.sb-quick-capture {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  background: rgba(241, 230, 212, 0.06);
+  border: 1px solid rgba(241, 230, 212, 0.08);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-sidebar-muted);
+  margin-top: 14px;
+  cursor: pointer;
+  transition: background var(--dur-q) var(--ease-out-expo);
+}
+.sb-quick-capture:hover { background: rgba(241, 230, 212, 0.1); }
+.sb-quick-capture .kbd {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  background: rgba(241, 230, 212, 0.08);
+  border-radius: 4px;
+}
+
+/* Sidebar light variant — non-token-level overrides
+   (token redefinitions live in tokens.css). */
+body[data-sidebar="light"] .sidebar { border-right: 1px solid var(--border-soft); }
+body[data-sidebar="light"] .sb-item .ico { filter: none; }
+body[data-sidebar="light"] .sb-item.is-active { color: var(--accent); }
+body[data-sidebar="light"] .sb-item.is-active .ico {
+  filter: invert(48%) sepia(35%) saturate(700%) hue-rotate(330deg); opacity: 1;
+}
+body[data-sidebar="light"] .sb-brand { border-bottom-color: var(--border-soft); }
+body[data-sidebar="light"] .sb-quick-capture {
+  background: var(--bg-app);
+  border-color: var(--border);
+  color: var(--fg-muted);
+}
+body[data-sidebar="light"] .sb-quick-capture .kbd {
+  background: var(--bg-card-soft);
+  color: var(--fg-muted);
+}
+
+/* ── Main area ──────────────────────────────────────────────── */
+.main {
+  background: var(--bg-content);
+  border-top-left-radius: var(--r-xl);
+  border-bottom-left-radius: var(--r-xl);
+  margin: 12px 12px 12px 0;
+  display: flex; flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Top bar */
+.topbar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 18px 28px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.search {
+  flex: 1; max-width: 360px;
+  margin-left: auto;
+  position: relative;
+}
+.search input {
+  width: 100%;
+  padding: 9px 12px 9px 38px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  background: var(--bg-card);
+  font: inherit; font-size: 13px;
+  color: var(--fg);
+  outline: none;
+  transition: border-color 150ms ease;
+}
+.search input:focus { border-color: var(--accent); }
+.search input::placeholder { color: var(--fg-faded); }
+.search-ico {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  width: 15px; height: 15px; opacity: 0.45;
+}
+.search-kbd {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--fg-faded);
+  background: var(--bg-card-soft);
+  padding: 2px 7px;
+  border-radius: 5px;
+}
+
+.icon-btn {
+  width: 38px; height: 38px;
+  border-radius: var(--r-pill);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  /* color drives stroke="currentColor" on inline-SVG icons (sun/moon/pencil
+     in TopBar), so they follow light/dark mode like the .icon-btn img
+     filter rule does for raster icons. */
+  color: var(--fg-muted);
+  display: grid; place-items: center;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+  position: relative;
+  flex-shrink: 0;
+}
+.icon-btn:hover { background: var(--bg-card-soft); color: var(--fg); }
+.icon-btn img { width: 16px; height: 16px; opacity: 0.6; }
+.icon-btn svg { opacity: 0.75; }
+/* Hamburger only shows on mobile (rule below in @media). Higher specificity
+   than .icon-btn { display: grid } so the desktop hide wins. */
+.topbar .menu-btn { display: none; }
+.icon-btn:hover svg { opacity: 1; }
+.icon-btn .dot {
+  position: absolute; top: 9px; right: 11px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent);
+  border: 1.5px solid var(--bg-card);
+}
+.icon-btn.is-active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.icon-btn.is-active svg { stroke: var(--accent); opacity: 1; }
+
+/* Avatar — flat tonal disc, serif initial. Reads as a bookplate, not a
+   social-media circle. The hairline border + soft shadow match the
+   topbar icon-btn family rather than fighting it with a colored fill. */
+.avatar-btn {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--bg-card-soft);
+  display: grid; place-items: center;
+  position: relative; overflow: hidden; padding: 0;
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  transition: background var(--dur-q) var(--ease-out-expo),
+              border-color var(--dur-q) var(--ease-out-expo);
+}
+.avatar-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+.avatar-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-menu { position: relative; }
+.user-pop {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  min-width: 220px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-pop);
+  padding: 10px 12px 4px;
+  z-index: 50;
+  font-size: 12.5px;
+}
+.user-pop-email {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 11.5px;
+  color: var(--fg);
+  letter-spacing: 0.01em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  padding-bottom: 8px;
+}
+.user-pop-note,
+.user-pop-logout {
+  display: block;
+  margin: 0 -12px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border-soft);
+  font-size: 12px;
+}
+.user-pop-note {
+  color: var(--fg-faded);
+  font-style: italic;
+}
+.user-pop-logout {
+  color: var(--fg-muted);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--dur-q) var(--ease-out-expo),
+              color var(--dur-q) var(--ease-out-expo);
+}
+.user-pop-logout:hover { background: var(--accent-soft); color: var(--accent); }
+
+/* Content scroll area — slightly more side breath than top, like a
+   book page: ample fore-edge margins, tighter head/foot. The serif
+   page-head benefits from this asymmetry. */
+.content {
+  flex: 1; overflow-y: auto;
+  padding: 26px 36px 20px;
+}
+
+/* ── Page header ─────────────────────────────────────────────
+   Editorial title slug: a serif italic display H1 on the left, a mono
+   date-stamp on the right, separated by a walnut hairline. Subtitle (if
+   any) sits below the H1 in quiet ink-muted mono small caps. The serif
+   is the system's most distinctive typographic move; do not fold it
+   back into sans without a brief revision. */
+.page-head {
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
+  margin-bottom: 22px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.page-head-title {
+  flex: 1; min-width: 0;
+}
+.page-head h1 {
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: -0.005em;
+  margin: 0;
+  line-height: 1.05;
+  color: var(--fg);
+  /* Optical: serif italics tend to crowd descenders; nudge for breath. */
+  padding-top: 2px;
+}
+.page-head-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  margin-top: 8px;
+}
+.page-head-date {
+  margin-left: auto;
+  text-align: right;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  /* Pull the date strip down a hair so it baselines with the body of
+     the H1 italic, not its cap line. */
+  padding-top: 6px;
+}
+.page-head-date-w {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-faded);
+}
+.page-head-date-d {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Stat strip ─────────────────────────────────────────────── */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--gap);
+  margin-bottom: var(--gap);
+}
+/* Editorial stat tile — label set in mono small caps so the role reads
+   immediately as metadata; value in display serif so the numbers carry the
+   visual weight without leaning on a colored backplate. The icon lives at
+   the *top right* now (a bookmark, not a logo) so the eye lands on the
+   number first. */
+.stat {
+  background: var(--bg-card);
+  border-radius: var(--r-lg);
+  padding: var(--pad-card);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-card);
+  display: flex; flex-direction: column; gap: 10px;
+  min-width: 0;
+  position: relative;
+}
+.stat-head {
+  display: flex; align-items: center;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.stat-icon {
+  width: 22px; height: 22px;
+  margin-right: 8px;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+  opacity: 0.55;
+}
+.stat-icon img { width: 14px; height: 14px; }
+.stat-icon.accent { opacity: 1; }
+.stat-icon.accent img { filter: invert(48%) sepia(35%) saturate(700%) hue-rotate(330deg); }
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+.stat-sub {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-faded);
+}
+.stat-bar {
+  height: 4px;
+  background: var(--bg-card-soft);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+  margin-top: 2px;
+}
+.stat-bar-fill {
+  height: 100%;
+  background: var(--fg);
+  border-radius: var(--r-pill);
+}
+.stat-bar-fill.accent { background: var(--accent); }
+
+/* ── Grid: 3 equal columns, fixed row height ────────────────────────
+   Item positions are explicit — every grid child carries
+   `grid-column: <col> / span <w>` and `grid-row: <row> / span <h>`
+   set inline by Panel/DashboardGrid/EditableGrid (see core.jsx
+   placeItems). dense auto-flow is no longer needed. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: var(--row-h);
+  gap: var(--gap);
+}
+
+/* Panel card. min-height: 0 + overflow: hidden are critical so the cell
+   bounds the panel; without them inner content can push the row taller
+   than --row-h and break alignment. */
+.panel {
+  background: var(--bg-card);
+  border-radius: var(--r-lg);
+  padding: var(--pad-card);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-card);
+  display: flex; flex-direction: column;
+  min-width: 0; min-height: 0;
+  overflow: hidden;
+}
+.panel-body {
+  display: flex; flex-direction: column;
+  flex: 1; min-height: 0;
+  overflow-y: auto;
+}
+.panel-body::-webkit-scrollbar { width: 6px; }
+.panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+/* Compact panels (1×1 cell) get a denser title to claw back vertical space. */
+.panel[data-size="compact"] { padding: 14px 18px; }
+.panel[data-size="compact"] .panel-head { margin-bottom: 8px; }
+.panel[data-size="compact"] .panel-title { font-size: 13px; }
+/* Hairline beneath every panel-head — typographic seam, like a chapter
+   underline in a book. The Borders-Do-the-Work rule. */
+.panel-head {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-soft);
+  min-width: 0;
+}
+.panel-title {
+  font-size: 15px; font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  flex: 1 1 auto; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.panel-title .muted { color: var(--fg-faded); font-weight: 400; margin-left: 4px; font-size: 13px; }
+.panel-hint {
+  font-size: 10px;
+  color: var(--fg-faded);
+  font-weight: 400;
+  margin-left: 6px;
+  letter-spacing: 0.01em;
+}
+.panel-action {
+  margin-left: auto;
+  font-size: 12.5px; color: var(--fg-muted);
+  background: transparent; border: none; cursor: pointer;
+  padding: 4px 8px; border-radius: var(--r-sm);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.panel-action:hover { background: var(--bg-hover); color: var(--fg); }
+.panel-select {
+  margin-left: auto;
+  font-size: 12.5px; color: var(--fg-muted);
+  background: var(--bg-card-soft);
+  border: none; padding: 5px 10px;
+  border-radius: var(--r-pill);
+  display: flex; align-items: center; gap: 4px;
+  cursor: pointer; font-family: inherit;
+  font-weight: 500;
+}
+.panel-foot {
+  margin-top: auto; padding-top: 12px;
+  border-top: 1px dashed var(--border);
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12.5px; color: var(--fg-muted);
+  cursor: pointer;
+  font-weight: 500;
+}
+.panel-foot:hover { color: var(--fg); }
+.panel-foot .arr { width: 12px; height: 12px; opacity: 0.6; }
+
+/* ── Header strip (page.header[] above grid) ─────────────────── */
+.header-strip {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  padding: 0 0 calc(var(--gap) - 4px);
+  align-items: center;
+}
+
+/* ── Footer quote ───────────────────────────────────────────── */
+.footer {
+  display: flex; align-items: center; gap: 8px;
+  padding: 18px 28px;
+  border-top: 1px solid var(--border-soft);
+  font-size: 13px;
+  color: var(--fg-muted);
+  font-style: italic;
+}
+.footer .att {
+  margin-left: auto;
+  font-style: normal;
+  color: var(--fg-faded);
+  font-size: 12.5px;
+}
+
+/* ── Boot screens (layout.yml load gate) ────────────────────── */
+.boot {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 24px;
+  font: 14px/1.5 var(--font-sans);
+  color: var(--fg-muted); background: var(--bg-app);
+}
+.boot-err { color: var(--danger); white-space: pre-wrap; }
+
+/* Edit-mode chrome + generic modal + page-meta modal + icon picker
+   live in edit-mode.css (loaded after this file in index.html). */
+
+/* Sidebar Add-page button — same shape as nav items but accent-tinted. */
+.sb-add-page {
+  margin-top: 6px;
+  color: var(--fg-sidebar-faded);
+  background: transparent;
+  border: 1px dashed var(--border-strong);
+}
+.sb-add-page:hover {
+  background: var(--bg-sidebar-active);
+  color: var(--fg-sidebar);
+}
+.sb-add-plus {
+  display: inline-grid; place-items: center;
+  width: 18px; height: 18px;
+  font-size: 14px; line-height: 1; font-weight: 300;
+  margin-right: 4px;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────
+   Below 1100px: drop to 2 cols, clamp every cell to span 1 col max so
+   layouts authored for 3-col don't blow horizontally. Row spans still
+   apply, so vertically-tall widgets stay tall. */
+@media (max-width: 1280px) {
+  .stats { grid-template-columns: repeat(5, 1fr); }
+}
+@media (max-width: 1100px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stats { grid-template-columns: repeat(3, 1fr); }
+  .grid > .panel,
+  .grid > .edit-panel-wrap { grid-column: auto !important; }
+}
+/* ── Mobile (≤768px): single column, sidebar becomes off-canvas drawer,
+   topbar wraps, edit-mode entry points hidden (read-only on phone). The
+   grid-column/row reset is critical — placeItems sets inline positions
+   on every panel, and without auto !important they'd keep their desktop
+   col/row coords and create implicit grid columns wider than viewport. */
+@media (max-width: 768px) {
+  .app { grid-template-columns: 1fr; }
+
+  .sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0;
+    height: 100vh;
+    width: 280px; max-width: 82vw;
+    z-index: 100;
+    transform: translateX(-100%);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+  }
+  .sidebar[data-open="true"] { transform: translateX(0); }
+
+  .sidebar-backdrop { display: block; }
+  .sidebar-backdrop[data-open="true"] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  body:has(.sidebar[data-open="true"]) { overflow: hidden; }
+
+  .main {
+    margin: 0;
+    border-radius: 0;
+  }
+  .topbar {
+    padding: 12px 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .topbar .menu-btn { display: grid; }
+  .search {
+    flex: 1 1 160px;
+    max-width: none;
+    margin-left: 0;
+  }
+  .search-kbd { display: none; }
+  /* Hide edit toggle on mobile — editing is desktop-only (drag UX needs pointer). */
+  .topbar .icon-btn[aria-label="Toggle edit mode"] { display: none; }
+
+  .content { padding: 18px 14px 16px; }
+
+  .page-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+  }
+  .page-head h1 { font-size: 30px; }
+  .page-head-date {
+    margin-left: 0;
+    padding-top: 0;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 10px;
+    text-align: left;
+  }
+
+  .stats { grid-template-columns: repeat(2, 1fr); }
+
+  .grid { grid-template-columns: 1fr; }
+  .grid > .panel,
+  .grid > .edit-panel-wrap { grid-column: auto !important; grid-row: auto !important; }
+
+  .footer {
+    padding: 14px 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .footer .att { margin-left: 0; }
+}

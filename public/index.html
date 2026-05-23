@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MyDashboard</title>
+
+<!-- display serif: Newsreader (Production Type, OFL). Variable opsz + wght.
+     CJK glyphs fall back to PingFang/Hiragino via the system stack. -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&display=swap" />
+
+<!-- design tokens (vars + theme variants) — must load before styles.css -->
+<link rel="stylesheet" href="tokens.css?v=3" />
+<!-- shell: reset, sidebar, topbar, grid, panel, responsive -->
+<link rel="stylesheet" href="styles.css?v=12" />
+<!-- edit-mode chrome + modals + page-meta form (loaded only by edit UIs) -->
+<link rel="stylesheet" href="edit-mode.css?v=1" />
+<!-- per-widget styles (co-located with widgets/<name>.jsx). calendar reuses agenda. -->
+<link rel="stylesheet" href="widgets/agenda.css?v=3" />
+<link rel="stylesheet" href="widgets/tasks.css?v=2" />
+<link rel="stylesheet" href="widgets/bookmarks.css?v=7" />
+<link rel="stylesheet" href="widgets/markets.css?v=2" />
+<link rel="stylesheet" href="widgets/feed.css?v=2" />
+<link rel="stylesheet" href="widgets/assets.css?v=2" />
+<link rel="stylesheet" href="widgets/journal.css?v=3" />
+</head>
+<body>
+<div id="root"></div>
+
+<!-- runtime deps -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+<!-- markdown rendering for the journal widget (UMD globals: marked, DOMPurify) -->
+<script src="https://cdn.jsdelivr.net/npm/marked@14.1.4/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
+
+<!-- foundations (must load before shell + widgets) -->
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="core.jsx"></script>
+
+<!-- shell components (Sidebar/TopBar/PageHeader/Stat*/Grid) -->
+<script type="text/babel" src="shell.jsx"></script>
+<script type="text/babel" src="user-menu.jsx"></script>
+
+<!-- widgets (each registers itself; order doesn't matter) -->
+<script type="text/babel" src="widgets/agenda.jsx"></script>
+<script type="text/babel" src="widgets/calendar.jsx"></script>
+<script type="text/babel" src="widgets/tasks.jsx"></script>
+<script type="text/babel" src="widgets/markets.jsx"></script>
+<script type="text/babel" src="widgets/bookmarks-edit.jsx"></script>
+<script type="text/babel" src="widgets/bookmarks.jsx"></script>
+<script type="text/babel" src="widgets/feed.jsx"></script>
+<script type="text/babel" src="widgets/assets.jsx"></script>
+<script type="text/babel" src="widgets/journal.jsx"></script>
+
+<!-- edit-mode UI (used by App when pencil is on) -->
+<script type="text/babel" src="edit-mode.jsx"></script>
+
+<!-- page-meta modal (Add/edit page) — used by Sidebar + edit toolbar -->
+<script type="text/babel" src="page-meta.jsx"></script>
+
+<!-- root composition -->
+<script type="text/babel" src="app.jsx"></script>
+
+<!-- last: render after App + all widgets are registered -->
+<script type="text/babel" src="boot.jsx"></script>
+</body>
+</html>

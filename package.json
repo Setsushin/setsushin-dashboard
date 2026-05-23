@@ -1,0 +1,17 @@
+{
+  "name": "setsushin-dashboard",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "dev": "npx wrangler@latest pages dev --port 8787 --ip 127.0.0.1",
+    "deploy": "npx wrangler@latest pages deploy",
+    "login": "npx wrangler@latest login",
+    "db:create": "npx wrangler@latest d1 create setsushin-dash",
+    "db:migrate:local": "npx wrangler@latest d1 migrations apply setsushin-dash --local",
+    "db:migrate:remote": "npx wrangler@latest d1 migrations apply setsushin-dash --remote",
+    "db:shell:local": "npx wrangler@latest d1 execute setsushin-dash --local --command",
+    "db:shell:remote": "npx wrangler@latest d1 execute setsushin-dash --remote --command"
+  }
+}

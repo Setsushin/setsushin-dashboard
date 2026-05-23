@@ -1,0 +1,32 @@
+name = "setsushin-dashboard"
+compatibility_date = "2025-09-01"
+# Static asset root. functions/ stays at repo root regardless and is
+# auto-discovered by Pages. migrations/ and test/ are dev-only and not
+# under public/ so they never get uploaded to the edge.
+pages_build_output_dir = "public"
+
+# ── D1 binding ────────────────────────────────────────────────────────
+# binding + database_name must match what functions/api/*.js reads
+# (env.setsushin_dash) and what `wrangler d1 create setsushin-dash`
+# created. Only database_id is per-installation.
+#
+# First-time setup:
+#   wrangler login
+#   wrangler d1 create setsushin-dash                        # prints UUID
+#   # paste UUID below
+#   wrangler d1 migrations apply setsushin-dash --local      # seeds local SQLite
+#   wrangler d1 migrations apply setsushin-dash --remote     # seeds prod (before deploy)
+#
+# Local data lives in .wrangler/state/v3/d1/ (gitignored).
+[[d1_databases]]
+binding       = "setsushin_dash"
+database_name = "setsushin-dash"
+database_id   = "REPLACE_WITH_YOUR_D1_UUID"
+
+# ── Local dev env vars ────────────────────────────────────────────────
+# Override per-source ICS URLs / impersonate a user. Don't commit real URLs.
+# For prod set these in CF Pages dashboard → Settings → Environment variables.
+# [vars]
+# CALENDAR_PRIMARY_ICS  = "https://calendar.google.com/calendar/ical/.../basic.ics"
+# CALENDAR_WORK_ICS     = "https://..."
+# LOCAL_DEV_USER_EMAIL  = "you@example.com"   # functions/_lib/auth.js fallback

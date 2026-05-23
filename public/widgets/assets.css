@@ -1,0 +1,269 @@
+/* widgets/assets.css — Portfolio widget: 2-pane (list + sunburst), inline edit
+   form, currency switch in panel header (Segmented control), tooltip. */
+
+/* Span the entire grid row (widget renders Panel className="panel-wide"). */
+.panel.panel-wide { grid-column: 1 / -1; }
+
+.assets-split {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 24px;
+  flex: 1; min-height: 0;
+}
+@media (max-width: 900px) {
+  .assets-split { grid-template-columns: 1fr; gap: 16px; }
+}
+@media (max-width: 768px) {
+  .sunburst-wrap { max-width: 320px; }
+  .assets-chart-legend { max-width: 320px; }
+}
+
+/* ── Left pane: collapsible list ────────────────────────────── */
+.assets-list { display: flex; flex-direction: column; gap: 6px; min-width: 0; overflow-y: auto; }
+.assets-layer { display: flex; flex-direction: column; }
+.assets-layer-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 6px; cursor: pointer; user-select: none;
+  border-radius: var(--r-sm);
+  font-weight: 600;
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+}
+.assets-layer-head:hover { background: var(--bg-hover); }
+.assets-layer-caret { font-size: 9px; color: var(--fg-faded); width: 10px; }
+.assets-layer-color { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.assets-layer-name { color: var(--fg); flex-shrink: 0; }
+.assets-layer-amount { color: var(--fg); font-weight: 600; margin-left: auto; }
+.assets-layer-pct { color: var(--fg-faded); font-size: 12px; min-width: 46px; text-align: right; }
+.assets-layer-body { padding: 2px 0 6px 18px; display: flex; flex-direction: column; gap: 2px; }
+
+/* Single 5-col grid shared by display rows and the inline edit form.
+   Columns: name | amount | layer/pct | exposure (tag or select) | account.
+   Action buttons (✎/×) are absolute-positioned overlays so they cost no
+   horizontal space when not hovered. */
+.assets-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) 64px 56px 80px minmax(0, 1fr);
+  align-items: center; gap: 10px;
+  padding: 5px 6px; border-radius: var(--r-xs);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+}
+.assets-row:hover { background: var(--bg-hover); }
+.assets-row-name { color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.assets-row-amount { color: var(--fg); font-weight: 500; text-align: right; }
+.assets-row-pct { color: var(--fg-faded); text-align: right; font-size: 11.5px; }
+.assets-row-tag {
+  font-size: 10px; font-weight: 600;
+  padding: 2px 6px; border-radius: var(--r-pill);
+  text-align: center; letter-spacing: 0.04em;
+}
+/* Warm-family exposure chips: JPY taupe / USD honey / mix walnut.
+   Was a cool blue + warm honey + warm walnut — JPY is now in family. */
+.assets-row-tag.ex-jpy { background: #ece5d8; color: #6e6249; }
+.assets-row-tag.ex-usd { background: #f5e6d3; color: #936339; }
+.assets-row-tag.ex-mixed-50-50 { background: #ece4d9; color: #74664f; }
+.assets-row-account {
+  font-size: 11.5px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+  /* Yields right-side space when the action overlay slides in so its
+     buttons don't sit on top of the account text. ~56px ≈ overlay width.
+     Symmetric timing with the overlay: snappy in (120ms), slow out (260ms). */
+  padding-right: 0;
+  transition: padding-right 260ms cubic-bezier(0.4, 0, 0.6, 1);
+}
+.assets-row:hover .assets-row-account {
+  padding-right: 56px;
+  transition: padding-right 120ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+/* Hover-reveal action overlay. Asymmetric: snappy slide-in (120ms) to
+   feel responsive, longer slide-out to the right (260ms cubic-out) so
+   the dismiss is the more noticeable motion. */
+.assets-row-actions {
+  position: absolute;
+  right: 4px; top: 50%;
+  display: flex; gap: 2px;
+  padding: 2px;
+  background: var(--bg-card-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xs);
+  box-shadow: var(--shadow-card);
+  opacity: 0; pointer-events: none;
+  transform: translateY(-50%) translateX(20px);
+  transition: opacity 200ms ease, transform 260ms cubic-bezier(0.4, 0, 0.6, 1);
+}
+.assets-row:hover .assets-row-actions {
+  opacity: 1; pointer-events: auto;
+  transform: translateY(-50%) translateX(0);
+  transition: opacity 100ms ease, transform 120ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.assets-row-act {
+  background: transparent; border: none; cursor: pointer;
+  color: var(--fg-faded); font-size: 13px;
+  padding: 0; line-height: 1;
+  border-radius: var(--r-xs);
+  width: 22px; height: 22px;
+}
+.assets-row-act:hover { background: var(--bg-card-soft); color: var(--fg); }
+.assets-row-act.assets-row-del:hover { color: var(--danger); }
+
+/* Inline edit form inherits the .assets-row 5-col grid (inputs occupy
+   cols 1–5 so they line up with display-row name/amount/pct/tag/account);
+   .af-actions spans all columns on row 2 and right-aligns ✓/✕. */
+.assets-row-form {
+  padding: 4px 6px;
+  background: var(--bg-card-soft);
+  row-gap: 6px;
+}
+.af-actions {
+  grid-column: 1 / -1;
+  display: flex; gap: 6px; justify-content: flex-end;
+}
+.af-input {
+  font: inherit; font-size: 12.5px;
+  padding: 4px 6px; border: 1px solid var(--border);
+  border-radius: var(--r-xs); background: var(--bg-card);
+  color: var(--fg); min-width: 0;
+}
+.af-input:focus { outline: none; border-color: var(--accent); }
+.af-amount { text-align: right; font-variant-numeric: tabular-nums; }
+.af-btn {
+  background: transparent; border: none; cursor: pointer;
+  font-size: 13px; padding: 0; line-height: 1;
+  width: 22px; height: 22px; border-radius: var(--r-xs);
+  color: var(--fg-muted);
+}
+.af-btn:hover { background: var(--bg-card); color: var(--fg); }
+.af-save:hover { color: var(--success); }
+.af-cancel:hover { color: var(--danger); }
+
+.assets-add-btn {
+  margin-top: 4px; align-self: flex-start;
+  background: transparent; border: 1px dashed var(--border);
+  cursor: pointer; padding: 5px 12px;
+  border-radius: var(--r-sm);
+  color: var(--fg-faded); font-size: 11.5px;
+  font-family: inherit; font-weight: 500;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.assets-add-btn:hover {
+  border-color: var(--accent); color: var(--accent); background: var(--accent-soft);
+}
+
+.assets-grand {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 6px 4px; margin-top: 6px;
+  border-top: 1px solid var(--border);
+  font-weight: 700; font-size: 14px;
+}
+.assets-grand-amount { color: var(--accent); font-variant-numeric: tabular-nums; margin-left: auto; }
+
+/* ── Right pane: sunburst chart ─────────────────────────────── */
+.assets-chart {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  min-width: 0;
+}
+.assets-chart-toolbar { width: 100%; display: flex; justify-content: center; }
+.sunburst-wrap { position: relative; width: 100%; max-width: 280px; }
+.sunburst { display: block; }
+.sunburst path { transition: opacity 80ms ease; cursor: pointer; }
+
+.sunburst-tip {
+  position: absolute; pointer-events: none; z-index: 5;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 8px 10px;
+  box-shadow: var(--shadow-pop);
+  font-size: 12px; min-width: 160px; max-width: 200px;
+  font-variant-numeric: tabular-nums;
+}
+.tip-name { font-weight: 600; color: var(--fg); margin-bottom: 2px; }
+.tip-amount { font-size: 14px; color: var(--accent); display: flex; align-items: baseline; gap: 6px; }
+.tip-suffix { font-size: 10px; color: var(--fg-faded); text-transform: uppercase; letter-spacing: 0.06em; }
+.tip-pct { margin-left: auto; font-size: 11.5px; color: var(--fg-muted); }
+.tip-meta {
+  font-size: 10.5px; color: var(--fg-muted);
+  margin-top: 4px; text-transform: uppercase; letter-spacing: 0.04em;
+}
+.sunburst-total {
+  font-size: 22px; font-weight: 700;
+  fill: var(--fg); font-variant-numeric: tabular-nums;
+  font-family: var(--font-sans);
+}
+.sunburst-total-suffix {
+  font-size: 10px; fill: var(--fg-faded);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  font-family: var(--font-sans);
+}
+.assets-chart-legend {
+  display: flex; flex-direction: column; gap: 4px; width: 100%; max-width: 260px;
+  font-size: 11.5px; font-variant-numeric: tabular-nums;
+}
+.assets-legend-row { display: flex; align-items: center; gap: 8px; }
+.assets-legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.assets-legend-label { color: var(--fg-muted); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.assets-legend-pct { color: var(--fg-faded); }
+
+/* Title + Copy-MD chip cluster. The chip is a quiet stamp next to the
+   panel heading — mono caps, hairline border, accent-soft tint on hover,
+   filled accent + cream when acknowledged. Override panel-title's nowrap
+   so the chip sits inline and stays visible even if the title shortens. */
+.assets-title {
+  display: inline-flex; align-items: center; gap: 10px;
+  overflow: visible;
+}
+.assets-md-chip {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--fg-muted);
+  background: var(--bg-card-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  padding: 3px 9px; line-height: 1;
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease,
+              border-color 140ms ease, transform 140ms ease;
+}
+.assets-md-chip:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.assets-md-chip:active { transform: translateY(1px); }
+.assets-md-chip:disabled {
+  opacity: 0.4; cursor: not-allowed;
+  background: transparent;
+}
+.assets-md-chip[data-ack="1"] {
+  background: var(--accent);
+  color: var(--bg-card);
+  border-color: var(--accent);
+}
+
+/* ── Segmented control (currently used by Portfolio: currency + view) ── */
+.seg {
+  display: inline-flex; gap: 0; align-items: center;
+  background: var(--bg-card-soft);
+  padding: 2px; border-radius: var(--r-pill);
+  font-size: 11.5px;
+}
+.seg-btn {
+  padding: 4px 10px;
+  background: transparent; border: none; cursor: pointer;
+  border-radius: var(--r-pill);
+  color: var(--fg-muted); font-weight: 500;
+  font-family: inherit;
+  transition: background-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
+  font-variant-numeric: tabular-nums;
+}
+.seg-btn:hover { color: var(--fg); }
+.seg-btn.is-active {
+  background: var(--bg-card);
+  color: var(--accent);
+  box-shadow: var(--shadow-card);
+}

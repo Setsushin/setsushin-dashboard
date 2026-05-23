@@ -1,0 +1,242 @@
+/* ============================================================
+   Design tokens — colors, type, radius, density, theme variants.
+   Loaded BEFORE styles.css so all selectors see resolved vars.
+   ============================================================ */
+
+:root {
+  /* Type stack — Latin first (Apple/system UI), then CJK fonts in
+     PingFang/Hiragino preference order. Browser does per-glyph
+     fallback, so SC characters land on PingFang SC / YaHei / Noto SC
+     while JP kanji land on Hiragino / Yu Gothic / Noto JP, all
+     transparently. Tested for SC + JP + EN mixed text. */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Text",
+               "PingFang SC", "Hiragino Sans GB",
+               "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+               "Microsoft YaHei", "Noto Sans SC", "Noto Sans CJK SC",
+               "Source Han Sans SC", "Yu Gothic UI", "Yu Gothic",
+               "Noto Sans JP", Meiryo, sans-serif;
+
+  /* Display serif — used on the page H1 and journal entry titles only.
+     Latin glyphs render in Newsreader; CJK falls through the same stack
+     as --font-sans so titles like "Journal · 2026" still set correctly. */
+  --font-display: "Newsreader",
+                  Charter, "Source Serif Pro", "Iowan Old Style", Georgia,
+                  "PingFang SC", "Hiragino Mincho ProN", "Yu Mincho",
+                  "Songti SC", serif;
+
+  --font-mono: "SF Mono", "SF Pro Text", "Helvetica Neue", "Segoe UI",
+               "Arial", monospace;
+
+  /* Warm cream content surface (overwritten by tone/mode below) */
+  --bg-app:       #f6f1e8;
+  --bg-content:   #fbf7f0;
+  --bg-card:      #ffffff;
+  --bg-card-soft: #f4ede1;
+  --bg-hover:     rgba(120, 88, 60, 0.06);
+
+  /* Walnut sidebar (warm dark) */
+  --bg-sidebar:        #2a231d;
+  --bg-sidebar-active: #3d342c;
+  --fg-sidebar:        #f1e6d4;
+  --fg-sidebar-muted:  rgba(241, 230, 212, 0.55);
+  --fg-sidebar-faded:  rgba(241, 230, 212, 0.35);
+
+  /* Foreground text on cream */
+  --fg:        #2b2419;
+  --fg-muted:  #6b5c48;
+  --fg-faded:  #9a8a72;
+  --fg-subtle: #c4b69c;
+
+  /* Accent — soft peach/terracotta */
+  --accent:        #d97757;
+  --accent-hover:  #e08a6e;
+  --accent-soft:   #f6e3d8;
+  --accent-fg:     #ffffff;
+
+  /* Status */
+  --success:      #7ba05b;
+  --success-soft: #e2ebd5;
+  --warning:      #d9a85a;
+  --danger:       #c75a4a;
+
+  /* Borders & dividers */
+  --border-soft:   rgba(120, 88, 60, 0.08);
+  --border:        rgba(120, 88, 60, 0.14);
+  --border-strong: rgba(120, 88, 60, 0.22);
+
+  /* Radius scale (overridden by data-radius) */
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 18px;
+  --r-xl: 22px;
+  --r-pill: 999px;
+
+  /* Shadow — warm + soft */
+  --shadow-card: 0 1px 2px rgba(80, 50, 20, 0.04),
+                 0 4px 14px rgba(80, 50, 20, 0.06);
+  --shadow-pop:  0 8px 28px rgba(80, 50, 20, 0.14);
+
+  /* Density (overridden by data-density) */
+  --pad-card: 22px;
+  --gap: 16px;
+
+  --sidebar-w: 232px;
+  --row-h: 200px;
+
+  /* Type weights */
+  --weight-light:   300;
+  --weight-regular: 400;
+  --weight-medium:  500;
+  --weight-semi:    600;
+  --weight-bold:    700;
+
+  /* Motion — exponential ease-out is the system curve. No bounce,
+     no elastic. State-change durations are quick (hover/focus/color);
+     normal is reserved for chrome motion (sidebar slide, edit-mode). */
+  --ease-out-expo: cubic-bezier(.22, 1, .36, 1);
+  --ease-standard: cubic-bezier(.4, 0, .2, 1);
+  --dur-q: 150ms;
+  --dur-n: 240ms;
+
+  /* Desaturated up/down — used by markets/portfolio numerals. The full-
+     chroma --success / --danger remain available for status dots and
+     destructive actions; but numeric deltas use the muted form so the
+     palette doesn't lose its quiet voice. */
+  --num-up:   #6b8a52;
+  --num-down: #b15546;
+}
+
+/* ── Tone variants (light mode) ──────────────────────────────── */
+body[data-tone="cool"] {
+  --bg-app: #eef0f3;
+  --bg-content: #f6f7f9;
+  --bg-card: #ffffff;
+  --bg-card-soft: #eaecf0;
+  --bg-sidebar: #1c2028;
+  --bg-sidebar-active: #2a2f38;
+  --fg-sidebar: #e6e9ee;
+  --fg-sidebar-muted: rgba(230, 233, 238, 0.55);
+  --fg-sidebar-faded: rgba(230, 233, 238, 0.35);
+  --fg: #1f242c;
+  --fg-muted: #5a6473;
+  --fg-faded: #8b94a3;
+  --fg-subtle: #c3cad5;
+  --accent: #5b6cff;
+  --accent-hover: #6d7cff;
+  --accent-soft: #e2e6ff;
+  --border-soft: rgba(60, 80, 110, 0.06);
+  --border: rgba(60, 80, 110, 0.12);
+  --border-strong: rgba(60, 80, 110, 0.2);
+  --bg-hover: rgba(60, 80, 110, 0.05);
+}
+body[data-tone="sage"] {
+  --bg-app: #eef1ec;
+  --bg-content: #f4f6f1;
+  --bg-card: #ffffff;
+  --bg-card-soft: #e8ece2;
+  --bg-sidebar: #1f2620;
+  --bg-sidebar-active: #2d352b;
+  --fg-sidebar: #e7ecdf;
+  --fg-sidebar-muted: rgba(231, 236, 223, 0.55);
+  --fg-sidebar-faded: rgba(231, 236, 223, 0.35);
+  --fg: #232a23;
+  --fg-muted: #5e6a5c;
+  --fg-faded: #8c9789;
+  --fg-subtle: #c0c9b9;
+  --accent: #6f8e5a;
+  --accent-hover: #7d9c68;
+  --accent-soft: #e0e8d4;
+  --border-soft: rgba(60, 80, 60, 0.07);
+  --border: rgba(60, 80, 60, 0.14);
+  --border-strong: rgba(60, 80, 60, 0.22);
+  --bg-hover: rgba(60, 80, 60, 0.05);
+}
+body[data-tone="lavender"] {
+  --bg-app: #f1eef4;
+  --bg-content: #f7f4fa;
+  --bg-card: #ffffff;
+  --bg-card-soft: #ece6f2;
+  --bg-sidebar: #2a2333;
+  --bg-sidebar-active: #3a3045;
+  --fg-sidebar: #ece6f3;
+  --fg-sidebar-muted: rgba(236, 230, 243, 0.55);
+  --fg-sidebar-faded: rgba(236, 230, 243, 0.35);
+  --fg: #2b2434;
+  --fg-muted: #645871;
+  --fg-faded: #918699;
+  --fg-subtle: #c8bfd0;
+  --accent: #9a72c4;
+  --accent-hover: #a886cf;
+  --accent-soft: #ebe1f2;
+  --border-soft: rgba(80, 60, 100, 0.07);
+  --border: rgba(80, 60, 100, 0.14);
+  --border-strong: rgba(80, 60, 100, 0.22);
+  --bg-hover: rgba(80, 60, 100, 0.05);
+}
+
+/* ── Density variants ────────────────────────────────────────── */
+body[data-density="compact"] { --pad-card: 16px; --gap: 12px; }
+body[data-density="comfy"]   { --pad-card: 28px; --gap: 20px; }
+
+/* ── Radius variants ─────────────────────────────────────────── */
+body[data-radius="square"] { --r-md: 8px;  --r-lg: 10px; --r-xl: 12px; --r-sm: 6px;  }
+body[data-radius="round"]  { --r-md: 14px; --r-lg: 18px; --r-xl: 22px; --r-sm: 10px; }
+body[data-radius="extra"]  { --r-md: 18px; --r-lg: 24px; --r-xl: 30px; --r-sm: 14px; }
+
+/* ── Sidebar light variant — token-level part ────────────────── */
+/* (sidebar-specific selector overrides live in styles.css next to .sidebar) */
+body[data-sidebar="light"] {
+  --bg-sidebar: var(--bg-card);
+  --bg-sidebar-active: var(--accent-soft);
+  --fg-sidebar: var(--fg);
+  --fg-sidebar-muted: var(--fg-muted);
+  --fg-sidebar-faded: var(--fg-faded);
+}
+
+/* ── Dark mode (warm dim) ────────────────────────────────────── */
+body[data-mode="dark"] {
+  --bg-app:       #18130d;
+  --bg-content:   #1f1812;
+  --bg-card:      #26201a;
+  --bg-card-soft: #2e2720;
+  --bg-hover:     rgba(255, 240, 220, 0.04);
+  --fg:           #f0e6d4;
+  --fg-muted:     #b3a48d;
+  --fg-faded:     #8a7d68;
+  --fg-subtle:    #5e5444;
+  --border-soft:  rgba(255, 230, 200, 0.05);
+  --border:       rgba(255, 230, 200, 0.09);
+  --border-strong:rgba(255, 230, 200, 0.16);
+  --shadow-card:  0 1px 2px rgba(0, 0, 0, 0.3),
+                  0 6px 18px rgba(0, 0, 0, 0.25);
+  --bg-sidebar: #14100b;
+  --bg-sidebar-active: #2a221a;
+}
+body[data-mode="dark"][data-tone="cool"] {
+  --bg-app: #131620; --bg-content: #1a1d28; --bg-card: #222633; --bg-card-soft: #2a2f3d;
+  --fg: #e8ecf4; --fg-muted: #98a2b8; --fg-faded: #6c7689;
+  --border-soft: rgba(180,200,230,0.06); --border: rgba(180,200,230,0.10); --border-strong: rgba(180,200,230,0.18);
+  --bg-sidebar: #0e1018; --bg-sidebar-active: #1f2330;
+}
+body[data-mode="dark"][data-tone="sage"] {
+  --bg-app: #141a14; --bg-content: #1a211a; --bg-card: #232a23; --bg-card-soft: #2c342c;
+  --fg: #e6efde; --fg-muted: #a3b39a; --fg-faded: #768174;
+  --border-soft: rgba(200,220,180,0.06); --border: rgba(200,220,180,0.10); --border-strong: rgba(200,220,180,0.18);
+  --bg-sidebar: #0f130e; --bg-sidebar-active: #1f2820;
+}
+body[data-mode="dark"][data-tone="lavender"] {
+  --bg-app: #1a1620; --bg-content: #211c2a; --bg-card: #2a2434; --bg-card-soft: #332c3f;
+  --fg: #ece5f2; --fg-muted: #a99cb8; --fg-faded: #7d7289;
+  --border-soft: rgba(220,200,240,0.06); --border: rgba(220,200,240,0.10); --border-strong: rgba(220,200,240,0.18);
+  --bg-sidebar: #140f1a; --bg-sidebar-active: #281f33;
+}
+
+/* Dark-mode icon flip (monochrome SVGs). Widget-specific dark
+   overrides live with their widget styles. */
+body[data-mode="dark"] .stat-icon img,
+body[data-mode="dark"] .icon-btn img,
+body[data-mode="dark"] .panel-foot .arr,
+body[data-mode="dark"] .search-ico {
+  filter: invert(1) brightness(0.92);
+}

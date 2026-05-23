@@ -1,0 +1,8 @@
+# Static daily schedule. Edit + git push to update.
+# Phase 2 candidates: ICS feed proxy, KV-backed editable list.
+
+items:
+  - { time: "10:00 AM", title: "Design Review",      meta: "Meeting",     kind: work     }
+  - { time: "11:30 AM", title: "Project Sync",       meta: "Meeting",     kind: work     }
+  - { time: "2:00 PM",  title: "Deep Work",          meta: "Focus Time",  kind: focus    }
+  - { time: "4:30 PM",  title: "Gym",                meta: "Personal",    kind: personal }

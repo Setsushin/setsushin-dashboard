@@ -1,0 +1,70 @@
+/* widgets/feed.css — RSS + YouTube items.
+   Height/scroll handled by .panel-body; .feed just lays items out. */
+
+.feed { display: flex; flex-direction: column; gap: 2px; }
+.feed-item {
+  display: flex; gap: 10px; padding: 10px 4px;
+  border-bottom: 1px solid var(--border-soft);
+  text-decoration: none; color: inherit;
+  transition: background 120ms ease;
+  min-width: 0;
+}
+.feed-item:hover { background: var(--bg-hover); }
+.feed-item:last-child { border-bottom: none; }
+/* Feed kind tag — small mono chips signaling the source class.
+   Both RSS and YouTube sit in the warm palette so the feed reads as
+   one curated stream, not "external service brand colors". */
+.feed-kind {
+  flex-shrink: 0; width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--r-xs);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.feed-kind.feed-rss     { background: var(--bg-card-soft); color: var(--fg-muted); }
+.feed-kind.feed-youtube { background: var(--bg-card-soft); color: var(--danger); }
+.feed-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.feed-title {
+  font-size: 13px; font-weight: 500; color: var(--fg);
+  overflow: hidden; text-overflow: ellipsis;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+.feed-meta {
+  display: flex; gap: 6px; align-items: center;
+  font-size: 11px; color: var(--fg-faded);
+  min-width: 0;
+}
+.feed-meta > span:first-child {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  min-width: 0;
+}
+.feed-dot { opacity: 0.5; flex-shrink: 0; }
+.feed-meta > span:last-child { flex-shrink: 0; }
+
+/* Columns mode: one source per column, source name as section header.
+   auto-fit wraps to fewer columns on narrow screens; minmax keeps each
+   column readable. Inside a column the kind chip is dropped — the
+   header already names the source. */
+.feed.feed-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.feed-col { display: flex; flex-direction: column; min-width: 0; }
+.feed-col-head {
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--fg-muted);
+  padding: 0 4px 6px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--border);
+}
+.feed-cols .feed-item { padding: 8px 4px; gap: 8px; }
+.feed-cols .feed-kind { display: none; }

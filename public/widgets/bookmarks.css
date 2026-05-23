@@ -1,0 +1,189 @@
+/* widgets/bookmarks.css — three layouts:
+   - default: vertical list with favicon + name + url
+   - compact: favicon-only chips (used when widget size = compact)
+   - row:     header-strip mode chips (config.layout === 'row') */
+
+/* ── Default vertical list ──────────────────────────────────── */
+.bookmark {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 0; border-bottom: 1px solid var(--border-soft);
+  cursor: pointer; min-width: 0;
+}
+.bookmark:last-of-type { border-bottom: none; }
+.bookmark:hover {
+  background: var(--bg-hover);
+  margin: 0 -8px; padding: 11px 8px;
+  border-radius: var(--r-sm); border-bottom-color: transparent;
+}
+.bookmark-favicon {
+  width: 32px; height: 32px;
+  border-radius: var(--r-sm);
+  display: grid; place-items: center;
+  flex-shrink: 0;
+  font-weight: 700; font-size: 14px;
+  color: #fff;
+}
+.bookmark-body { flex: 1 1 auto; min-width: 0; }
+.bookmark-name {
+  font-size: 13.5px; font-weight: 500; color: var(--fg);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.bookmark-url {
+  font-size: 11.5px; color: var(--fg-faded); margin-top: 1px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ── Compact (favicon-only chips) ───────────────────────────── */
+.bookmark-strip { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px 0; }
+.bookmark-chip { display: block; transition: transform 120ms ease; }
+.bookmark-chip:hover { transform: translateY(-1px); }
+.bookmark-chip .bookmark-favicon {
+  width: 30px; height: 30px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+}
+
+/* ── Row (header-strip layout, config.layout === 'row') ─────── */
+.bookmarks-row {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  flex: 1; min-width: 0;
+}
+.bookmark-row-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 12px 6px 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-pill);
+  text-decoration: none; color: var(--fg-muted);
+  font-size: 12.5px; font-weight: 500;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+.bookmark-row-chip:hover {
+  background: var(--bg-card-soft); color: var(--fg);
+  border-color: var(--border); transform: translateY(-1px);
+}
+.bookmark-row-chip .bookmark-favicon {
+  width: 20px; height: 20px; font-size: 11px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%; color: white; font-weight: 700;
+  flex-shrink: 0;
+}
+.bookmark-row-name { white-space: nowrap; }
+
+/* ── Bucket-mode editing affordances ───────────────────────────
+   - row chips: hover reveals a × delete button overlay; trailing
+     dashed-border chip is the + Add target
+   - compact chips: same × on the favicon, square + Add tile
+   - large list: trailing "+ Add bookmark" full-width row */
+
+/* × delete badge — must sit ENTIRELY INSIDE its chip's bounding box.
+   The widget can be hosted in a .panel which is overflow:hidden (a hard
+   invariant — see styles.css comment), so any negative-offset overlay
+   gets clipped. Approach: small dark-bubble badge overlapping the chip's
+   top-right corner from inside, fade-in on hover. */
+.bookmark-row-chip { position: relative; }
+.bookmark-row-del {
+  position: absolute;
+  top: 1px; right: 1px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: none; padding: 0;
+  background: var(--fg);
+  color: var(--bg-card);
+  cursor: pointer;
+  display: grid; place-items: center;
+  opacity: 0; transform: scale(0.85);
+  transition: opacity var(--dur-q) var(--ease-out-expo),
+              transform var(--dur-q) var(--ease-out-expo),
+              background var(--dur-q) var(--ease-out-expo);
+}
+.bookmark-row-chip:hover .bookmark-row-del,
+.bookmark-chip:hover .bookmark-row-del {
+  opacity: 1; transform: scale(1);
+}
+.bookmark-row-del:hover { background: var(--danger); }
+
+/* + Add chip in row-strip mode: dashed circle that stretches to match
+   sibling chip height (chips are ~32px tall from padding+favicon, so a
+   fixed 30×30 + button would sit 1px short on each side). */
+.bookmark-row-add {
+  display: inline-flex; align-items: center; justify-content: center;
+  align-self: stretch;
+  min-height: 30px; width: auto; aspect-ratio: 1;
+  border: 1px dashed var(--border-strong);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--fg-faded);
+  cursor: pointer; padding: 0;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.bookmark-row-add:hover {
+  background: var(--accent-soft); color: var(--accent); border-color: var(--accent);
+}
+/* Compact-strip + Add: square 30×30 matching the favicon footprint
+   (no stretch — chips here are themselves a fixed 30×30 favicon). */
+.bookmark-add-square {
+  align-self: auto;
+  width: 30px; height: 30px;
+  border-radius: var(--r-sm);
+}
+
+/* Compact chip: relative for the × overlay. */
+.bookmark-chip { position: relative; }
+
+/* Large list: trailing "+ Add" row, full width. */
+.bookmark-add-row {
+  display: block; width: 100%;
+  margin-top: 8px;
+  padding: 9px;
+  background: transparent;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-sm);
+  color: var(--fg-faded);
+  font: inherit; font-size: 12px;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.bookmark-add-row:hover {
+  background: var(--accent-soft); color: var(--accent); border-color: var(--accent);
+}
+
+/* Swatch row for AddBookmarkModal — small Apple-style colored dots,
+   selected one gets a ring of the page bg color (so it stands out
+   against any swatch). */
+.bookmark-swatches {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  align-items: center;
+}
+.bookmark-swatch {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: none; padding: 0; cursor: pointer;
+  position: relative;
+  box-shadow: 0 0 0 1px var(--border) inset;
+  transition: transform 100ms ease, box-shadow 100ms ease;
+}
+.bookmark-swatch:hover { transform: scale(1.1); }
+.bookmark-swatch.is-selected {
+  /* outer ring (3px gap + 2px border) — Apple-style selection ring */
+  box-shadow:
+    0 0 0 2px var(--bg-card),
+    0 0 0 4px var(--accent);
+  transform: scale(1.05);
+}
+
+/* Large-list × — the row is wide and sits on panel bg (no colored
+   chip behind it), so the dark-bubble would look out of place. Use
+   a panel-bg pill with border instead, vertically centered. Still
+   fully inside the row, so panel clipping isn't a concern here. */
+.bookmark { position: relative; }
+.bookmark-large-del {
+  top: 50%; right: 8px;
+  width: 18px; height: 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--fg-faded);
+  transform: translateY(-50%) scale(0.85);
+}
+.bookmark:hover .bookmark-large-del { transform: translateY(-50%) scale(1); }
+.bookmark-large-del:hover { background: var(--danger); color: #fff; border-color: var(--danger); }

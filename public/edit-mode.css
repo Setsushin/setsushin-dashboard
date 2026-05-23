@@ -1,0 +1,220 @@
+/* edit-mode.css — extracted from styles.css to keep the shell stylesheet
+   focused on always-on UI. Loaded after styles.css.
+
+   Sections:
+     1. Edit-mode toolbar + dragged-panel chrome (TopBar pencil → on)
+     2. Add-widget tile + the generic Add-widget modal
+     3. Page-meta modal + icon picker (PageMetaModal in page-meta.jsx) */
+
+/* ── 1. Edit mode (drag-edit UI) ──────────────────────────────────
+   Active when TopBar's pencil button is on. Adds a toolbar, wraps
+   each grid item with chrome (drag handle + size toggle + remove),
+   and appends an "+ Add widget" tile. Save/Reset call /api/layout. */
+.edit-toolbar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  margin-bottom: var(--gap);
+  background: var(--bg-card-soft);
+  border: 1px dashed var(--border);
+  border-radius: var(--r-md);
+  font-size: 12.5px;
+}
+.edit-toolbar strong { font-weight: 600; color: var(--fg); }
+.edit-dirty { color: var(--accent); font-size: 11.5px; font-weight: 500; }
+.edit-save {
+  background: var(--accent) !important;
+  color: var(--accent-fg) !important;
+  font-weight: 500;
+}
+.edit-save:disabled { opacity: 0.45; cursor: not-allowed; }
+.edit-save:not(:disabled):hover { background: var(--accent-hover) !important; }
+
+.edit-panel-wrap {
+  display: flex; flex-direction: column;
+  border: 1px dashed var(--border);
+  border-radius: var(--r-lg);
+  padding: 8px;
+  background: var(--bg-card-soft);
+  transition: opacity 120ms ease, border-color 120ms ease, background 120ms ease;
+  min-width: 0;
+}
+/* While being dragged the wrap shows where it WILL land (renderItems
+   already includes the ghost position) — the accent dashed border + soft
+   fill makes that target obvious. */
+.edit-panel-wrap.is-dragging {
+  border-color: var(--accent);
+  border-style: solid;
+  background: var(--accent-soft);
+  opacity: 0.65;
+}
+
+.edit-panel-toolbar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 6px 8px;
+  font-size: 11.5px;
+  color: var(--fg-muted);
+}
+.edit-grip {
+  cursor: grab;
+  font-size: 16px; line-height: 1;
+  color: var(--fg-faded);
+  padding: 0 2px;
+  user-select: none;
+}
+.edit-grip:active { cursor: grabbing; }
+.edit-type {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--bg-card);
+  padding: 2px 7px;
+  border-radius: var(--r-pill);
+  color: var(--fg);
+}
+.edit-size-btn {
+  font-family: var(--font-mono);
+  font-size: 11px !important;
+  padding: 3px 8px !important;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-soft);
+  text-transform: lowercase;
+}
+.edit-size-btn:hover { background: var(--accent-soft) !important; color: var(--accent) !important; }
+.edit-x {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-card);
+  color: var(--fg-muted);
+  font-size: 16px; line-height: 1;
+  cursor: pointer;
+  display: grid; place-items: center;
+}
+.edit-x:hover { background: var(--danger); color: #fff; }
+/* Preview is a flex container so the inner .panel stretches to fill the
+   wrap's reserved cell area. Without flex+min-height:0, the Panel sized
+   itself by content and the dashed wrap border was visibly larger than
+   the rendered Panel rectangle. The inner Panel also drops its own grid
+   inline style (set by core.jsx Panel) since we're not in a grid here. */
+.edit-panel-preview {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  pointer-events: none;
+  filter: saturate(0.85);
+}
+.edit-panel-preview > .panel {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  box-shadow: none;
+  grid-row: auto !important;
+  grid-column: auto !important;
+}
+
+.add-tile {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px;
+  min-height: 160px;
+  padding: 22px;
+  border: 2px dashed var(--border);
+  background: transparent;
+  border-radius: var(--r-lg);
+  color: var(--fg-muted);
+  cursor: pointer;
+  font: inherit; font-size: 13px;
+  transition: border-color 120ms ease, color 120ms ease, background 120ms ease;
+}
+.add-tile:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.add-tile-plus { font-size: 28px; line-height: 1; font-weight: 300; }
+
+/* ── 2. Modal (generic — Add widget picker uses these) ──────────── */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(40, 30, 20, 0.4);
+  display: grid; place-items: center;
+  z-index: 100;
+  backdrop-filter: blur(2px);
+}
+.modal {
+  background: var(--bg-card);
+  border-radius: var(--r-lg);
+  padding: 22px;
+  width: min(480px, calc(100vw - 24px));
+  box-shadow: var(--shadow-pop);
+  display: flex; flex-direction: column; gap: 14px;
+}
+.modal-title {
+  font-size: 15px; font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.modal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+}
+.modal-tile {
+  padding: 16px 10px;
+  background: var(--bg-card-soft);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+  font: inherit; font-size: 13px;
+  color: var(--fg);
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease, transform 120ms ease;
+  font-family: var(--font-mono);
+}
+.modal-tile:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+.modal-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+/* ── 3. Page meta modal (Add page / edit current page) ──────────────
+   Wider than the default modal because of the icon picker and 4 stacked
+   form rows. Form is 2-col grid: a fixed-width label gutter + the input. */
+.modal-page-meta { width: min(560px, calc(100vw - 24px)); }
+.page-meta-form { display: flex; flex-direction: column; gap: 10px; }
+.pm-row {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  align-items: center; gap: 10px;
+  font-size: 13px;
+}
+.pm-label { color: var(--fg-muted); font-weight: 500; font-size: 12px; }
+.pm-warn {
+  margin-top: 2px; padding: 6px 10px;
+  background: rgba(199, 90, 74, 0.1);
+  color: var(--danger);
+  border-radius: var(--r-sm);
+  font-size: 11.5px;
+}
+.pm-delete:hover { color: var(--danger) !important; }
+
+.icon-picker {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.icon-pick {
+  background: var(--bg-card-soft);
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  padding: 6px;
+  cursor: pointer;
+  display: grid; place-items: center;
+  transition: background-color 100ms ease, border-color 100ms ease;
+}
+.icon-pick img { width: 16px; height: 16px; opacity: 0.65; }
+.icon-pick:hover { background: var(--bg-hover); }
+.icon-pick:hover img { opacity: 1; }
+.icon-pick.is-selected {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.icon-pick.is-selected img { opacity: 1; filter: invert(48%) sepia(35%) saturate(700%) hue-rotate(330deg); }
+body[data-mode="dark"] .icon-pick img { filter: invert(1) brightness(0.92); }
+body[data-mode="dark"] .icon-pick.is-selected img {
+  filter: invert(48%) sepia(35%) saturate(700%) hue-rotate(330deg);
+}

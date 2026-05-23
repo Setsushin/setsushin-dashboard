@@ -1,0 +1,49 @@
+/* widgets/markets.css — full row list (large size) + compact (top mover only). */
+
+.markets { display: flex; flex-direction: column; gap: 2px; }
+.market-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px;
+  padding: 10px 4px; border-bottom: 1px solid var(--border-soft);
+  min-width: 0;
+}
+.market-row:last-child { border-bottom: none; }
+.market-meta {
+  display: flex; flex-direction: column; gap: 2px;
+  flex: 1 1 auto; min-width: 0;
+}
+.market-name {
+  font-size: 13px; font-weight: 500; color: var(--fg);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.market-symbol {
+  font-size: 11px; color: var(--fg-faded);
+  font-family: var(--font-mono); letter-spacing: -0.01em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.market-vals {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+  flex-shrink: 0;
+}
+.market-price {
+  font-size: 13px; font-weight: 500; color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+.market-change {
+  font-size: 11px; font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+/* Desaturated up/down — quieter than --success / --danger so the warm
+   palette doesn't get loud over a busy markets list. The signal stays
+   readable; the chroma stays in-family. */
+.market-change.up   { color: var(--num-up); }
+.market-change.down { color: var(--num-down); }
+
+/* Compact (top mover only) */
+.markets-compact { display: flex; flex-direction: column; gap: 6px; }
+.mc-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.mc-name {
+  font-size: 14px; font-weight: 500; color: var(--fg);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+}
+.mc-meta { font-size: 11px; color: var(--fg-faded); }

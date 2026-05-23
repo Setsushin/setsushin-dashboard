@@ -1,0 +1,75 @@
+/* widgets/agenda.css — agenda widget + calendar widget (calendar reuses
+   the agenda visual rows: time pill · color dot · title/meta). */
+
+.agenda { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+.agenda-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 9px 4px;
+  position: relative;
+  min-width: 0;
+}
+.agenda-time {
+  width: 56px; flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
+  padding-top: 3px;
+}
+.agenda-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  margin-top: 7px; flex-shrink: 0;
+  background: var(--accent);
+}
+.agenda-dot.work { background: var(--accent); }
+.agenda-dot.focus { background: var(--success); }
+.agenda-dot.personal { background: var(--warning); }
+.agenda-content { flex: 1 1 auto; min-width: 0; }
+.agenda-title {
+  font-size: 13.5px; font-weight: 500; color: var(--fg);
+  overflow: hidden; text-overflow: ellipsis;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.agenda-meta {
+  font-size: 12px; color: var(--fg-faded); margin-top: 1px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Calendar widget — source picker chips. Only rendered when 2+ sources
+   are bound (single-source dashboards skip the UI entirely). */
+.cal-sources {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  margin: -4px 0 8px;
+}
+.cal-source-chip {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: background var(--dur-q) var(--ease-out-expo),
+              color var(--dur-q) var(--ease-out-expo),
+              border-color var(--dur-q) var(--ease-out-expo);
+}
+.cal-source-chip:hover { color: var(--fg); border-color: var(--border-strong); }
+.cal-source-chip.is-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Per-source dot color for merged feeds — palette cycles by source key
+   so 2-3 calendars stay visually distinct. New keys can add their own. */
+.agenda-dot.src-primary { background: var(--accent); }
+.agenda-dot.src-work    { background: #5b8db8; }
+.agenda-dot.src-personal{ background: var(--success); }
+.agenda-dot.src-family  { background: var(--warning); }

@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-08T00:00:00Z",
+  "title": "Design System: Setsushin Dashboard",
+  "extensions": {
+    "colorMeta": {
+      "peach-mark":       { "role": "primary", "displayName": "Peach Mark",        "canonical": "oklch(67% 0.13 38)",  "tonalRamp": ["oklch(22% 0.05 38)", "oklch(32% 0.07 38)", "oklch(42% 0.10 38)", "oklch(52% 0.12 38)", "oklch(62% 0.13 38)", "oklch(72% 0.12 38)", "oklch(82% 0.08 38)", "oklch(92% 0.04 38)"] },
+      "ink-deep":         { "role": "neutral", "displayName": "Ink Deep",          "canonical": "oklch(22% 0.012 60)", "tonalRamp": ["oklch(15% 0.012 60)", "oklch(22% 0.012 60)", "oklch(35% 0.012 60)", "oklch(46% 0.012 60)", "oklch(58% 0.014 60)", "oklch(70% 0.014 60)", "oklch(82% 0.012 60)", "oklch(92% 0.008 60)"] },
+      "paper-app":        { "role": "neutral", "displayName": "Paper (App)",       "canonical": "oklch(95% 0.012 78)", "tonalRamp": ["oklch(82% 0.012 78)", "oklch(86% 0.012 78)", "oklch(89% 0.012 78)", "oklch(92% 0.012 78)", "oklch(95% 0.012 78)", "oklch(97% 0.010 78)", "oklch(98.5% 0.006 78)", "oklch(100% 0 0)"] },
+      "paper-content":    { "role": "neutral", "displayName": "Paper (Content)",   "canonical": "oklch(97% 0.010 78)", "tonalRamp": ["oklch(85% 0.010 78)", "oklch(89% 0.010 78)", "oklch(92% 0.010 78)", "oklch(95% 0.010 78)", "oklch(97% 0.010 78)", "oklch(98% 0.008 78)", "oklch(99% 0.005 78)", "oklch(100% 0 0)"] },
+      "paper-card":       { "role": "neutral", "displayName": "Paper (Card)",      "canonical": "oklch(100% 0 0)",     "tonalRamp": ["oklch(88% 0.010 78)", "oklch(92% 0.010 78)", "oklch(95% 0.010 78)", "oklch(97% 0.010 78)", "oklch(98% 0.008 78)", "oklch(99% 0.005 78)", "oklch(99.5% 0.002 78)", "oklch(100% 0 0)"] },
+      "paper-card-soft":  { "role": "neutral", "displayName": "Paper (Card Soft)", "canonical": "oklch(94% 0.014 78)", "tonalRamp": ["oklch(82% 0.014 78)", "oklch(86% 0.014 78)", "oklch(90% 0.014 78)", "oklch(92% 0.014 78)", "oklch(94% 0.014 78)", "oklch(96% 0.012 78)", "oklch(98% 0.008 78)", "oklch(99.5% 0.004 78)"] },
+      "walnut-binding":   { "role": "neutral", "displayName": "Walnut (Binding)",  "canonical": "oklch(22% 0.014 56)", "tonalRamp": ["oklch(12% 0.014 56)", "oklch(18% 0.014 56)", "oklch(22% 0.014 56)", "oklch(28% 0.014 56)", "oklch(36% 0.014 56)", "oklch(50% 0.014 56)", "oklch(70% 0.012 56)", "oklch(88% 0.010 56)"] },
+      "signal-success":   { "role": "tertiary", "displayName": "Signal Success",    "canonical": "oklch(64% 0.10 130)", "tonalRamp": ["oklch(28% 0.06 130)", "oklch(38% 0.08 130)", "oklch(48% 0.10 130)", "oklch(56% 0.10 130)", "oklch(64% 0.10 130)", "oklch(74% 0.09 130)", "oklch(86% 0.06 130)", "oklch(94% 0.03 130)"] },
+      "signal-warning":   { "role": "tertiary", "displayName": "Signal Warning",    "canonical": "oklch(72% 0.13 80)",  "tonalRamp": ["oklch(34% 0.08 80)", "oklch(46% 0.10 80)", "oklch(56% 0.12 80)", "oklch(64% 0.13 80)", "oklch(72% 0.13 80)", "oklch(82% 0.10 80)", "oklch(90% 0.06 80)", "oklch(96% 0.03 80)"] },
+      "signal-danger":    { "role": "tertiary", "displayName": "Signal Danger",     "canonical": "oklch(56% 0.14 30)",  "tonalRamp": ["oklch(28% 0.08 30)", "oklch(38% 0.10 30)", "oklch(48% 0.12 30)", "oklch(56% 0.14 30)", "oklch(66% 0.13 30)", "oklch(76% 0.10 30)", "oklch(86% 0.06 30)", "oklch(94% 0.03 30)"] }
+    },
+    "typographyMeta": {
+      "page-title":  { "displayName": "Page Title",  "purpose": "The H1 in PageHeader; one per page." },
+      "stat-value":  { "displayName": "Stat Value",  "purpose": "Big numbers in stat tiles." },
+      "panel-title": { "displayName": "Panel Title", "purpose": "Card heading; appears in every panel." },
+      "body":        { "displayName": "Body",        "purpose": "Default reading copy inside panels — light weight is the system's voice." },
+      "label-mono":  { "displayName": "Label / Mono", "purpose": "Machine-readable labels: shortcuts, timestamps, ticker symbols. Reserved." }
+    },
+    "shadows": [
+      { "name": "card",          "value": "0 1px 2px rgba(80,50,20,0.04), 0 4px 14px rgba(80,50,20,0.06)", "purpose": "Default panels and stats. Paper-on-paper warm shadow." },
+      { "name": "pop",           "value": "0 8px 28px rgba(80,50,20,0.14)",                                "purpose": "Popovers and elevated edit-mode chrome. At most once per viewport." },
+      { "name": "card-dark-mode","value": "0 1px 2px rgba(0,0,0,0.30), 0 6px 18px rgba(0,0,0,0.25)",       "purpose": "Dark-mode replacement; warm tint loses contrast on dark surfaces." }
+    ],
+    "motion": [
+      { "name": "ease-out-expo",   "value": "cubic-bezier(.22, 1, .36, 1)",  "purpose": "Default easing for state transitions; exponential pull-out, no bounce." },
+      { "name": "duration-quick",  "value": "150ms",                          "purpose": "Hover, focus, color shifts." },
+      { "name": "duration-normal", "value": "240ms",                          "purpose": "Sidebar slide, panel reveal, edit-mode chrome." }
+    ],
+    "breakpoints": [
+      { "name": "mobile",  "value": "768px"  },
+      { "name": "tablet",  "value": "1100px" },
+      { "name": "desktop", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Panel (Card)",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "The workhorse. Every widget renders inside one.",
+      "html": "<div class=\"ds-panel\"><header class=\"ds-panel-head\"><h2 class=\"ds-panel-title\">Tasks <span class=\"ds-panel-hint\">(mock — upstream blocked)</span></h2><button class=\"ds-panel-action\">Add</button></header><div class=\"ds-panel-body\">Body content</div><footer class=\"ds-panel-foot\">View all <span class=\"ds-arr\">→</span></footer></div>",
+      "css": ".ds-panel { background: #fff; border-radius: 18px; padding: 22px; border: 1px solid rgba(120,88,60,0.08); box-shadow: 0 1px 2px rgba(80,50,20,0.04), 0 4px 14px rgba(80,50,20,0.06); display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; font-family: -apple-system, Inter, sans-serif; color: #2b2419; } .ds-panel-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; } .ds-panel-title { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; margin: 0; flex: 1; } .ds-panel-hint { font-size: 10px; color: #9a8a72; font-weight: 400; margin-left: 6px; letter-spacing: 0.01em; } .ds-panel-action { margin-left: auto; font-size: 12.5px; color: #6b5c48; background: transparent; border: none; cursor: pointer; padding: 4px 8px; border-radius: 10px; font-weight: 500; transition: background 150ms ease, color 150ms ease; font-family: inherit; } .ds-panel-action:hover { background: rgba(120,88,60,0.06); color: #2b2419; } .ds-panel-body { flex: 1; min-height: 0; } .ds-panel-foot { margin-top: auto; padding-top: 12px; border-top: 1px dashed rgba(120,88,60,0.14); display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #6b5c48; cursor: pointer; font-weight: 500; transition: color 150ms ease; } .ds-panel-foot:hover { color: #2b2419; } .ds-arr { opacity: 0.6; }"
+    },
+    {
+      "name": "Stat Tile",
+      "kind": "card",
+      "refersTo": "stat",
+      "description": "Single number with label + optional progress bar.",
+      "html": "<div class=\"ds-stat\"><div class=\"ds-stat-head\"><div class=\"ds-stat-icon ds-accent\">●</div><div class=\"ds-stat-label\">Tasks Remaining</div></div><div class=\"ds-stat-value\">12</div><div class=\"ds-stat-sub\">3 due today</div><div class=\"ds-stat-bar\"><div class=\"ds-stat-bar-fill\" style=\"width: 25%\"></div></div></div>",
+      "css": ".ds-stat { background: #fff; border-radius: 18px; padding: 22px; border: 1px solid rgba(120,88,60,0.08); box-shadow: 0 1px 2px rgba(80,50,20,0.04), 0 4px 14px rgba(80,50,20,0.06); display: flex; flex-direction: column; gap: 12px; min-width: 0; font-family: -apple-system, Inter, sans-serif; color: #2b2419; } .ds-stat-head { display: flex; align-items: center; gap: 10px; color: #6b5c48; font-size: 13px; font-weight: 500; } .ds-stat-icon { width: 30px; height: 30px; border-radius: 10px; background: #f4ede1; display: grid; place-items: center; flex-shrink: 0; font-size: 12px; color: #6b5c48; } .ds-stat-icon.ds-accent { background: #f6e3d8; color: #d97757; } .ds-stat-value { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; } .ds-stat-sub { font-size: 12px; color: #9a8a72; } .ds-stat-bar { height: 4px; background: #f4ede1; border-radius: 999px; overflow: hidden; margin-top: 2px; } .ds-stat-bar-fill { height: 100%; background: #d97757; border-radius: 999px; }"
+    },
+    {
+      "name": "Icon Button",
+      "kind": "button",
+      "refersTo": "icon-btn",
+      "description": "Topbar pill button (38×38) for theme/edit/notifications.",
+      "html": "<button class=\"ds-icon-btn\" aria-label=\"Toggle edit mode\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 20h9\"/><path d=\"M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z\"/></svg></button>",
+      "css": ".ds-icon-btn { width: 38px; height: 38px; border-radius: 999px; background: #fff; border: 1px solid rgba(120,88,60,0.14); color: #6b5c48; display: grid; place-items: center; cursor: pointer; transition: background 150ms ease, border-color 150ms ease, color 150ms ease; font-family: inherit; } .ds-icon-btn:hover { background: #f4ede1; color: #2b2419; } .ds-icon-btn:focus-visible { outline: 2px solid #d97757; outline-offset: 2px; } .ds-icon-btn svg { opacity: 0.75; transition: opacity 150ms ease, stroke 150ms ease; } .ds-icon-btn:hover svg { opacity: 1; } .ds-icon-btn.ds-active { background: #f6e3d8; border-color: #d97757; } .ds-icon-btn.ds-active svg { stroke: #d97757; opacity: 1; }"
+    },
+    {
+      "name": "Search Input",
+      "kind": "input",
+      "refersTo": "search-input",
+      "description": "Topbar search with inline icon and ⌘K hint.",
+      "html": "<div class=\"ds-search\"><svg class=\"ds-search-ico\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"11\" cy=\"11\" r=\"7\"/><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"/></svg><input type=\"text\" placeholder=\"Search\"/><span class=\"ds-search-kbd\">⌘K</span></div>",
+      "css": ".ds-search { position: relative; max-width: 360px; font-family: -apple-system, Inter, sans-serif; } .ds-search input { width: 100%; padding: 9px 12px 9px 38px; border: 1px solid rgba(120,88,60,0.14); border-radius: 999px; background: #fff; font: inherit; font-size: 13px; color: #2b2419; outline: none; transition: border-color 150ms ease; } .ds-search input:focus { border-color: #d97757; } .ds-search input::placeholder { color: #9a8a72; } .ds-search-ico { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); opacity: 0.45; color: #6b5c48; pointer-events: none; } .ds-search-kbd { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-family: \"SF Mono\", monospace; font-size: 10.5px; color: #9a8a72; background: #f4ede1; padding: 2px 7px; border-radius: 5px; }"
+    },
+    {
+      "name": "Sidebar Item",
+      "kind": "nav",
+      "refersTo": "sidebar-item",
+      "description": "Walnut-rail nav row. Active state = walnut-active backplate, no peach.",
+      "html": "<div class=\"ds-sb\"><button class=\"ds-sb-item\"><span class=\"ds-sb-ico\">●</span> Home</button><button class=\"ds-sb-item ds-active\"><span class=\"ds-sb-ico\">●</span> Finance</button><button class=\"ds-sb-item\"><span class=\"ds-sb-ico\">●</span> Feed</button></div>",
+      "css": ".ds-sb { background: #2a231d; padding: 14px; display: flex; flex-direction: column; gap: 2px; font-family: -apple-system, Inter, sans-serif; border-radius: 18px; min-width: 200px; } .ds-sb-item { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 14px; color: rgba(241,230,212,0.55); font-size: 13.5px; font-weight: 400; cursor: pointer; transition: background 150ms ease, color 150ms ease; border: none; background: transparent; text-align: left; width: 100%; font-family: inherit; } .ds-sb-item:hover { color: #f1e6d4; background: rgba(241,230,212,0.05); } .ds-sb-item.ds-active { background: #3d342c; color: #f1e6d4; font-weight: 500; } .ds-sb-ico { font-size: 8px; opacity: 0.6; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Scholar's Cabinet",
+    "overview": "Setsushin is a single-owner personal command surface that should feel like a small library: warm paper underfoot, a walnut binding running down one edge, a single peach bookmark left between pages. The owner reads it daily. Nothing in the room is loud. Everything in the room is cared for.\n\nDensity is welcome — this is the bridge of a working ship, not a meditation app — but density is earned through typographic discipline, hairline borders, and tight scale ratios, not by stuffing the page. When the dashboard is at rest, it is at rest. Motion is the exception, never the ambient state. Color is one accent and the paper; everything else is ink at varying strengths.",
+    "keyCharacteristics": [
+      "Warm cream + walnut + a single peach mark (one accent, ≤10% of any view)",
+      "Hierarchy carried by typography (weight × scale × serif-vs-mono), not whitespace",
+      "Hairline borders, paper-soft shadows, no decorative gradients",
+      "Authored: serif headlines, mono labels, asymmetric stat strips are fair game",
+      "Stillness at rest; motion only as response to user input"
+    ],
+    "rules": [
+      { "name": "The One Mark Rule", "body": "The peach accent is used on ≤10% of any rendered surface. It marks the user's place — never decoration.", "section": "colors" },
+      { "name": "The No-Black Rule", "body": "#000 and #fff are forbidden. Every neutral is tinted toward warm-brown.", "section": "colors" },
+      { "name": "The No-Decorative-Gradient Rule", "body": "Decorative gradients are forbidden on backgrounds, hero areas, and text. Existing gradients (brand mark, avatar) are scheduled for replacement.", "section": "colors" },
+      { "name": "The Light-Weight-By-Default Rule", "body": "Body copy is font-weight 300. Hierarchy gains weight against this baseline.", "section": "typography" },
+      { "name": "The Mono-As-Caption Rule", "body": "Mono is reserved for machine-readable labels. Its appearance is semantic.", "section": "typography" },
+      { "name": "The Tracking-Tightens-As-Size-Grows Rule", "body": "Display ≥28px tightens to -0.02em; mid sizes -0.01em; body 0; mono +0.02em.", "section": "typography" },
+      { "name": "The Paper-Not-Glass Rule", "body": "Shadows simulate paper-on-paper: short, warm, soft. Cap blur at 28px, alpha at 0.18.", "section": "elevation" },
+      { "name": "The Borders-Do-the-Work Rule", "body": "Hairline borders carry depth. Shadows quietly reinforce.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep the cream → walnut → peach trio; tone variants are personalization, not identity replacement.",
+      "Do carry hierarchy through type weight × scale × serif/mono contrast, ≥1.25:1 ratio between adjacent steps.",
+      "Do use font-weight 300 for body — the light voice is the system.",
+      "Do use mono exclusively for machine labels (shortcuts, timestamps, tickers).",
+      "Do prefer hairline borders over heavy shadows.",
+      "Do keep state changes under 200ms with exponential ease-out.",
+      "Do prefer inline editing over modals.",
+      "Do respect prefers-reduced-motion.",
+      "Do validate WCAG AA contrast on every tone × mode pair when changing neutrals."
+    ],
+    "donts": [
+      "Don't use #000 or #fff as text or surface color.",
+      "Don't introduce decorative gradients; replace with flat color + precise type.",
+      "Don't use background-clip: text with a gradient.",
+      "Don't use glassmorphism (backdrop-filter blur on translucent cards).",
+      "Don't add side-stripe borders > 1px as colored accents.",
+      "Don't ship the hero-metric template (big number + small label + supporting stats + gradient).",
+      "Don't ship a uniform card grid; variety lives in arrangement.",
+      "Don't reach for a modal first — exhaust inline alternatives.",
+      "Don't auto-refresh, auto-rotate, or auto-animate.",
+      "Don't add 'Welcome back' / onboarding copy.",
+      "Don't use neon or iris cool hues for status; status sits in the warm family.",
+      "Don't drift into Linear/Vercel cool-grey + iris."
+    ]
+  }
+}

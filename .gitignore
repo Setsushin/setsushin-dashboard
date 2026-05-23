@@ -1,0 +1,23 @@
+# secrets
+.env
+.env.*
+secrets/
+*.key
+*.pem
+*.crt
+wrangler.toml
+
+# build / runtime
+node_modules/
+dist/
+.wrangler/
+
+# design-tool reference images (not part of the app)
+uploads/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp

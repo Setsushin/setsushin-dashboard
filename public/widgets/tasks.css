@@ -1,0 +1,125 @@
+/* widgets/tasks.css — task list with checkbox / strike-through / tag pill.
+   The form modal reuses the global modal kit (.modal-backdrop / .modal /
+   .pm-row / .af-input / .modal-foot / .panel-action / .edit-save / .pm-delete);
+   only the task-specific row/chip/button styles live here. */
+
+.task-list { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.task {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border-soft);
+  min-width: 0;
+}
+.task:last-of-type { border-bottom: none; }
+.task-check {
+  width: 18px; height: 18px; border-radius: 6px;
+  border: 1.5px solid var(--border-strong);
+  display: grid; place-items: center;
+  background: var(--bg-card);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+.task-check.done {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.task-check.done::after {
+  content: ""; width: 10px; height: 6px;
+  border-left: 2px solid #fff; border-bottom: 2px solid #fff;
+  transform: rotate(-45deg) translate(1px, -1px);
+}
+.task-text {
+  flex: 1 1 auto; min-width: 0;
+  font-size: 13.5px;
+  color: var(--fg);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.task-text-clickable { cursor: pointer; transition: color 120ms ease; }
+.task-text-clickable:hover { color: var(--accent); }
+.task.done .task-text {
+  text-decoration: line-through;
+  color: var(--fg-faded);
+}
+.task-due {
+  font-size: 11px; font-weight: 500;
+  color: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: color 120ms ease;
+}
+.task-due:hover { color: var(--accent); }
+.task-due.overdue { color: var(--danger); font-weight: 600; }
+.task.done .task-due { color: var(--fg-faded); }
+/* Tag chips read as metadata (mono small caps), not as decoration.  The
+   work variant gets a hairline border to set itself apart from personal,
+   instead of borrowing the peach accent — peach belongs to "your place"
+   (active nav, focus, status), not to a category. */
+.task-tag {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  background: var(--bg-card-soft);
+  color: var(--fg-muted);
+  flex-shrink: 0;
+}
+.task-tag.work     { color: var(--fg); border: 1px solid var(--border); padding: 1px 7px; }
+.task-tag.personal { color: var(--fg-faded); }
+.task-remove {
+  width: 20px; height: 20px;
+  display: grid; place-items: center;
+  border: none; background: transparent;
+  border-radius: 5px;
+  color: var(--fg-faded);
+  cursor: pointer;
+  opacity: 0;
+  font-size: 15px; line-height: 1;
+  flex-shrink: 0;
+  padding: 0;
+  transition: opacity 120ms ease, color 120ms ease, background 120ms ease;
+}
+.task:hover .task-remove { opacity: 0.55; }
+.task-remove:hover { opacity: 1; color: var(--fg); background: var(--bg-card-soft); }
+.task-remove:focus-visible { opacity: 1; outline: 1.5px solid var(--accent); outline-offset: 1px; }
+@media (hover: none) {
+  .task-remove { opacity: 0.4; }
+}
+
+.task-add-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 0 0;
+  margin-top: auto;
+  background: transparent; border: none;
+  font: inherit;
+  font-size: 13px; font-weight: 500;
+  color: var(--fg-muted);
+  cursor: pointer;
+  text-align: left;
+  transition: color 120ms ease;
+}
+.task-add-btn:hover { color: var(--fg); }
+.task-add-btn .plus {
+  width: 16px; height: 16px;
+  border-radius: 5px;
+  display: grid; place-items: center;
+  font-size: 14px; line-height: 1;
+}
+
+/* Dark-mode tag tweaks (token bg already follows mode; only the work
+   border needs a brighter shade since border-soft loses contrast on dark). */
+body[data-mode="dark"] .task-tag.work     { border-color: var(--border-strong); }
+body[data-mode="dark"] .task-tag.personal { color: var(--fg-faded); }
+
+/* TaskFormModal — task-specific overrides on top of the global modal kit. */
+.modal-task { width: min(480px, calc(100vw - 24px)); }
+.task-form { display: flex; flex-direction: column; gap: 10px; }
+.task-form .pm-row { align-items: start; }
+.task-form .pm-label { padding-top: 5px; }
+.task-form-area { min-height: 60px; resize: vertical; line-height: 1.45; font-family: inherit; }
+.task-modal-hint { font-size: 11px; color: var(--fg-faded); letter-spacing: 0.02em; }

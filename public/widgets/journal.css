@@ -1,0 +1,338 @@
+/* widgets/journal.css — Journal widget: composer + filter bar + timeline. */
+
+.journal-root {
+  display: flex; flex-direction: column;
+  gap: 14px;
+  flex: 1; min-height: 0;
+}
+
+/* ── Composer ──────────────────────────────────────────────── */
+.journal-composer {
+  display: flex; flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+  background: var(--bg-card-soft);
+}
+.journal-composer-title {
+  width: 100%;
+  font-size: 14px;
+  font-weight: 500;
+}
+.journal-composer-body {
+  width: 100%;
+  font-family: inherit; font-size: 13.5px;
+  line-height: 1.55;
+  resize: vertical;
+  min-height: 64px;
+}
+.journal-composer-foot {
+  display: flex; align-items: center; gap: 10px;
+}
+.journal-composer-tags {
+  flex: 1; min-width: 0;
+  font-size: 12.5px;
+}
+.journal-hint {
+  font-size: 11px;
+  color: var(--fg-faded);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* ── Filter bar ────────────────────────────────────────────── */
+.journal-filter {
+  display: flex; flex-direction: column;
+  gap: 8px;
+}
+.journal-filter-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+}
+.journal-filter-q {
+  flex: 1; min-width: 180px;
+  font-size: 13px;
+}
+.journal-filter-date {
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+.journal-filter-arrow { font-size: 12px; color: var(--fg-faded); }
+.journal-filter-count {
+  font-size: 12px;
+  color: var(--fg-faded);
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+}
+.journal-filter-tags {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+
+/* ── Tag chip (shared between entry display + filter row) ── */
+.journal-tag-chip {
+  display: inline-flex; align-items: center;
+  font-size: 11px; font-weight: 500;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  background: var(--bg-card-soft);
+  color: var(--fg-muted);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+  letter-spacing: 0.01em;
+  user-select: none;
+}
+.journal-tag-chip:hover { color: var(--fg); }
+.journal-tag-chip.is-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ── Timeline list ─────────────────────────────────────────── */
+.journal-list {
+  display: flex; flex-direction: column;
+  gap: 10px;
+  flex: 1; min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px; /* breathing room next to the scrollbar */
+}
+.journal-empty {
+  padding: 20px;
+  text-align: center;
+  font-size: 13px;
+}
+
+/* Notebook 2-column entry: left rail holds metadata (date + tags), right
+   column holds the read content (title + body + toggle).  Reads like a
+   journal page where the date is in the gutter, body in the column.  On
+   mobile the two collapse to single-column with the rail above the main. */
+.journal-entry {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  column-gap: 22px;
+  align-items: start;
+  padding: 12px 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+  background: var(--bg-card);
+  transition: border-color var(--dur-q) var(--ease-out-expo),
+              background var(--dur-q) var(--ease-out-expo);
+}
+.journal-entry:hover { border-color: var(--border); }
+.journal-entry-editing {
+  border-color: var(--accent);
+  background: var(--bg-card-soft);
+}
+.journal-entry-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+  /* Sticky-feel right alignment so the date hugs the column gutter, like
+     a margin note. Small entries don't pull the rail tall. */
+  align-items: flex-end;
+  text-align: right;
+}
+.journal-entry-rail .journal-entry-tags {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  margin-top: 0;
+}
+.journal-entry-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.journal-entry-meta {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-faded);
+  cursor: pointer;
+}
+/* Journal entry title — serif italic, the second display surface in the
+   system after the page H1. Same family, lighter scale; sets these
+   timeline cards apart from grid-widget panel titles which stay sans. */
+.journal-entry-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: -0.005em;
+  line-height: 1.2;
+  color: var(--fg);
+  margin: 0;
+  cursor: pointer;
+  word-break: break-word;
+}
+.journal-entry-body {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--fg);
+  word-break: break-word;
+  cursor: pointer;
+}
+/* Markdown elements rendered into .journal-entry-body via dangerouslySetInnerHTML.
+   Tight vertical rhythm — first/last child margins collapse so the body
+   sits flush against title (above) and toggle/tags (below). */
+.journal-entry-body > :first-child { margin-top: 0; }
+.journal-entry-body > :last-child { margin-bottom: 0; }
+.journal-entry-body h1,
+.journal-entry-body h2,
+.journal-entry-body h3,
+.journal-entry-body h4 {
+  margin: 0.6em 0 0.3em;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+.journal-entry-body h1 { font-size: 1.25em; }
+.journal-entry-body h2 { font-size: 1.13em; }
+.journal-entry-body h3 { font-size: 1.05em; }
+.journal-entry-body h4 { font-size: 1em; color: var(--fg-muted); }
+.journal-entry-body p { margin: 0.5em 0; }
+.journal-entry-body ul,
+.journal-entry-body ol { margin: 0.5em 0; padding-left: 1.6em; }
+.journal-entry-body li { margin: 0.15em 0; }
+.journal-entry-body li > p { margin: 0.15em 0; }
+.journal-entry-body code {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: 0.92em;
+  padding: 1px 5px;
+  background: var(--bg-card-soft);
+  border-radius: 3px;
+}
+.journal-entry-body pre {
+  background: var(--bg-card-soft);
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  overflow-x: auto;
+  margin: 0.6em 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.journal-entry-body pre code {
+  background: transparent;
+  padding: 0;
+  font-size: 1em;
+}
+.journal-entry-body blockquote {
+  border-left: 3px solid var(--border-strong);
+  margin: 0.5em 0;
+  padding: 0.05em 0.9em;
+  color: var(--fg-muted);
+}
+.journal-entry-body a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.journal-entry-body a:hover { text-decoration-color: var(--accent); }
+.journal-entry-body strong { font-weight: 600; }
+.journal-entry-body em { font-style: italic; }
+.journal-entry-body img { max-width: 100%; border-radius: var(--r-sm); }
+.journal-entry-body hr {
+  border: none;
+  border-top: 1px solid var(--border-soft);
+  margin: 0.8em 0;
+}
+.journal-entry-body table {
+  border-collapse: collapse;
+  margin: 0.5em 0;
+  font-size: 12.5px;
+}
+.journal-entry-body th,
+.journal-entry-body td {
+  border: 1px solid var(--border-soft);
+  padding: 4px 8px;
+  text-align: left;
+}
+.journal-entry-body th { background: var(--bg-card-soft); font-weight: 600; }
+/* Soft cap at ~6 lines. Fade gradient over the bottom 2.4em hides the cut
+   edge; toggle below is rendered only when scrollHeight actually overflows
+   (measured in EntryView). pointer-events: none on the gradient lets the
+   click below it still hit the body (→ enter edit mode). */
+.journal-entry-body.is-clamped {
+  max-height: 9.6em;
+  overflow: hidden;
+  position: relative;
+}
+.journal-entry-body.is-clamped.is-overflowing::after {
+  content: "";
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: 2.4em;
+  background: linear-gradient(to bottom, transparent, var(--bg-card));
+  pointer-events: none;
+}
+.journal-entry-toggle {
+  align-self: flex-start;
+  background: transparent; border: none;
+  font: inherit; font-size: 11.5px;
+  color: var(--fg-faded);
+  cursor: pointer;
+  padding: 2px 0 0;
+  letter-spacing: 0.02em;
+  transition: color 120ms ease;
+}
+.journal-entry-toggle:hover { color: var(--accent); }
+.journal-entry-tags {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  margin-top: 2px;
+}
+
+/* ── Inline editor ─────────────────────────────────────────── */
+.journal-entry-title-edit {
+  width: 100%;
+  font-size: 14px;
+  font-weight: 500;
+}
+.journal-entry-body-edit {
+  width: 100%;
+  font-family: inherit; font-size: 13.5px;
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 96px;
+}
+.journal-entry-tags-edit {
+  width: 100%;
+  font-size: 12.5px;
+}
+.journal-entry-actions {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 4px;
+}
+
+/* ── Mobile ────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .journal-filter-row { gap: 6px; }
+  .journal-filter-q { flex: 1 1 100%; }
+  .journal-filter-count { margin-left: 0; }
+
+  /* Collapse the notebook 2-col into a single column. Rail items stay
+     in their natural order (date, then tags) above the main content. */
+  .journal-entry {
+    grid-template-columns: 1fr;
+    column-gap: 0;
+    row-gap: 8px;
+  }
+  .journal-entry-rail {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    text-align: left;
+    padding-top: 0;
+    gap: 10px;
+  }
+  .journal-entry-rail .journal-entry-tags {
+    flex-direction: row;
+    align-items: center;
+  }
+}
