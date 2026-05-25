@@ -49,22 +49,19 @@ async function fetchJSON(path, init) {
 
 console.log(`\n  smoke @ ${BASE}\n`);
 
-// 1. Static assets — every entry point that index.html depends on.
-const STATIC = [
-  '/', '/core.jsx', '/shell.jsx', '/edit-mode.jsx', '/page-meta.jsx', '/app.jsx',
-  '/boot.jsx', '/tweaks-panel.jsx',
-  '/tokens.css', '/styles.css', '/edit-mode.css',
-  '/layout.yml', '/icons/home.svg',
-  '/widgets/markets.jsx', '/widgets/calendar.jsx', '/widgets/feed.jsx',
-  '/widgets/tasks.jsx', '/widgets/bookmarks.jsx', '/widgets/bookmarks-edit.jsx',
-  '/widgets/agenda.jsx',
-  '/widgets/assets.jsx', '/widgets/profile.jsx',
-  '/widgets/agenda.css', '/widgets/tasks.css', '/widgets/bookmarks.css',
-  '/widgets/markets.css', '/widgets/feed.css', '/widgets/assets.css',
-  '/widgets/profile.css',
-];
+// 1. Static assets — the SPA shell + runtime-fetched files served from the
+// Vite build output (dist/). The bundled JS/CSS have content-hashed names,
+// so instead of hardcoding them we assert index.html ships a module script
+// (i.e. the build deployed) and the data files Pages serves verbatim resolve.
 console.log('  static assets');
-for (const p of STATIC) {
+{
+  const root = await fetchOK('/');
+  check('GET / (SPA shell)', root.ok, root.ok ? '' : `${root.status}`);
+  check('/ references a bundled module script',
+        /<script type="module"[^>]*src="\/assets\//.test(root.body),
+        'index.html has no /assets/*.js module script');
+}
+for (const p of ['/layout.yml', '/schedule.yml', '/icons/home.svg']) {
   const r = await fetchOK(p);
   check(`GET ${p}`, r.ok, r.error || (r.ok ? '' : `${r.status}`));
 }
@@ -103,9 +100,9 @@ for (const p of ['/api/feed', '/api/calendar?source=primary&limit=2']) {
 console.log('\n  source code is fenced off');
 for (const p of ['/migrations/0001_init.sql', '/migrations/0003_pages.sql',
                  '/migrations/0007_profile.sql',
-                 '/test/parseFeed.test.mjs',
-                 '/package.json', '/wrangler.toml', '/functions/api/feed.js',
-                 '/functions/api/pages/[id].js', '/functions/api/profile/[id].js']) {
+                 '/test/parseFeed.test.ts', '/src/main.tsx', '/src/App.tsx',
+                 '/package.json', '/wrangler.toml', '/functions/api/feed.ts',
+                 '/functions/api/pages/[id].ts', '/functions/api/profile/[id].ts']) {
   const r = await fetchOK(p);
   const isHtmlFallback = r.body.startsWith('<!DOCTYPE html>') || r.body.startsWith('<html');
   const is404 = r.status === 404;

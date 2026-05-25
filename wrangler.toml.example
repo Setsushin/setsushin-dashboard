@@ -1,9 +1,12 @@
 name = "setsushin-dashboard"
 compatibility_date = "2025-09-01"
-# Static asset root. functions/ stays at repo root regardless and is
-# auto-discovered by Pages. migrations/ and test/ are dev-only and not
-# under public/ so they never get uploaded to the edge.
-pages_build_output_dir = "public"
+# Vite build output. `npm run build` (tsc + vite) emits the SPA to dist/;
+# CF Pages serves it as the static asset root. functions/ stays at repo root
+# and is auto-discovered + compiled (TypeScript) by Pages. src/, migrations/,
+# test/, and scripts/ are dev-only and never reach the edge.
+#
+# CF Pages project settings: Build command = `npm run build`, Output dir = `dist`.
+pages_build_output_dir = "dist"
 
 # ── D1 binding ────────────────────────────────────────────────────────
 # binding + database_name must match what functions/api/*.js reads
