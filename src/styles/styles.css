@@ -20,6 +20,23 @@ html, body {
 button { font-family: inherit; }
 a { color: inherit; text-decoration: none; }
 
+/* Themed scrollbars — transparent track + muted thumb via tokens, so they
+   adapt to light/dark/tone instead of the OS default whose light track
+   clashed with dark panels. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover { background: var(--fg-faded); }
+
 /* Global keyboard focus ring — peach hairline, offset so it never
    touches the element's own border. Mouse focus stays invisible. */
 :focus { outline: none; }
@@ -523,8 +540,6 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
   flex: 1; min-height: 0;
   overflow-y: auto;
 }
-.panel-body::-webkit-scrollbar { width: 6px; }
-.panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 /* Compact panels (1×1 cell) get a denser title to claw back vertical space. */
 .panel[data-size="compact"] { padding: 14px 18px; }
 .panel[data-size="compact"] .panel-head { margin-bottom: 8px; }
