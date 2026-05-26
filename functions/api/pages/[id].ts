@@ -7,6 +7,7 @@
 // PUT is full upsert: any field omitted from the body becomes NULL in D1.
 
 import { getUserEmail, json } from '../../_lib/auth';
+import { httpError } from '../../_lib/http';
 import { parseJson } from '../../_lib/parse';
 import { pagesPut } from '../../_lib/schemas';
 import type { Env } from '../../_lib/types';
@@ -17,7 +18,7 @@ export const onRequestPut: PagesFunction<Env, 'id'> = async ({ request, env, par
   const email = getUserEmail(request, env);
   const page_id = String(params.id || '').trim();
   if (!PAGE_ID_RE.test(page_id)) {
-    return json({ error: 'page_id must match /^[a-z0-9_-]+$/' }, { status: 400 });
+    return httpError(400, 'page_id must match /^[a-z0-9_-]+$/');
   }
   const r = await parseJson(request, pagesPut);
   if (r.error) return r.error;
@@ -50,7 +51,7 @@ export const onRequestDelete: PagesFunction<Env, 'id'> = async ({ request, env, 
   const email = getUserEmail(request, env);
   const page_id = String(params.id || '').trim();
   if (!PAGE_ID_RE.test(page_id)) {
-    return json({ error: 'page_id must match /^[a-z0-9_-]+$/' }, { status: 400 });
+    return httpError(400, 'page_id must match /^[a-z0-9_-]+$/');
   }
   const db = env.setsushin_dash;
   await db.prepare('DELETE FROM pages_local WHERE user_email = ? AND page_id = ?').bind(email, page_id).run();

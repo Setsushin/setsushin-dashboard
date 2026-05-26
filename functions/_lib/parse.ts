@@ -3,7 +3,7 @@
 // validation/coercion; these just move the result across the boundary.
 
 import { z } from 'zod';
-import { json } from './auth';
+import { httpError } from './http';
 
 // Read the JSON body and validate it against `schema`. On failure, hand back a
 // ready-made 400 Response so callers can `if (r.error) return r.error;`.
@@ -14,7 +14,7 @@ export async function parseJson<S extends z.ZodType>(
   const raw = await request.json().catch(() => null);
   const r = schema.safeParse(raw);
   if (!r.success) {
-    return { error: json({ error: 'invalid body', issues: r.error.issues }, { status: 400 }) };
+    return { error: httpError(400, 'invalid body', { issues: r.error.issues }) };
   }
   return { data: r.data };
 }
