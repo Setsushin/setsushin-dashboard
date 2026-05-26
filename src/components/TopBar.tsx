@@ -1,4 +1,4 @@
-// TopBar — search, theme toggle, edit-mode toggle, notifications, user menu.
+// TopBar — search, theme toggle, edit-mode toggle, user menu.
 
 import { useEffect, useRef } from 'react';
 import { UserMenu } from './UserMenu';
@@ -71,10 +71,6 @@ export function TopBar({ mode, onToggleMode, editMode, onToggleEditMode, onMenuC
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
         </svg>
-      </button>
-      <button className="icon-btn" aria-label="Notifications">
-        <img src="icons/bell.svg" alt="" />
-        <span className="dot" />
       </button>
       <UserMenu me={me} />
     </header>

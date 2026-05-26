@@ -12,10 +12,12 @@ import { PageMetaModal, type PageMetaForm, type PageMetaInitial } from './compon
 import { TweaksPanel, TweakSection, TweakRadio, TweakColor, TweakText } from './components/tweaks';
 import { EditableGrid } from './edit/EditableGrid';
 import { TaskFormModal } from './widgets/TaskFormModal';
+import { ToastHost } from './components/Toast';
 import { useLayout } from './hooks/useLayout';
 import { useHashRoute } from './hooks/useHashRoute';
 import { useTweaks } from './hooks/useTweaks';
-import { onFocusTaskInput, onOpenTaskModal } from './lib/events';
+import { onFocusTaskInput, onOpenTaskModal, showToast } from './lib/events';
+import { apiFetch } from './lib/api';
 import { hexToSoft } from './lib/color';
 import type { GridItem, Me, Task } from './types';
 
@@ -155,16 +157,15 @@ export function App() {
     if (!page) return;
     setOverrideLocal(page.id, grid);
     try {
-      const r = await fetch('/api/layout', {
+      await apiFetch('/api/layout', {
         method: 'PUT',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ page_id: page.id, grid }),
       });
-      if (!r.ok) throw new Error(`PUT failed: HTTP ${r.status}`);
       setEditMode(false);
     } catch (err) {
       console.error('layout save failed:', err);
-      alert(`Save failed: ${(err as Error).message}\nYour changes are still in the editor.`);
+      showToast(`Save failed: ${(err as Error).message} — changes kept in the editor`, 'error');
       reloadOverrides();
     }
   };
@@ -179,17 +180,16 @@ export function App() {
     });
     setPageMetaModal(null);
     try {
-      const r = await fetch(`/api/pages/${encodeURIComponent(form.page_id)}`, {
+      await apiFetch(`/api/pages/${encodeURIComponent(form.page_id)}`, {
         method: 'PUT',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(form),
       });
-      if (!r.ok) throw new Error(`PUT failed: HTTP ${r.status}`);
       reloadPagesMeta();
       if (isAdd) window.location.hash = form.page_id;
     } catch (err) {
       console.error('page meta save failed:', err);
-      alert(`Save failed: ${(err as Error).message}`);
+      showToast(`Save failed: ${(err as Error).message}`, 'error');
       reloadPagesMeta();
     }
   };
@@ -200,14 +200,13 @@ export function App() {
     setOverrideLocal(pageId, null);
     setPageMetaModal(null);
     try {
-      const r = await fetch(`/api/pages/${encodeURIComponent(pageId)}`, { method: 'DELETE' });
-      if (!r.ok) throw new Error(`DELETE failed: HTTP ${r.status}`);
+      await apiFetch(`/api/pages/${encodeURIComponent(pageId)}`, { method: 'DELETE' });
       reloadPagesMeta();
       reloadOverrides();
       if (window.location.hash.slice(1) === pageId) window.location.hash = '';
     } catch (err) {
       console.error('page delete failed:', err);
-      alert(`Delete failed: ${(err as Error).message}`);
+      showToast(`Delete failed: ${(err as Error).message}`, 'error');
       reloadPagesMeta();
       reloadOverrides();
     }
@@ -217,13 +216,12 @@ export function App() {
     if (!page) return;
     if (!window.confirm(`Reset "${page.id}" to layout.yml default?`)) return;
     try {
-      const r = await fetch(`/api/layout?page_id=${encodeURIComponent(page.id)}`, { method: 'DELETE' });
-      if (!r.ok) throw new Error(`DELETE failed: HTTP ${r.status}`);
+      await apiFetch(`/api/layout?page_id=${encodeURIComponent(page.id)}`, { method: 'DELETE' });
       setOverrideLocal(page.id, null);
       setEditMode(false);
     } catch (err) {
       console.error('layout reset failed:', err);
-      alert(`Reset failed: ${(err as Error).message}`);
+      showToast(`Reset failed: ${(err as Error).message}`, 'error');
     }
   };
 
@@ -304,6 +302,8 @@ export function App() {
         task={taskModal && typeof taskModal === 'object' ? taskModal : null}
         onClose={closeTaskModal}
       />
+
+      <ToastHost />
 
       <TweaksPanel title="Tweaks">
         <TweakSection label="Theme" />

@@ -5,6 +5,8 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { Panel } from './Panel';
 import { registerWidget } from './registry';
 import { renderMarkdown } from '../lib/markdown';
+import { apiFetch } from '../lib/api';
+import { showToast } from '../lib/events';
 import type { JournalEntry } from '../types';
 import './journal.css';
 
@@ -379,30 +381,31 @@ function JournalWidget() {
   }, [reload]);
 
   const create = async ({ title, body, tags }: EntryDraft) => {
-    const r = await fetch('/api/journal', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ title, body, tags }),
-    });
-    if (!r.ok) {
-      alert('Save failed');
-      return;
+    try {
+      const r = await apiFetch('/api/journal', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ title, body, tags }),
+      });
+      const created = (await r.json()) as JournalEntry;
+      setEntries((prev) => [created, ...(prev || [])]);
+    } catch (err) {
+      showToast(`Save failed: ${(err as Error).message}`, 'error');
     }
-    const created = (await r.json()) as JournalEntry;
-    setEntries((prev) => [created, ...(prev || [])]);
   };
 
   const update = async (id: number, patch: EntryDraft) => {
     const now = Math.floor(Date.now() / 1000);
     setEntries((prev) => (prev || []).map((e) => (e.id === id ? { ...e, ...patch, updated_at: now } : e)));
     setEditingId(null);
-    const r = await fetch(`/api/journal/${id}`, {
-      method: 'PATCH',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(patch),
-    });
-    if (!r.ok) {
-      alert('Update failed; reloading');
+    try {
+      await apiFetch(`/api/journal/${id}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(patch),
+      });
+    } catch (err) {
+      showToast(`Update failed: ${(err as Error).message} — reloading`, 'error');
       void reload();
     }
   };
@@ -411,9 +414,10 @@ function JournalWidget() {
     if (!window.confirm('Delete this entry?')) return;
     setEntries((prev) => (prev || []).filter((e) => e.id !== id));
     setEditingId(null);
-    const r = await fetch(`/api/journal/${id}`, { method: 'DELETE' });
-    if (!r.ok) {
-      alert('Delete failed; reloading');
+    try {
+      await apiFetch(`/api/journal/${id}`, { method: 'DELETE' });
+    } catch (err) {
+      showToast(`Delete failed: ${(err as Error).message} — reloading`, 'error');
       void reload();
     }
   };
@@ -472,7 +476,7 @@ function JournalWidget() {
       await navigator.clipboard.writeText(md);
       setCopyAck(true);
     } catch (err) {
-      alert('Copy failed: ' + (err as Error).message);
+      showToast('Copy failed: ' + (err as Error).message, 'error');
     }
   };
 

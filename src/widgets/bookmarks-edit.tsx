@@ -2,6 +2,8 @@
 // (fetch + optimistic create/remove) and the "+ Add bookmark" modal.
 
 import { useCallback, useEffect, useState } from 'react';
+import { apiFetch } from '../lib/api';
+import { showToast } from '../lib/events';
 import type { Bookmark } from '../types';
 
 // Apple system-color inspired palette. The first is the default for new ones.
@@ -52,16 +54,15 @@ export function useBookmarks(
     const sort_order = items?.length ?? 0;
     setItems((prev) => [...(prev || []), { ...form, id: -Date.now(), sort_order }]);
     try {
-      const r = await fetch('/api/bookmarks', {
+      await apiFetch('/api/bookmarks', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ bucket, ...form, sort_order }),
       });
-      if (!r.ok) throw new Error(`POST failed: HTTP ${r.status}`);
       reload();
     } catch (err) {
       console.error(err);
-      alert(`Add failed: ${(err as Error).message}`);
+      showToast(`Add failed: ${(err as Error).message}`, 'error');
       reload();
     }
   };
@@ -70,11 +71,10 @@ export function useBookmarks(
     if (!bucket) return;
     setItems((prev) => (prev || []).filter((it) => it.id !== id));
     try {
-      const r = await fetch(`/api/bookmarks/${id}`, { method: 'DELETE' });
-      if (!r.ok) throw new Error(`DELETE failed: HTTP ${r.status}`);
+      await apiFetch(`/api/bookmarks/${id}`, { method: 'DELETE' });
     } catch (err) {
       console.error(err);
-      alert(`Delete failed: ${(err as Error).message}`);
+      showToast(`Delete failed: ${(err as Error).message}`, 'error');
       reload();
     }
   };

@@ -7,6 +7,8 @@ import { Panel } from './Panel';
 import { registerWidget } from './registry';
 import { mockHint } from './mockHint';
 import { useFetch } from '../hooks/useFetch';
+import { apiFetch } from '../lib/api';
+import { showToast } from '../lib/events';
 import { tint } from '../lib/color';
 import type { Asset, AssetExposure, FxData, WidgetProps } from '../types';
 import './assets.css';
@@ -489,32 +491,29 @@ function AssetsWidget({ config }: WidgetProps) {
   const grandJpyMan = items.reduce((s, i) => s + i.jpy_man, 0);
 
   const mutate = async (
-    label: string,
     optimistic: () => void,
     doFetch: () => Promise<Response>,
     { reloadOnSuccess = false }: { reloadOnSuccess?: boolean } = {},
   ) => {
     optimistic();
     try {
-      const r = await doFetch();
-      if (!r.ok) throw new Error(`${label} failed: HTTP ${r.status}`);
+      await doFetch();
       if (reloadOnSuccess) void reload();
     } catch (err) {
       console.error(err);
-      alert(`${(err as Error).message}\nReverting.`);
+      showToast(`${(err as Error).message} — reverted`, 'error');
       void reload();
     }
   };
 
   const create = (form: AssetFormValues) =>
     mutate(
-      'POST',
       () => {
         setAddingLayer(null);
         setAssets((a) => [...(a || []), { ...form, id: -Date.now() }]);
       },
       () =>
-        fetch('/api/assets', {
+        apiFetch('/api/assets', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(form),
@@ -524,13 +523,12 @@ function AssetsWidget({ config }: WidgetProps) {
 
   const update = (id: number, patch: AssetFormValues) =>
     mutate(
-      'PATCH',
       () => {
         setEditingId(null);
         setAssets((a) => (a || []).map((it) => (it.id === id ? { ...it, ...patch } : it)));
       },
       () =>
-        fetch(`/api/assets/${id}`, {
+        apiFetch(`/api/assets/${id}`, {
           method: 'PATCH',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(patch),
@@ -540,9 +538,8 @@ function AssetsWidget({ config }: WidgetProps) {
   const remove = (id: number, name: string) => {
     if (!window.confirm(`Delete "${name}"?`)) return;
     return mutate(
-      'DELETE',
       () => setAssets((a) => (a || []).filter((it) => it.id !== id)),
-      () => fetch(`/api/assets/${id}`, { method: 'DELETE' }),
+      () => apiFetch(`/api/assets/${id}`, { method: 'DELETE' }),
     );
   };
 
@@ -552,7 +549,7 @@ function AssetsWidget({ config }: WidgetProps) {
       await navigator.clipboard.writeText(buildMarkdown(items, fx));
       setCopyAck(true);
     } catch (err) {
-      alert('Copy failed: ' + (err as Error).message);
+      showToast('Copy failed: ' + (err as Error).message, 'error');
     }
   };
   useEffect(() => {

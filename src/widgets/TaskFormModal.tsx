@@ -4,6 +4,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { mutateTasks } from '../lib/events';
+import { apiFetch } from '../lib/api';
 import { deriveKind, dueAtToLocalInput, localInputToDueAt, TAG_PRESETS } from './tasks-utils';
 import type { Task } from '../types';
 
@@ -61,7 +62,7 @@ export function TaskFormModal({ open, task, onClose }: TaskFormModalProps) {
         await mutateTasks({
           optimistic: { patch: [{ id: task.id, ...payload }] },
           run: () =>
-            fetch(`/api/tasks/${task.id}`, {
+            apiFetch(`/api/tasks/${task.id}`, {
               method: 'PATCH',
               headers: { 'content-type': 'application/json' },
               body: JSON.stringify(payload),
@@ -70,7 +71,7 @@ export function TaskFormModal({ open, task, onClose }: TaskFormModalProps) {
       } else {
         await mutateTasks({
           run: () =>
-            fetch('/api/tasks', {
+            apiFetch('/api/tasks', {
               method: 'POST',
               headers: { 'content-type': 'application/json' },
               body: JSON.stringify(payload),
@@ -110,7 +111,7 @@ export function TaskFormModal({ open, task, onClose }: TaskFormModalProps) {
     try {
       await mutateTasks({
         optimistic: { removeIds: [task.id] },
-        run: () => fetch(`/api/tasks/${task.id}`, { method: 'DELETE' }),
+        run: () => apiFetch(`/api/tasks/${task.id}`, { method: 'DELETE' }),
       });
     } finally {
       onClose();

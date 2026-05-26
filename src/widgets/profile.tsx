@@ -5,6 +5,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Panel } from './Panel';
 import { registerWidget } from './registry';
 import { PlusIcon } from './icons';
+import { apiFetch } from '../lib/api';
+import { showToast } from '../lib/events';
 import type { ProfileItem } from '../types';
 import './profile.css';
 
@@ -234,7 +236,7 @@ function ProfileRow({
       await navigator.clipboard.writeText(item.value);
       setCopied(true);
     } catch (err) {
-      alert('Copy failed: ' + (err as Error).message);
+      showToast('Copy failed: ' + (err as Error).message, 'error');
     }
   };
 
@@ -315,32 +317,29 @@ function ProfileWidget() {
   const categories = [...new Set(list.map((i) => (i.category || '').trim()).filter(Boolean))];
 
   const mutate = async (
-    label: string,
     optimistic: () => void,
     doFetch: () => Promise<Response>,
     { reloadOnSuccess = false }: { reloadOnSuccess?: boolean } = {},
   ) => {
     optimistic();
     try {
-      const r = await doFetch();
-      if (!r.ok) throw new Error(`${label} failed: HTTP ${r.status}`);
+      await doFetch();
       if (reloadOnSuccess) void reload();
     } catch (err) {
       console.error(err);
-      alert(`${(err as Error).message}\nReverting.`);
+      showToast(`${(err as Error).message} — reverted`, 'error');
       void reload();
     }
   };
 
   const create = (form: ProfileFormValues) =>
     mutate(
-      'POST',
       () => {
         setAdding(false);
         setItems((a) => [...(a || []), { ...form, id: -Date.now() }]);
       },
       () =>
-        fetch('/api/profile', {
+        apiFetch('/api/profile', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(form),
@@ -350,13 +349,12 @@ function ProfileWidget() {
 
   const update = (id: number, patch: ProfileFormValues) =>
     mutate(
-      'PATCH',
       () => {
         setEditingId(null);
         setItems((a) => (a || []).map((it) => (it.id === id ? { ...it, ...patch } : it)));
       },
       () =>
-        fetch(`/api/profile/${id}`, {
+        apiFetch(`/api/profile/${id}`, {
           method: 'PATCH',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(patch),
@@ -366,9 +364,8 @@ function ProfileWidget() {
   const remove = (id: number, label: string) => {
     if (!window.confirm(`Delete "${label}"?`)) return;
     return mutate(
-      'DELETE',
       () => setItems((a) => (a || []).filter((it) => it.id !== id)),
-      () => fetch(`/api/profile/${id}`, { method: 'DELETE' }),
+      () => apiFetch(`/api/profile/${id}`, { method: 'DELETE' }),
     );
   };
 
@@ -421,7 +418,10 @@ function ProfileWidget() {
           }),
         ),
       ).then((rs) => {
-        if (rs.some((r) => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.ok))) void reload();
+        if (rs.some((r) => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.ok))) {
+          showToast('Reorder failed — reloading', 'error');
+          void reload();
+        }
       });
     }
   };

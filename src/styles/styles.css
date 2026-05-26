@@ -271,12 +271,6 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
    than .icon-btn { display: grid } so the desktop hide wins. */
 .topbar .menu-btn { display: none; }
 .icon-btn:hover svg { opacity: 1; }
-.icon-btn .dot {
-  position: absolute; top: 9px; right: 11px;
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--accent);
-  border: 1.5px solid var(--bg-card);
-}
 .icon-btn.is-active {
   background: var(--accent-soft);
   border-color: var(--accent);

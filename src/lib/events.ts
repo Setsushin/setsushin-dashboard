@@ -11,6 +11,25 @@ export interface TasksOptimistic {
 const TASKS_EVENT = 'tasks-updated';
 const OPEN_TASK_MODAL = 'open-task-modal';
 const FOCUS_TASK_INPUT = 'focus-task-input';
+const TOAST_EVENT = 'app-toast';
+
+export type ToastTone = 'error' | 'success' | 'info';
+export interface ToastDetail {
+  message: string;
+  tone: ToastTone;
+}
+
+// Fire a transient toast (rendered by components/Toast ToastHost). Use for
+// user-facing failures that used to call window.alert().
+export function showToast(message: string, tone: ToastTone = 'info'): void {
+  window.dispatchEvent(new CustomEvent<ToastDetail>(TOAST_EVENT, { detail: { message, tone } }));
+}
+
+export function onToast(handler: (t: ToastDetail) => void): () => void {
+  const listener = (e: Event) => handler((e as CustomEvent<ToastDetail>).detail);
+  window.addEventListener(TOAST_EVENT, listener);
+  return () => window.removeEventListener(TOAST_EVENT, listener);
+}
 
 // dispatch with optimistic → mutate local caches synchronously (no network).
 // dispatch with no args → reconcile (reload from /api/tasks).
@@ -38,6 +57,8 @@ export async function mutateTasks({
   if (optimistic) dispatchTasksUpdated(optimistic);
   try {
     await run();
+  } catch (err) {
+    showToast((err as Error).message || 'Task update failed', 'error');
   } finally {
     dispatchTasksUpdated();
   }

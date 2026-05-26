@@ -6,6 +6,7 @@ import { Panel } from './Panel';
 import { registerWidget, useWidgetSize } from './registry';
 import { useTasksList } from '../hooks/useTasksList';
 import { dispatchTasksUpdated, mutateTasks, openTaskModal } from '../lib/events';
+import { apiFetch } from '../lib/api';
 import { fmtDue } from './tasks-utils';
 import type { WidgetProps } from '../types';
 import './tasks.css';
@@ -71,7 +72,7 @@ function TasksWidget({ config }: WidgetProps) {
     return mutateTasks({
       optimistic: { patch: [{ id, done: !t.done }] },
       run: () =>
-        fetch(`/api/tasks/${id}`, {
+        apiFetch(`/api/tasks/${id}`, {
           method: 'PATCH',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ done: !t.done }),
@@ -82,7 +83,7 @@ function TasksWidget({ config }: WidgetProps) {
   const remove = (id: number) =>
     mutateTasks({
       optimistic: { removeIds: [id] },
-      run: () => fetch(`/api/tasks/${id}`, { method: 'DELETE' }),
+      run: () => apiFetch(`/api/tasks/${id}`, { method: 'DELETE' }),
     });
 
   const clearDone = () => {
@@ -90,7 +91,12 @@ function TasksWidget({ config }: WidgetProps) {
     if (done.length === 0) return;
     return mutateTasks({
       optimistic: { removeIds: done.map((t) => t.id) },
-      run: () => Promise.allSettled(done.map((t) => fetch(`/api/tasks/${t.id}`, { method: 'DELETE' }))),
+      run: async () => {
+        const rs = await Promise.allSettled(
+          done.map((t) => apiFetch(`/api/tasks/${t.id}`, { method: 'DELETE' })),
+        );
+        if (rs.some((r) => r.status === 'rejected')) throw new Error('Some tasks could not be cleared');
+      },
     });
   };
 
