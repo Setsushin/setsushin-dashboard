@@ -3,15 +3,38 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test test/*.test.mjs",
+    "dev": "vite",
+    "dev:cf": "wrangler pages dev",
+    "build": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.functions.json --noEmit && vite build",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.functions.json --noEmit",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "smoke": "node scripts/smoke.mjs",
-    "dev": "npx wrangler@latest pages dev --port 8787 --ip 127.0.0.1",
-    "deploy": "npx wrangler@latest pages deploy",
-    "login": "npx wrangler@latest login",
-    "db:create": "npx wrangler@latest d1 create setsushin-dash",
-    "db:migrate:local": "npx wrangler@latest d1 migrations apply setsushin-dash --local",
-    "db:migrate:remote": "npx wrangler@latest d1 migrations apply setsushin-dash --remote",
-    "db:shell:local": "npx wrangler@latest d1 execute setsushin-dash --local --command",
-    "db:shell:remote": "npx wrangler@latest d1 execute setsushin-dash --remote --command"
+    "deploy": "npm run build && wrangler pages deploy",
+    "login": "wrangler login",
+    "db:create": "wrangler d1 create setsushin-dash",
+    "db:migrate:local": "wrangler d1 migrations apply setsushin-dash --local",
+    "db:migrate:remote": "wrangler d1 migrations apply setsushin-dash --remote",
+    "db:shell:local": "wrangler d1 execute setsushin-dash --local --command",
+    "db:shell:remote": "wrangler d1 execute setsushin-dash --remote --command"
+  },
+  "dependencies": {
+    "dompurify": "^3.2.4",
+    "js-yaml": "^4.1.0",
+    "marked": "^14.1.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241127.0",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.5",
+    "vitest": "^3.0.5"
   }
 }

@@ -16,18 +16,25 @@ Layouts are config-driven (`layout.yml`) and editable in-place; per-user state
 
 ## Stack
 
-React 18 SPA served via CDN babel-standalone — **no build step**. Hosted on
-Cloudflare Pages, with Pages Functions for the backend and D1 for storage.
+React 18 + TypeScript SPA bundled with **Vite**. Hosted on Cloudflare Pages,
+with Pages Functions (TypeScript) for the backend and D1 for storage.
 Single-user, gated by Cloudflare Access in production.
 
 ## Run it
 
 ```sh
-npm run dev      # wrangler pages dev → http://127.0.0.1:8787
-npm test         # unit tests
-npm run smoke    # end-to-end check against the dev server
-npm run deploy   # ship to Cloudflare Pages
+npm install
+npm run dev        # vite dev server → http://127.0.0.1:8787 (proxies /api → :8788)
+npm run dev:cf     # wrangler pages dev → Functions + D1 on :8788
+npm test           # vitest unit tests
+npm run typecheck  # tsc (app + functions)
+npm run build      # tsc + vite build → dist/
+npm run smoke      # end-to-end check against a running dev server
+npm run deploy     # build + ship to Cloudflare Pages
 ```
+
+Full local dev runs both `npm run dev` (UI, HMR) and `npm run dev:cf`
+(Functions + D1); the Vite server proxies `/api/*` to wrangler.
 
 Architecture, conventions, and how to add a widget live in
 [CLAUDE.md](./CLAUDE.md).
