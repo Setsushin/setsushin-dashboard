@@ -5,19 +5,9 @@
 // POST /api/tasks  → body: {text, description?, tag?, kind?, done?, due_at?}
 
 import { getUserEmail, json } from '../_lib/auth';
-import { asString } from '../_lib/coerce';
+import { parseJson } from '../_lib/parse';
+import { rowToTask, taskInsert, type TaskRow } from '../_lib/schemas';
 import type { Env } from '../_lib/types';
-
-interface TaskRow {
-  id: number;
-  text: string;
-  description: string | null;
-  tag: string | null;
-  kind: string | null;
-  done: number;
-  due_at: number | null;
-  created_at: number;
-}
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const email = getUserEmail(request, env);
@@ -32,49 +22,29 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     )
     .bind(email)
     .all<TaskRow>();
-  return json(
-    results.map((r) => ({ ...r, done: r.done === 1 })),
-    { headers: { 'cache-control': 'no-store' } },
-  );
+  return json(results.map(rowToTask), { headers: { 'cache-control': 'no-store' } });
 };
-
-// Coerce due_at into a positive integer (unix seconds) or null.
-function coerceDueAt(v: unknown): number | null {
-  if (v == null || v === '') return null;
-  const n = Number(v);
-  return Number.isFinite(n) && n > 0 ? Math.floor(n) : null;
-}
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const email = getUserEmail(request, env);
-  const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-  const text = asString(body?.text).trim();
-  if (!text) {
-    return json(
-      { error: 'body must be { text: string, description?, tag?, kind?, done?, due_at? }' },
-      { status: 400 },
-    );
-  }
-  const description = asString(body?.description).trim() || null;
-  const dueAt = coerceDueAt(body?.due_at);
-  const tag = body?.tag != null ? String(body.tag) : null;
-  const kind = body?.kind != null ? String(body.kind) : null;
-  const done = body?.done ? 1 : 0;
+  const r = await parseJson(request, taskInsert);
+  if (r.error) return r.error;
+  const { text, description, tag, kind, done, due_at } = r.data;
   const db = env.setsushin_dash;
   const { meta } = await db
     .prepare(
       `INSERT INTO tasks (user_email, text, description, tag, kind, done, due_at)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
     )
-    .bind(email, text, description, tag, kind, done, dueAt)
+    .bind(email, text, description ?? null, tag ?? null, kind ?? null, done ? 1 : 0, due_at ?? null)
     .run();
   return json({
     id: meta.last_row_id,
     text,
-    description,
-    tag,
-    kind,
-    done: !!done,
-    due_at: dueAt,
+    description: description ?? null,
+    tag: tag ?? null,
+    kind: kind ?? null,
+    done,
+    due_at: due_at ?? null,
   });
 };

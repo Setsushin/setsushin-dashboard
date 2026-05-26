@@ -5,7 +5,8 @@
 // POST /api/bookmarks              → body: {bucket, name, url, mark?, color?, sort_order?}
 
 import { getUserEmail, json } from '../_lib/auth';
-import { asFiniteNumber, asString } from '../_lib/coerce';
+import { parseJson } from '../_lib/parse';
+import { bookmarkInsert } from '../_lib/schemas';
 import type { Env } from '../_lib/types';
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
@@ -35,23 +36,24 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const email = getUserEmail(request, env);
-  const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-  const bucket = asString(body?.bucket).trim();
-  const name = asString(body?.name).trim();
-  const url = asString(body?.url).trim();
-  if (!bucket || !name || !url) {
-    return json({ error: 'body must be { bucket, name, url, mark?, color?, sort_order? }' }, { status: 400 });
-  }
-  const mark = asString(body?.mark).trim() || null;
-  const color = asString(body?.color).trim() || null;
-  const sort_order = asFiniteNumber(body?.sort_order, 0);
+  const r = await parseJson(request, bookmarkInsert);
+  if (r.error) return r.error;
+  const { bucket, name, url, mark, color, sort_order } = r.data;
   const db = env.setsushin_dash;
   const { meta } = await db
     .prepare(
       `INSERT INTO bookmarks_local (user_email, bucket, name, url, mark, color, sort_order)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
     )
-    .bind(email, bucket, name, url, mark, color, sort_order)
+    .bind(email, bucket, name, url, mark ?? null, color ?? null, sort_order)
     .run();
-  return json({ id: meta.last_row_id, bucket, name, url, mark, color, sort_order });
+  return json({
+    id: meta.last_row_id,
+    bucket,
+    name,
+    url,
+    mark: mark ?? null,
+    color: color ?? null,
+    sort_order,
+  });
 };

@@ -7,12 +7,11 @@
 // PUT is full upsert: any field omitted from the body becomes NULL in D1.
 
 import { getUserEmail, json } from '../../_lib/auth';
-import { asFiniteNumber } from '../../_lib/coerce';
+import { parseJson } from '../../_lib/parse';
+import { pagesPut } from '../../_lib/schemas';
 import type { Env } from '../../_lib/types';
 
 const PAGE_ID_RE = /^[a-z0-9_-]+$/i;
-
-const trim = (v: unknown): string | null => (typeof v === 'string' ? v.trim() : null);
 
 export const onRequestPut: PagesFunction<Env, 'id'> = async ({ request, env, params }) => {
   const email = getUserEmail(request, env);
@@ -20,16 +19,14 @@ export const onRequestPut: PagesFunction<Env, 'id'> = async ({ request, env, par
   if (!PAGE_ID_RE.test(page_id)) {
     return json({ error: 'page_id must match /^[a-z0-9_-]+$/' }, { status: 400 });
   }
-  const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-  if (!body || typeof body !== 'object') {
-    return json({ error: 'body must be JSON' }, { status: 400 });
-  }
+  const r = await parseJson(request, pagesPut);
+  if (r.error) return r.error;
   const fields = {
-    label: trim(body.label) || null,
-    icon: trim(body.icon) || null,
-    title: trim(body.title) || null,
-    subtitle: trim(body.subtitle) || null,
-    sort_order: asFiniteNumber(body.sort_order, 100),
+    label: r.data.label ?? null,
+    icon: r.data.icon ?? null,
+    title: r.data.title ?? null,
+    subtitle: r.data.subtitle ?? null,
+    sort_order: r.data.sort_order,
   };
   const db = env.setsushin_dash;
   await db

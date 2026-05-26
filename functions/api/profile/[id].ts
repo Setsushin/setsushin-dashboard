@@ -4,32 +4,24 @@
 // DELETE /api/profile/123  → remove
 
 import { getUserEmail, json } from '../../_lib/auth';
-import { buildPatch, finiteOrNull, trimmedOrNull, type FieldSpec } from '../../_lib/patch';
+import { parseJson, toSqlSet } from '../../_lib/parse';
+import { profilePatch } from '../../_lib/schemas';
 import type { Env } from '../../_lib/types';
-
-const FIELDS: Record<string, FieldSpec> = {
-  category: {
-    sql: 'category = ?',
-    prep: (v) => (v == null ? null : trimmedOrNull(v)),
-    nullable: true,
-  },
-  label: { sql: 'label = ?', prep: trimmedOrNull },
-  value: { sql: 'value = ?', prep: (v) => (typeof v === 'string' ? v : null) },
-  note: {
-    sql: 'note = ?',
-    prep: (v) => (v == null ? null : trimmedOrNull(v)),
-    nullable: true,
-  },
-  sort_order: { sql: 'sort_order = ?', prep: finiteOrNull },
-};
 
 export const onRequestPatch: PagesFunction<Env, 'id'> = async ({ request, env, params }) => {
   const email = getUserEmail(request, env);
   const id = parseInt(String(params.id), 10);
   if (!Number.isFinite(id) || id <= 0) return json({ error: 'invalid id' }, { status: 400 });
 
-  const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
-  const { sets, binds } = buildPatch(body, FIELDS);
+  const r = await parseJson(request, profilePatch);
+  if (r.error) return r.error;
+  const { sets, binds } = toSqlSet(r.data, {
+    category: 'category',
+    label: 'label',
+    value: 'value',
+    note: 'note',
+    sort_order: 'sort_order',
+  });
   if (sets.length === 0) return json({ error: 'no updatable fields' }, { status: 400 });
   sets.push('updated_at = unixepoch()');
 

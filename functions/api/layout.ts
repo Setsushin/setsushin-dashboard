@@ -6,6 +6,8 @@
 // DELETE /api/layout?page_id=home   → wipe one page (= "reset to default")
 
 import { getUserEmail, json } from '../_lib/auth';
+import { parseJson } from '../_lib/parse';
+import { layoutPut } from '../_lib/schemas';
 import type { Env } from '../_lib/types';
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
@@ -28,12 +30,9 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
 
 export const onRequestPut: PagesFunction<Env> = async ({ request, env }) => {
   const email = getUserEmail(request, env);
-  const body = (await request.json().catch(() => null)) as
-    | { page_id?: unknown; grid?: unknown }
-    | null;
-  if (!body || typeof body.page_id !== 'string' || !Array.isArray(body.grid)) {
-    return json({ error: 'body must be { page_id: string, grid: array }' }, { status: 400 });
-  }
+  const r = await parseJson(request, layoutPut);
+  if (r.error) return r.error;
+  const { page_id, grid } = r.data;
   const db = env.setsushin_dash;
   await db
     .prepare(
@@ -43,9 +42,9 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, env }) => {
          grid_json  = excluded.grid_json,
          updated_at = excluded.updated_at`,
     )
-    .bind(email, body.page_id, JSON.stringify(body.grid))
+    .bind(email, page_id, JSON.stringify(grid))
     .run();
-  return json({ ok: true, page_id: body.page_id });
+  return json({ ok: true, page_id });
 };
 
 export const onRequestDelete: PagesFunction<Env> = async ({ request, env }) => {

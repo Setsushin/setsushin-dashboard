@@ -4,30 +4,26 @@
 // DELETE /api/assets/123  → remove
 
 import { getUserEmail, json } from '../../_lib/auth';
-import { buildPatch, finiteOrNull, trimmedOrNull, type FieldSpec } from '../../_lib/patch';
-import { VALID_EXPOSURE } from '../assets';
+import { parseJson, toSqlSet } from '../../_lib/parse';
+import { assetPatch } from '../../_lib/schemas';
 import type { Env } from '../../_lib/types';
-
-const FIELDS: Record<string, FieldSpec> = {
-  layer: { sql: 'layer = ?', prep: trimmedOrNull },
-  sublayer: { sql: 'sublayer = ?', prep: (v) => (v == null ? null : String(v) || null), nullable: true },
-  name: { sql: 'name = ?', prep: trimmedOrNull },
-  jpy_man: { sql: 'jpy_man = ?', prep: finiteOrNull },
-  exposure: {
-    sql: 'exposure = ?',
-    prep: (v) => (typeof v === 'string' && VALID_EXPOSURE.has(v.toLowerCase()) ? v.toLowerCase() : null),
-  },
-  account: { sql: 'account = ?', prep: (v) => (v == null ? null : String(v) || null), nullable: true },
-  sort_order: { sql: 'sort_order = ?', prep: finiteOrNull },
-};
 
 export const onRequestPatch: PagesFunction<Env, 'id'> = async ({ request, env, params }) => {
   const email = getUserEmail(request, env);
   const id = parseInt(String(params.id), 10);
   if (!Number.isFinite(id) || id <= 0) return json({ error: 'invalid id' }, { status: 400 });
 
-  const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
-  const { sets, binds } = buildPatch(body, FIELDS);
+  const r = await parseJson(request, assetPatch);
+  if (r.error) return r.error;
+  const { sets, binds } = toSqlSet(r.data, {
+    layer: 'layer',
+    sublayer: 'sublayer',
+    name: 'name',
+    jpy_man: 'jpy_man',
+    exposure: 'exposure',
+    account: 'account',
+    sort_order: 'sort_order',
+  });
   if (sets.length === 0) return json({ error: 'no updatable fields' }, { status: 400 });
   sets.push('updated_at = unixepoch()');
 

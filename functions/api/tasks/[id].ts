@@ -4,37 +4,25 @@
 // DELETE /api/tasks/123   → remove
 
 import { getUserEmail, json } from '../../_lib/auth';
-import { buildPatch, type FieldSpec } from '../../_lib/patch';
+import { parseJson, toSqlSet } from '../../_lib/parse';
+import { taskPatch } from '../../_lib/schemas';
 import type { Env } from '../../_lib/types';
-
-const FIELDS: Record<string, FieldSpec> = {
-  text: { sql: 'text = ?', prep: (v) => (typeof v === 'string' ? v : null) },
-  description: {
-    sql: 'description = ?',
-    prep: (v) => (v == null ? null : typeof v === 'string' && v.trim() ? v.trim() : null),
-    nullable: true,
-  },
-  tag: { sql: 'tag = ?', prep: (v) => v ?? null, nullable: true },
-  kind: { sql: 'kind = ?', prep: (v) => v ?? null, nullable: true },
-  done: { sql: 'done = ?', prep: (v) => (typeof v === 'boolean' ? (v ? 1 : 0) : null) },
-  due_at: {
-    sql: 'due_at = ?',
-    prep: (v) => {
-      if (v == null || v === '') return null;
-      const n = Number(v);
-      return Number.isFinite(n) && n > 0 ? Math.floor(n) : null;
-    },
-    nullable: true,
-  },
-};
 
 export const onRequestPatch: PagesFunction<Env, 'id'> = async ({ request, env, params }) => {
   const email = getUserEmail(request, env);
   const id = parseInt(String(params.id), 10);
   if (!Number.isFinite(id) || id <= 0) return json({ error: 'invalid id' }, { status: 400 });
 
-  const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
-  const { sets, binds } = buildPatch(body, FIELDS);
+  const r = await parseJson(request, taskPatch);
+  if (r.error) return r.error;
+  const { sets, binds } = toSqlSet(r.data, {
+    text: 'text',
+    description: 'description',
+    tag: 'tag',
+    kind: 'kind',
+    done: { col: 'done', enc: (v) => (v ? 1 : 0) },
+    due_at: 'due_at',
+  });
   if (sets.length === 0) return json({ error: 'no updatable fields' }, { status: 400 });
 
   const db = env.setsushin_dash;

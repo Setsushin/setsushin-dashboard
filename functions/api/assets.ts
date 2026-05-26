@@ -5,10 +5,9 @@
 // POST /api/assets  → body: {layer, name, jpy_man, exposure, sublayer?, account?, sort_order?}
 
 import { getUserEmail, json } from '../_lib/auth';
-import { asFiniteNumber, asString } from '../_lib/coerce';
+import { parseJson } from '../_lib/parse';
+import { assetInsert } from '../_lib/schemas';
 import type { Env } from '../_lib/types';
-
-export const VALID_EXPOSURE = new Set(['jpy', 'usd', 'mixed-50-50']);
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const email = getUserEmail(request, env);
@@ -27,25 +26,9 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const email = getUserEmail(request, env);
-  const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-  const layer = asString(body?.layer).trim();
-  const name = asString(body?.name).trim();
-  const jpy_man = Number(body?.jpy_man);
-  const exposure = asString(body?.exposure).trim().toLowerCase();
-
-  if (!layer || !name || !Number.isFinite(jpy_man) || !VALID_EXPOSURE.has(exposure)) {
-    return json(
-      {
-        error:
-          'body must be { layer, name, jpy_man:number, exposure: jpy|usd|mixed-50-50, sublayer?, account?, sort_order? }',
-      },
-      { status: 400 },
-    );
-  }
-
-  const sublayer = body?.sublayer != null ? String(body.sublayer) : null;
-  const account = asString(body?.account).trim() || null;
-  const sort_order = asFiniteNumber(body?.sort_order, 0);
+  const r = await parseJson(request, assetInsert);
+  if (r.error) return r.error;
+  const { layer, name, jpy_man, exposure, sublayer, account, sort_order } = r.data;
 
   const db = env.setsushin_dash;
   const { meta } = await db
@@ -53,8 +36,17 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       `INSERT INTO assets (user_email, layer, sublayer, name, jpy_man, exposure, account, sort_order)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     )
-    .bind(email, layer, sublayer, name, jpy_man, exposure, account, sort_order)
+    .bind(email, layer, sublayer ?? null, name, jpy_man, exposure, account ?? null, sort_order)
     .run();
 
-  return json({ id: meta.last_row_id, layer, sublayer, name, jpy_man, exposure, account, sort_order });
+  return json({
+    id: meta.last_row_id,
+    layer,
+    sublayer: sublayer ?? null,
+    name,
+    jpy_man,
+    exposure,
+    account: account ?? null,
+    sort_order,
+  });
 };

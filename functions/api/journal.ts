@@ -5,23 +5,9 @@
 // POST /api/journal  → body: {body, title?, tags?}; returns the created row.
 
 import { getUserEmail, json } from '../_lib/auth';
-import { parseTags, serializeTags } from '../_lib/journal-tags';
-import { asString } from '../_lib/coerce';
+import { parseJson } from '../_lib/parse';
+import { journalInsert, rowToJournal, serializeTags, type JournalRow } from '../_lib/schemas';
 import type { Env } from '../_lib/types';
-
-interface JournalRow {
-  id: number;
-  title: string | null;
-  body: string;
-  tags: string | null;
-  created_at: number;
-  updated_at: number;
-}
-
-function normalizeTitle(input: unknown): string | null {
-  if (typeof input !== 'string') return null;
-  return input.trim() || null;
-}
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const email = getUserEmail(request, env);
@@ -35,21 +21,15 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     )
     .bind(email)
     .all<JournalRow>();
-  return json(
-    results.map((r) => ({ ...r, tags: parseTags(r.tags) })),
-    { headers: { 'cache-control': 'no-store' } },
-  );
+  return json(results.map(rowToJournal), { headers: { 'cache-control': 'no-store' } });
 };
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const email = getUserEmail(request, env);
-  const payload = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-  const body = asString(payload?.body).trim();
-  if (!body) {
-    return json({ error: 'body must be { body: string, title?, tags?: string[] }' }, { status: 400 });
-  }
-  const title = normalizeTitle(payload?.title);
-  const tags = serializeTags(payload?.tags);
+  const r = await parseJson(request, journalInsert);
+  if (r.error) return r.error;
+  const { body, title, tags } = r.data;
+  const tagsSql = serializeTags(tags) ?? null;
   const now = Math.floor(Date.now() / 1000);
   const db = env.setsushin_dash;
   const { meta } = await db
@@ -57,14 +37,16 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       `INSERT INTO journal_entries (user_email, title, body, tags, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?)`,
     )
-    .bind(email, title, body, tags ?? null, now, now)
+    .bind(email, title ?? null, body, tagsSql, now, now)
     .run();
-  return json({
-    id: meta.last_row_id,
-    title,
-    body,
-    tags: parseTags(tags ?? null),
-    created_at: now,
-    updated_at: now,
-  });
+  return json(
+    rowToJournal({
+      id: meta.last_row_id as number,
+      title: title ?? null,
+      body,
+      tags: tagsSql,
+      created_at: now,
+      updated_at: now,
+    }),
+  );
 };

@@ -4,27 +4,23 @@
 // DELETE /api/bookmarks/<id>
 
 import { getUserEmail, json } from '../../_lib/auth';
-import { asFiniteNumber } from '../../_lib/coerce';
-import { buildPatch, type FieldSpec } from '../../_lib/patch';
+import { parseJson, toSqlSet } from '../../_lib/parse';
+import { bookmarkPatch } from '../../_lib/schemas';
 import type { Env } from '../../_lib/types';
-
-const FIELDS: Record<string, FieldSpec> = {
-  name: { sql: 'name = ?', prep: (v) => String(v).trim() },
-  url: { sql: 'url = ?', prep: (v) => String(v).trim() },
-  mark: { sql: 'mark = ?', prep: (v) => (v == null ? null : String(v).trim() || null), nullable: true },
-  color: { sql: 'color = ?', prep: (v) => (v == null ? null : String(v).trim() || null), nullable: true },
-  sort_order: { sql: 'sort_order = ?', prep: (v) => asFiniteNumber(v, 0) },
-};
 
 export const onRequestPatch: PagesFunction<Env, 'id'> = async ({ request, env, params }) => {
   const email = getUserEmail(request, env);
   const id = parseInt(String(params.id), 10);
   if (!Number.isInteger(id)) return json({ error: 'bad id' }, { status: 400 });
-  const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-  if (!body || typeof body !== 'object') {
-    return json({ error: 'body must be JSON' }, { status: 400 });
-  }
-  const { sets, binds } = buildPatch(body, FIELDS);
+  const r = await parseJson(request, bookmarkPatch);
+  if (r.error) return r.error;
+  const { sets, binds } = toSqlSet(r.data, {
+    name: 'name',
+    url: 'url',
+    mark: 'mark',
+    color: 'color',
+    sort_order: 'sort_order',
+  });
   if (sets.length === 0) return json({ error: 'no recognized fields' }, { status: 400 });
   sets.push('updated_at = unixepoch()');
   const db = env.setsushin_dash;
