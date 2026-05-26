@@ -17,7 +17,10 @@ export function renderMarkdown(src: string): string {
   } catch {
     return escapeHtml(src);
   }
-  html = DOMPurify.sanitize(html);
+  // Explicitly allow <img> (journal inline images, src=/api/images/<uuid>).
+  // Relative URLs already pass DOMPurify's default URI policy; this just
+  // pins the intent so a version bump can't silently drop images.
+  html = DOMPurify.sanitize(html, { ADD_TAGS: ['img'], ADD_ATTR: ['src', 'alt', 'title'] });
   // Force links to open in a new tab so a stray click never replaces the
   // dashboard. DOMPurify's output never pre-stamps target/rel on <a>.
   return html.replace(/<a /g, '<a target="_blank" rel="noopener noreferrer" ');

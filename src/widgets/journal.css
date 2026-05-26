@@ -30,6 +30,34 @@
 .journal-composer-foot {
   display: flex; align-items: center; gap: 10px;
 }
+
+/* Quiet icon button matching panel-action's restraint; sits in composer foot
+   and entry-editor actions to open the file picker. */
+.journal-img-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px;
+  padding: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--fg-muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 120ms ease, color 120ms ease, background 120ms ease;
+}
+.journal-img-btn:hover {
+  border-color: var(--border);
+  color: var(--fg);
+  background: var(--bg-card-soft);
+}
+
+/* Accent dashed outline while an image is dragged over either editor. */
+.journal-composer-body.is-dragover,
+.journal-entry-body-edit.is-dragover {
+  outline: 2px dashed var(--accent);
+  outline-offset: -2px;
+}
 .journal-composer-tags {
   flex: 1; min-width: 0;
   font-size: 12.5px;

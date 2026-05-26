@@ -5,10 +5,15 @@
 
 type Row = Record<string, any>;
 
-export function installDemoMode(): void {
+// Same probe installDemoMode() uses to decide whether to activate. Exported so
+// backend-only actions (e.g. image upload) can short-circuit in guest mode.
+export function isDemoMode(): boolean {
   const params = new URLSearchParams(location.search);
-  const active = params.has('demo') || /(^|[.-])demo([.-]|$)/i.test(location.hostname);
-  if (!active) return;
+  return params.has('demo') || /(^|[.-])demo([.-]|$)/i.test(location.hostname);
+}
+
+export function installDemoMode(): void {
+  if (!isDemoMode()) return;
 
   (window as unknown as { __DEMO__?: boolean }).__DEMO__ = true;
 

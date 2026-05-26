@@ -7,8 +7,11 @@ import { registerWidget } from './registry';
 import { renderMarkdown } from '../lib/markdown';
 import { apiFetch } from '../lib/api';
 import { showToast } from '../lib/events';
+import { useJournalImages } from './journal-images';
 import type { JournalEntry } from '../types';
 import './journal.css';
+
+const IMG_ICON = '🖼';
 
 function fmtEntryDate(unixSec: number): string {
   const d = new Date(unixSec * 1000);
@@ -42,6 +45,7 @@ function Composer({ onCreate }: { onCreate: (draft: EntryDraft) => Promise<void>
   const [tagsInput, setTagsInput] = useState('');
   const [busy, setBusy] = useState(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
+  const img = useJournalImages(taRef, body, setBody);
 
   const submit = async () => {
     const text = body.trim();
@@ -77,11 +81,15 @@ function Composer({ onCreate }: { onCreate: (draft: EntryDraft) => Promise<void>
       />
       <textarea
         ref={taRef}
-        className="journal-composer-body af-input"
+        className={`journal-composer-body af-input${img.dragOver ? ' is-dragover' : ''}`}
         value={body}
         onChange={(e) => setBody(e.target.value)}
         onKeyDown={onKey}
-        placeholder="写点什么…  支持 markdown：**粗体** · `code` · - list · [link](url)"
+        onPaste={img.onPaste}
+        onDrop={img.onDrop}
+        onDragOver={img.onDragOver}
+        onDragLeave={img.onDragLeave}
+        placeholder="写点什么…  支持 markdown：**粗体** · `code` · - list · [link](url) · 粘贴/拖图片"
         rows={3}
       />
       <div className="journal-composer-foot">
@@ -93,7 +101,18 @@ function Composer({ onCreate }: { onCreate: (draft: EntryDraft) => Promise<void>
           onKeyDown={onKey}
           placeholder="tags (逗号分隔)"
         />
-        <span className="muted journal-hint">⌘↵ to save</span>
+        <button className="journal-img-btn" onClick={img.openPicker} title="插入图片" type="button">
+          {IMG_ICON}
+        </button>
+        <input
+          ref={img.fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          onChange={img.onFileChange}
+        />
+        <span className="muted journal-hint">{img.uploading ? '上传中…' : '⌘↵ to save'}</span>
         <button className="panel-action edit-save" onClick={submit} disabled={!body.trim() || busy}>
           Save
         </button>
@@ -118,6 +137,7 @@ function EntryEditor({
   const [tagsInput, setTagsInput] = useState((entry.tags || []).join(', '));
   const [busy, setBusy] = useState(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
+  const img = useJournalImages(taRef, body, setBody);
 
   useEffect(() => {
     const ta = taRef.current;
@@ -166,10 +186,14 @@ function EntryEditor({
         />
         <textarea
           ref={taRef}
-          className="af-input journal-entry-body-edit"
+          className={`af-input journal-entry-body-edit${img.dragOver ? ' is-dragover' : ''}`}
           value={body}
           onChange={(e) => setBody(e.target.value)}
           onKeyDown={onKey}
+          onPaste={img.onPaste}
+          onDrop={img.onDrop}
+          onDragOver={img.onDragOver}
+          onDragLeave={img.onDragLeave}
           rows={rows}
         />
         <input
@@ -184,8 +208,19 @@ function EntryEditor({
           <button className="panel-action pm-delete" onClick={onDelete} disabled={busy}>
             Delete
           </button>
+          <button className="journal-img-btn" onClick={img.openPicker} title="插入图片" type="button">
+            {IMG_ICON}
+          </button>
+          <input
+            ref={img.fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            hidden
+            onChange={img.onFileChange}
+          />
           <span style={{ flex: 1 }} />
-          <span className="muted journal-hint">⌘↵ save · Esc cancel</span>
+          <span className="muted journal-hint">{img.uploading ? '上传中…' : '⌘↵ save · Esc cancel'}</span>
           <button className="panel-action" onClick={onCancel}>
             Cancel
           </button>

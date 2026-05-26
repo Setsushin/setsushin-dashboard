@@ -472,6 +472,46 @@ console.log('\n  /api/profile CRUD round-trip');
   check('PATCH non-existent → 404', nf.status === 404, `got ${nf.status}`);
 }
 
+// 9. /api/images round-trip — POST raw PNG bytes → {url}; GET that url → the
+//    image bytes with an image/* content-type; GET a missing id → 404; POST a
+//    non-image content-type → 400. Local dev uses a simulated R2 bucket.
+console.log('\n  /api/images round-trip');
+{
+  const PNG = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==',
+    'base64',
+  );
+  const up = await fetchJSON('/api/images', {
+    method: 'POST',
+    headers: { 'content-type': 'image/png' },
+    body: PNG,
+  });
+  check('POST png → {url:/api/images/…}',
+        up.ok && typeof up.json?.url === 'string' && up.json.url.startsWith('/api/images/'),
+        `got ${up.status} ${JSON.stringify(up.json)}`);
+
+  let getStatus = 0, getType = '';
+  try {
+    const r = await fetch(BASE + (up.json?.url || '/api/images/none'), { signal: AbortSignal.timeout(5000) });
+    getStatus = r.status;
+    getType = r.headers.get('content-type') || '';
+    await r.arrayBuffer();
+  } catch { /* leave defaults → check fails with status 0 */ }
+  check('GET url → 200 image/png',
+        getStatus === 200 && getType.startsWith('image/png'),
+        `got ${getStatus} ${getType}`);
+
+  const nf = await fetchOK('/api/images/does-not-exist', 404);
+  check('GET missing id → 404', nf.ok, `got ${nf.status}`);
+
+  const bad = await fetchJSON('/api/images', {
+    method: 'POST',
+    headers: { 'content-type': 'text/plain' },
+    body: 'not an image',
+  });
+  check('POST text/plain → 400', bad.status === 400, `got ${bad.status}`);
+}
+
 console.log(`\n  ${pass} passed, ${fail} failed\n`);
 if (fail > 0) {
   console.log('  failures:');
