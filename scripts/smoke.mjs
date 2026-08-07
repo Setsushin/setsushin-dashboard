@@ -405,6 +405,18 @@ console.log('\n  /api/assets CRUD round-trip');
     body: JSON.stringify({ jpy_man: 1 }),
   });
   check('PATCH non-existent → 404', nf.status === 404, `got ${nf.status}`);
+
+  // Snapshot round-trip. Same-JST-day overwrite keeps repeated smoke runs
+  // from accumulating rows.
+  const snap = await fetchJSON('/api/asset-snapshots', { method: 'POST' });
+  check('POST snapshot → id + count', snap.ok && Number.isInteger(snap.json?.id),
+        `got ${snap.status} ${JSON.stringify(snap.json)}`);
+
+  const hist = await fetchJSON('/api/asset-snapshots?days=1');
+  check('GET snapshots ?days=1 → array ≥1',
+        hist.ok && Array.isArray(hist.json) && hist.json.length >= 1
+          && Array.isArray(hist.json[hist.json.length - 1]?.data),
+        `got ${hist.status} ${JSON.stringify(hist.json)?.slice(0, 200)}`);
 }
 
 // 8. /api/profile round-trip — POST → GET → PATCH → GET → DELETE → GET.

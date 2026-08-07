@@ -142,6 +142,7 @@ and asserting 404 / SPA fallback.
 | `/api/pages`     | `pages_local`      | yes | GET list · `pages/[id]` PUT/DELETE |
 | `/api/tasks`     | `tasks`            | yes | GET list · POST · `tasks/[id]` PATCH/DELETE |
 | `/api/assets`    | `assets`           | yes | GET list · POST · `assets/[id]` PATCH/DELETE |
+| `/api/asset-snapshots` | `asset_snapshots` | yes | GET `?days=N` · POST (server self-reads assets; same JST day overwrites) |
 | `/api/bookmarks` | `bookmarks_local`  | yes | GET (by bucket) · POST · `bookmarks/[id]` PATCH/DELETE |
 | `/api/journal`   | `journal_entries`  | yes | GET list · POST · `journal/[id]` PATCH/DELETE |
 | `/api/profile`   | `profile_items`    | yes | GET list · POST · `profile/[id]` PATCH/DELETE |
