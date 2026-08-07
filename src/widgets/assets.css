@@ -53,7 +53,14 @@
 }
 .assets-row:hover { background: var(--bg-hover); }
 .assets-row-name { color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-.assets-row-amount { color: var(--fg); font-weight: 500; text-align: right; }
+/* Amount cell is click-to-edit (inline input, Tab flows to the next row). */
+.assets-row-amount { color: var(--fg); font-weight: 500; text-align: right; cursor: pointer; }
+.assets-row-amount:hover { color: var(--accent); text-decoration: underline dotted; text-underline-offset: 3px; }
+.assets-amount-inline {
+  width: 100%; text-align: right;
+  font-size: 12px; padding: 2px 4px;
+  font-variant-numeric: tabular-nums;
+}
 .assets-row-pct { color: var(--fg-faded); text-align: right; font-size: 11.5px; }
 .assets-row-tag {
   font-size: 10px; font-weight: 600;
@@ -117,7 +124,12 @@
   padding: 4px 6px;
   background: var(--bg-card-soft);
   row-gap: 6px;
+  /* Amount column widened to fit the input + unit select pair. */
+  grid-template-columns: minmax(0, 1.2fr) 104px 56px 80px minmax(0, 1fr);
 }
+.af-amount-wrap { display: flex; gap: 3px; min-width: 0; }
+.af-amount-wrap .af-amount { flex: 1; min-width: 0; }
+.af-unit { padding: 4px 2px; }
 .af-actions {
   grid-column: 1 / -1;
   display: flex; gap: 6px; justify-content: flex-end;
@@ -244,6 +256,46 @@
   color: var(--bg-card);
   border-color: var(--accent);
 }
+
+/* Snapshots chip + dropdown. Panel title clips overflow by default — undo
+   that for this panel so the popover can escape the title row. */
+.panel-wide .panel-title { overflow: visible; }
+.snaps-menu { position: relative; display: inline-flex; }
+.snaps-pop {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 20;
+  min-width: 250px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-pop);
+  padding: 8px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.snaps-pop-actions { display: flex; align-items: center; gap: 6px; }
+.snaps-pop-list {
+  max-height: 200px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 2px;
+  font-size: 11.5px; font-variant-numeric: tabular-nums;
+}
+.snaps-pop-row { display: flex; align-items: baseline; gap: 10px; padding: 3px 4px; border-radius: var(--r-xs); color: var(--fg); }
+.snaps-pop-row:hover { background: var(--bg-hover); }
+.snaps-pop-total { margin-left: auto; font-weight: 500; }
+.snaps-pop-empty { padding: 6px 4px; }
+
+/* History range select, styled to sit with the chips. */
+.assets-hist-range {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--fg-muted);
+  background: var(--bg-card-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  padding: 2px 4px; line-height: 1;
+  cursor: pointer;
+}
+.assets-hist-range:hover { color: var(--accent); border-color: var(--accent); }
+.assets-hist-range:focus { outline: none; border-color: var(--accent); }
 
 /* ── Segmented control (currently used by Portfolio: currency + view) ── */
 .seg {

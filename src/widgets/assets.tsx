@@ -10,6 +10,7 @@ import { useFetch } from '../hooks/useFetch';
 import { apiFetch } from '../lib/api';
 import { showToast } from '../lib/events';
 import { tint } from '../lib/color';
+import { fromMan, parseAmount, type AmountUnit } from './assets-utils';
 import type { Asset, AssetExposure, FxData, WidgetProps } from '../types';
 import './assets.css';
 
@@ -121,8 +122,8 @@ function buildHierarchy(items: Asset[], mode: string): Group[] {
 }
 
 // LLM-friendly snapshot. Always emits 万JPY plus current FX rates.
-function buildMarkdown(items: Asset[], fx: Rates): string {
-  const today = new Date().toISOString().slice(0, 10);
+function buildMarkdown(items: Asset[], fx: Rates, date?: string): string {
+  const today = date ?? new Date().toISOString().slice(0, 10);
   const grand = items.reduce((s, i) => s + i.jpy_man, 0);
   const fmt = (n: number, d = 1) => n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
   const lines: string[] = [];
@@ -332,16 +333,21 @@ interface AssetFormValues {
 function AssetForm({
   initial,
   layer: defaultLayer,
+  usdRate,
   onSave,
   onCancel,
 }: {
   initial: Asset | null;
   layer: string;
+  usdRate: number | undefined;
   onSave: (form: AssetFormValues) => void;
   onCancel: () => void;
 }) {
   const [name, setName] = useState(initial?.name ?? '');
-  const [jpyMan, setJpyMan] = useState(initial?.jpy_man != null ? String(initial.jpy_man) : '');
+  // Pre-fill in m-shorthand (10.2万 → "10.2m") so the ¥-mode field round-trips
+  // exactly without a rate conversion.
+  const [jpyMan, setJpyMan] = useState(initial?.jpy_man != null ? `${initial.jpy_man}m` : '');
+  const [unit, setUnit] = useState<AmountUnit>('yen');
   const [layer, setLayer] = useState(initial?.layer ?? defaultLayer);
   const [exposure, setExposure] = useState<AssetExposure>(initial?.exposure ?? 'jpy');
   const [account, setAccount] = useState(initial?.account ?? '');
@@ -352,9 +358,19 @@ function AssetForm({
     nameRef.current?.select();
   }, []);
 
+  // Switching units converts the field in place (10.2万 ↔ $652.8 ↔ ¥102000)
+  // so a pre-filled edit value never gets silently reinterpreted in the new
+  // unit. Unconvertible (no rate / unparseable) clears the field instead.
+  const switchUnit = (next: AmountUnit) => {
+    const man = parseAmount(jpyMan, usdRate, unit);
+    const disp = man === null ? null : fromMan(man, next, usdRate);
+    setJpyMan(disp === null ? '' : String(disp));
+    setUnit(next);
+  };
+
   const submit = () => {
-    const value = parseFloat(jpyMan);
-    if (!name.trim() || !Number.isFinite(value)) return;
+    const value = parseAmount(jpyMan, usdRate, unit);
+    if (!name.trim() || value === null) return;
     onSave({
       layer,
       name: name.trim(),
@@ -384,14 +400,20 @@ function AssetForm({
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
-      <input
-        className="af-input af-amount"
-        type="number"
-        step="0.1"
-        placeholder="万JPY"
-        value={jpyMan}
-        onChange={(e) => setJpyMan(e.target.value)}
-      />
+      <div className="af-amount-wrap">
+        <input
+          className="af-input af-amount"
+          inputMode="decimal"
+          placeholder={unit === 'usd' ? 'USD' : '円'}
+          title="$…=USD · ¥…=円 (符号优先于下拉) · k=千 m=万"
+          value={jpyMan}
+          onChange={(e) => setJpyMan(e.target.value)}
+        />
+        <select className="af-input af-unit" value={unit} onChange={(e) => switchUnit(e.target.value as AmountUnit)}>
+          <option value="yen">¥</option>
+          <option value="usd">$</option>
+        </select>
+      </div>
       <select className="af-input af-layer" value={layer} onChange={(e) => setLayer(e.target.value)}>
         {LAYER_ORDER.map((L) => (
           <option key={L} value={L}>
@@ -428,11 +450,62 @@ function AssetForm({
   );
 }
 
+// Amount-only inline editor. Enter/blur commit, Esc cancels, Tab commits and
+// asks the parent to move to the adjacent row (shift-Tab = previous).
+function AmountInline({
+  initial,
+  onCommit,
+  onCancel,
+}: {
+  initial: string;
+  onCommit: (raw: string, dir?: 1 | -1) => void;
+  onCancel: () => void;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  const done = useRef(false);
+  useEffect(() => {
+    ref.current?.focus();
+    ref.current?.select();
+  }, []);
+  const finish = (commit: boolean, dir?: 1 | -1) => {
+    if (done.current) return;
+    done.current = true;
+    if (commit) onCommit(ref.current?.value ?? '', dir);
+    else onCancel();
+  };
+  return (
+    <input
+      ref={ref}
+      className="af-input assets-amount-inline"
+      defaultValue={initial}
+      inputMode="decimal"
+      onBlur={() => finish(true)}
+      onDoubleClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          finish(true);
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          finish(false);
+        } else if (e.key === 'Tab') {
+          e.preventDefault();
+          finish(true, e.shiftKey ? -1 : 1);
+        }
+      }}
+    />
+  );
+}
+
 function AssetRow({
   item,
   grand,
   ccy,
   fx,
+  amountEditing,
+  onAmountStart,
+  onAmountCommit,
+  onAmountCancel,
   onEditStart,
   onDelete,
 }: {
@@ -440,13 +513,27 @@ function AssetRow({
   grand: number;
   ccy: string;
   fx: Rates;
+  amountEditing: boolean;
+  onAmountStart: () => void;
+  onAmountCommit: (raw: string, dir?: 1 | -1) => void;
+  onAmountCancel: () => void;
   onEditStart: () => void;
   onDelete: () => void;
 }) {
   return (
-    <div className="assets-row">
+    <div className="assets-row" onDoubleClick={onEditStart}>
       <span className="assets-row-name">{item.name}</span>
-      <span className="assets-row-amount">{fmtAmount(item.jpy_man, ccy, fx)}</span>
+      {amountEditing ? (
+        <AmountInline initial={String(item.jpy_man)} onCommit={onAmountCommit} onCancel={onAmountCancel} />
+      ) : (
+        <span
+          className="assets-row-amount"
+          onClick={onAmountStart}
+          title="Click to edit — plain=万円, $…=USD, ¥…=円, k=千 m=万 · Tab jumps to the next row"
+        >
+          {fmtAmount(item.jpy_man, ccy, fx)}
+        </span>
+      )}
       <span className="assets-row-pct">{pct(item.jpy_man, grand)}%</span>
       <span className={`assets-row-tag ex-${item.exposure}`}>{EXPOSURE_LABEL[item.exposure] ?? item.exposure}</span>
       <span className="assets-row-account muted">{item.account}</span>
@@ -465,14 +552,152 @@ function AssetRow({
 type Ccy = 'JPY' | 'USD' | 'CNY';
 type View = 'layer' | 'currency';
 
+interface Snapshot {
+  id: number;
+  taken_at: number;
+  data: Asset[];
+}
+
+// Chip acknowledgement flash: true for 1.4s after arm(), then auto-resets.
+function useAck(): [boolean, () => void] {
+  const [ack, setAck] = useState(false);
+  useEffect(() => {
+    if (!ack) return;
+    const t = setTimeout(() => setAck(false), 1400);
+    return () => clearTimeout(t);
+  }, [ack]);
+  return [ack, useCallback(() => setAck(true), [])];
+}
+
+// `snaps · N` chip + dropdown: save-today, ranged markdown export, and the
+// list of saved snapshots (date · rows · total). Follows the UserMenu
+// outside-click/Escape pattern.
+function SnapsMenu({
+  snaps,
+  canSave,
+  onSave,
+}: {
+  snaps: Snapshot[] | null;
+  canSave: boolean;
+  onSave: () => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [range, setRange] = useState('30');
+  const [saveAck, armSaveAck] = useAck();
+  const [copyAck, armCopyAck] = useAck();
+  const wrapRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  const save = async () => {
+    try {
+      await onSave();
+      armSaveAck();
+    } catch (err) {
+      showToast('Snapshot failed: ' + (err as Error).message, 'error');
+    }
+  };
+
+  const copy = async () => {
+    const cutoff = range === 'all' ? 0 : Date.now() / 1000 - Number(range) * 86400;
+    const inRange = (snaps || []).filter((s) => s.taken_at >= cutoff);
+    if (!inRange.length) {
+      showToast('No snapshots in range', 'info');
+      return;
+    }
+    try {
+      const md = inRange
+        .map((s) => buildMarkdown(s.data, undefined, new Date(s.taken_at * 1000).toLocaleDateString('sv-SE')))
+        .join('\n\n---\n\n');
+      await navigator.clipboard.writeText(md);
+      armCopyAck();
+    } catch (err) {
+      showToast('Copy failed: ' + (err as Error).message, 'error');
+    }
+  };
+
+  return (
+    <span className="snaps-menu" ref={wrapRef}>
+      <button
+        className="assets-md-chip"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open ? 'true' : 'false'}
+        title="Asset snapshots"
+      >
+        snaps · {snaps ? snaps.length : '…'} ▾
+      </button>
+      {open && (
+        <div className="snaps-pop">
+          <div className="snaps-pop-actions">
+            <button
+              className="assets-md-chip"
+              onClick={save}
+              disabled={!canSave}
+              data-ack={saveAck ? '1' : '0'}
+              title="Save a dated snapshot (same-day saves overwrite)"
+            >
+              {saveAck ? '✓ saved' : 'save today'}
+            </button>
+            <select className="assets-hist-range" value={range} onChange={(e) => setRange(e.target.value)}>
+              <option value="7">7d</option>
+              <option value="30">30d</option>
+              <option value="90">90d</option>
+              <option value="all">all</option>
+            </select>
+            <button
+              className="assets-md-chip"
+              onClick={copy}
+              data-ack={copyAck ? '1' : '0'}
+              title="Copy snapshot history as Markdown (for LLM)"
+            >
+              {copyAck ? '✓ copied' : 'copy · md'}
+            </button>
+          </div>
+          <div className="snaps-pop-list">
+            {(snaps || [])
+              .slice()
+              .reverse()
+              .map((s) => (
+                <div key={s.id} className="snaps-pop-row">
+                  <span>{new Date(s.taken_at * 1000).toLocaleDateString('sv-SE')}</span>
+                  <span className="muted">{s.data.length} rows</span>
+                  <span className="snaps-pop-total">
+                    {Math.round(s.data.reduce((t, a) => t + a.jpy_man, 0)).toLocaleString('en-US')}万
+                  </span>
+                </div>
+              ))}
+            {snaps && !snaps.length && <div className="snaps-pop-empty muted">No snapshots yet</div>}
+          </div>
+        </div>
+      )}
+    </span>
+  );
+}
+
 function AssetsWidget({ config }: WidgetProps) {
   const [assets, setAssets] = useState<Asset[] | null>(null);
   const [ccy, setCcy] = useState<Ccy>((config?.default_currency as Ccy) || 'JPY');
   const [view, setView] = useState<View>('layer');
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [amountEditId, setAmountEditId] = useState<number | null>(null);
   const [addingLayer, setAddingLayer] = useState<string | null>(null);
-  const [copyAck, setCopyAck] = useState(false);
+  const [copyAck, armCopyAck] = useAck();
+  const [snaps, setSnaps] = useState<Snapshot[] | null>(null);
 
   const fxState = useFetch<FxData>('/api/fx?base=JPY&symbols=USD,CNY', { ttl: 60 * 60_000 });
   const fx = fxState.data?.rates;
@@ -486,6 +711,23 @@ function AssetsWidget({ config }: WidgetProps) {
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  // ponytail: pulls every snapshot's full data just to count/list; at one
+  // row per day that's tiny — add a ?meta=1 mode if it ever hurts.
+  const loadSnaps = useCallback(() => {
+    return fetch('/api/asset-snapshots')
+      .then((r) => (r.ok ? (r.json() as Promise<Snapshot[]>) : []))
+      .then(setSnaps)
+      .catch(() => setSnaps([]));
+  }, []);
+  useEffect(() => {
+    void loadSnaps();
+  }, [loadSnaps]);
+
+  const saveSnap = async () => {
+    await apiFetch('/api/asset-snapshots', { method: 'POST' });
+    await loadSnaps();
+  };
 
   const items = assets || [];
   const grandJpyMan = items.reduce((s, i) => s + i.jpy_man, 0);
@@ -535,6 +777,36 @@ function AssetsWidget({ config }: WidgetProps) {
         }),
     );
 
+  const updateAmount = (id: number, jpy_man: number) =>
+    mutate(
+      () => setAssets((a) => (a || []).map((it) => (it.id === id ? { ...it, jpy_man } : it))),
+      () =>
+        apiFetch(`/api/assets/${id}`, {
+          method: 'PATCH',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ jpy_man }),
+        }),
+    );
+
+  // Row order as rendered (layers in order, collapsed layers skipped) — the
+  // Tab-flow path for inline amount editing.
+  const visibleIds = LAYER_ORDER.flatMap((L) =>
+    collapsed[L] ? [] : items.filter((i) => i.layer === L).map((i) => i.id),
+  );
+
+  const commitAmount = (item: Asset, raw: string, dir?: 1 | -1) => {
+    const i = visibleIds.indexOf(item.id);
+    const nextId = dir ? (visibleIds[i + dir] ?? null) : null;
+    const v = parseAmount(raw, fx?.USD);
+    if (v === null) {
+      showToast('Invalid amount — plain=万円, $…=USD, ¥…=円, k=千 m=万', 'error');
+      setAmountEditId(null);
+      return;
+    }
+    if (v !== item.jpy_man) void updateAmount(item.id, v);
+    setAmountEditId(nextId);
+  };
+
   const remove = (id: number, name: string) => {
     if (!window.confirm(`Delete "${name}"?`)) return;
     return mutate(
@@ -547,16 +819,11 @@ function AssetsWidget({ config }: WidgetProps) {
     if (!items.length) return;
     try {
       await navigator.clipboard.writeText(buildMarkdown(items, fx));
-      setCopyAck(true);
+      armCopyAck();
     } catch (err) {
       showToast('Copy failed: ' + (err as Error).message, 'error');
     }
   };
-  useEffect(() => {
-    if (!copyAck) return;
-    const t = setTimeout(() => setCopyAck(false), 1400);
-    return () => clearTimeout(t);
-  }, [copyAck]);
 
   const title = (
     <span className="assets-title">
@@ -570,6 +837,7 @@ function AssetsWidget({ config }: WidgetProps) {
       >
         {copyAck ? '✓ copied' : 'copy · md'}
       </button>
+      <SnapsMenu snaps={snaps} canSave={!!items.length} onSave={saveSnap} />
     </span>
   );
 
@@ -630,6 +898,7 @@ function AssetsWidget({ config }: WidgetProps) {
                           key={it.id}
                           layer={layer}
                           initial={it}
+                          usdRate={fx?.USD}
                           onSave={(form) => update(it.id, form)}
                           onCancel={() => setEditingId(null)}
                         />
@@ -640,13 +909,23 @@ function AssetsWidget({ config }: WidgetProps) {
                           grand={grandJpyMan || 1}
                           ccy={ccy}
                           fx={fx}
+                          amountEditing={amountEditId === it.id}
+                          onAmountStart={() => setAmountEditId(it.id)}
+                          onAmountCommit={(raw, dir) => commitAmount(it, raw, dir)}
+                          onAmountCancel={() => setAmountEditId(null)}
                           onEditStart={() => setEditingId(it.id)}
                           onDelete={() => remove(it.id, it.name)}
                         />
                       ),
                     )}
                     {addingLayer === layer ? (
-                      <AssetForm layer={layer} initial={null} onSave={create} onCancel={() => setAddingLayer(null)} />
+                      <AssetForm
+                        layer={layer}
+                        initial={null}
+                        usdRate={fx?.USD}
+                        onSave={create}
+                        onCancel={() => setAddingLayer(null)}
+                      />
                     ) : (
                       <button className="assets-add-btn" onClick={() => setAddingLayer(layer)}>
                         + Add to {layer}
