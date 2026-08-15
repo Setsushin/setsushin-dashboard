@@ -734,9 +734,20 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
 
   .stats { grid-template-columns: repeat(2, 1fr); }
 
-  .grid { grid-template-columns: 1fr; }
+  /* Auto rows, not --row-h: the grid-row reset below collapses every panel
+     to a single row, and a fixed 200px row turns tall widgets (journal,
+     assets) into tiny inner-scroll wells. Let content size the row. */
+  .grid { grid-template-columns: 1fr; grid-auto-rows: auto; }
   .grid > .panel,
   .grid > .edit-panel-wrap { grid-column: auto !important; grid-row: auto !important; }
+
+  /* Header actions (e.g. Portfolio's currency Segmented) wrap under the
+     title instead of clipping against it. */
+  .panel-head { flex-wrap: wrap; }
+
+  /* iOS Safari zooms the page when a focused control's font-size is under
+     16px. !important so per-widget input classes can't reintroduce it. */
+  input, select, textarea { font-size: 16px !important; }
 
   .footer {
     padding: 14px 16px;

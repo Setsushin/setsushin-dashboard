@@ -111,3 +111,10 @@
   .profile-row-label { grid-column: 2 / -1; padding-top: 0; }
   .profile-form-grid { grid-template-columns: 1fr; }
 }
+
+/* Touch: no hover to reveal, so actions stay visible; the drag handle is
+   HTML5-DnD-only (won't work on touch) — hide it rather than tease it. */
+@media (hover: none) {
+  .profile-row-actions { opacity: 1; }
+  .profile-drag { visibility: hidden; }
+}

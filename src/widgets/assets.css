@@ -319,3 +319,15 @@
   color: var(--accent);
   box-shadow: var(--shadow-card);
 }
+
+/* ── Mobile row layout — must stay at file end: same specificity as the
+   desktop .assets-row/.assets-row-form rules above, so source order wins. */
+@media (max-width: 768px) {
+  /* Drop the account column — name/amount/pct/tag are what a phone glance
+     needs; account is desktop detail. */
+  .assets-row { grid-template-columns: minmax(0, 1fr) 80px 44px 60px; }
+  .assets-row-account { display: none; }
+  /* Edit form wraps to 2 columns (name full width, ✓/✕ already span). */
+  .assets-row-form { grid-template-columns: 1fr 1fr; }
+  .assets-row-form .af-name { grid-column: 1 / -1; }
+}
