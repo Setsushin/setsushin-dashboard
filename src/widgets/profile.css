@@ -109,6 +109,10 @@
 @media (max-width: 720px) {
   .profile-row { grid-template-columns: 18px 1fr auto; }
   .profile-row-label { grid-column: 2 / -1; padding-top: 0; }
+  /* Pin value/actions to row 2 cols 2–3 — auto-placement would drop the
+     value into the 18px drag column and render it one char per line. */
+  .profile-row-value { grid-column: 2; }
+  .profile-row-actions { grid-column: 3; }
   .profile-form-grid { grid-template-columns: 1fr; }
 }
 
