@@ -1,6 +1,7 @@
 // assets — Portfolio widget backed by D1 (/api/assets + /api/fx).
-// All edits are kept in 万JPY (the canonical unit); the currency toggle is
-// display-only.
+// Rows are stored as a JPY part (jpy_man, 万円) + a USD part (usd, $) split
+// by exposure; the live total is recomputed from /api/fx on render, so USD-
+// exposed rows float with the rate. The currency toggle is display-only.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Panel } from './Panel';
@@ -10,7 +11,7 @@ import { useFetch } from '../hooks/useFetch';
 import { apiFetch } from '../lib/api';
 import { showToast } from '../lib/events';
 import { tint } from '../lib/color';
-import { fromMan, parseAmount, type AmountUnit } from './assets-utils';
+import { fromMan, parseAmount, parseAsset, withLiveJpy, type AmountUnit } from './assets-utils';
 import type { Asset, AssetExposure, FxData, WidgetProps } from '../types';
 import './assets.css';
 
@@ -325,6 +326,7 @@ interface AssetFormValues {
   layer: string;
   name: string;
   jpy_man: number;
+  usd: number | null;
   sublayer: null;
   exposure: AssetExposure;
   account: string | null;
@@ -344,10 +346,11 @@ function AssetForm({
   onCancel: () => void;
 }) {
   const [name, setName] = useState(initial?.name ?? '');
-  // Pre-fill in m-shorthand (10.2万 → "10.2m") so the ¥-mode field round-trips
-  // exactly without a rate conversion.
-  const [jpyMan, setJpyMan] = useState(initial?.jpy_man != null ? `${initial.jpy_man}m` : '');
-  const [unit, setUnit] = useState<AmountUnit>('yen');
+  // Pre-fill in the row's own unit (USD rows as "$", others as the live total
+  // in m-shorthand 10.2万 → "10.2m") so the field round-trips without drift.
+  const isUsd = initial?.exposure === 'usd' && initial.usd != null;
+  const [jpyMan, setJpyMan] = useState(isUsd ? String(initial.usd) : initial?.jpy_man != null ? `${initial.jpy_man}m` : '');
+  const [unit, setUnit] = useState<AmountUnit>(isUsd ? 'usd' : 'yen');
   const [layer, setLayer] = useState(initial?.layer ?? defaultLayer);
   const [exposure, setExposure] = useState<AssetExposure>(initial?.exposure ?? 'jpy');
   const [account, setAccount] = useState(initial?.account ?? '');
@@ -369,12 +372,12 @@ function AssetForm({
   };
 
   const submit = () => {
-    const value = parseAmount(jpyMan, usdRate, unit);
-    if (!name.trim() || value === null) return;
+    const amount = parseAsset(jpyMan, usdRate, exposure, unit);
+    if (!name.trim() || !amount) return;
     onSave({
       layer,
       name: name.trim(),
-      jpy_man: value,
+      ...amount,
       sublayer: null,
       exposure,
       account: account.trim() || null,
@@ -524,7 +527,11 @@ function AssetRow({
     <div className="assets-row" onDoubleClick={onEditStart}>
       <span className="assets-row-name">{item.name}</span>
       {amountEditing ? (
-        <AmountInline initial={String(item.jpy_man)} onCommit={onAmountCommit} onCancel={onAmountCancel} />
+        <AmountInline
+          initial={item.exposure === 'usd' && item.usd != null ? `$${item.usd}` : String(item.jpy_man)}
+          onCommit={onAmountCommit}
+          onCancel={onAmountCancel}
+        />
       ) : (
         <span
           className="assets-row-amount"
@@ -725,11 +732,15 @@ function AssetsWidget({ config }: WidgetProps) {
   }, [loadSnaps]);
 
   const saveSnap = async () => {
-    await apiFetch('/api/asset-snapshots', { method: 'POST' });
+    await apiFetch('/api/asset-snapshots', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ usd_rate: fx?.USD }),
+    });
     await loadSnaps();
   };
 
-  const items = assets || [];
+  const items = fx?.USD ? withLiveJpy(assets || [], fx.USD) : [];
   const grandJpyMan = items.reduce((s, i) => s + i.jpy_man, 0);
 
   const mutate = async (
@@ -777,14 +788,14 @@ function AssetsWidget({ config }: WidgetProps) {
         }),
     );
 
-  const updateAmount = (id: number, jpy_man: number) =>
+  const updateAmount = (id: number, amount: { jpy_man: number; usd: number | null }) =>
     mutate(
-      () => setAssets((a) => (a || []).map((it) => (it.id === id ? { ...it, jpy_man } : it))),
+      () => setAssets((a) => (a || []).map((it) => (it.id === id ? { ...it, ...amount } : it))),
       () =>
         apiFetch(`/api/assets/${id}`, {
           method: 'PATCH',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ jpy_man }),
+          body: JSON.stringify(amount),
         }),
     );
 
@@ -797,13 +808,14 @@ function AssetsWidget({ config }: WidgetProps) {
   const commitAmount = (item: Asset, raw: string, dir?: 1 | -1) => {
     const i = visibleIds.indexOf(item.id);
     const nextId = dir ? (visibleIds[i + dir] ?? null) : null;
-    const v = parseAmount(raw, fx?.USD);
-    if (v === null) {
+    const v = parseAsset(raw, fx?.USD, item.exposure);
+    if (!v) {
       showToast('Invalid amount — plain=万円, $…=USD, ¥…=円, k=千 m=万', 'error');
       setAmountEditId(null);
       return;
     }
-    if (v !== item.jpy_man) void updateAmount(item.id, v);
+    const stored = (assets || []).find((a) => a.id === item.id);
+    if (v.jpy_man !== stored?.jpy_man || v.usd !== (stored?.usd ?? null)) void updateAmount(item.id, v);
     setAmountEditId(nextId);
   };
 
@@ -855,7 +867,7 @@ function AssetsWidget({ config }: WidgetProps) {
 
   const fxStaleHint = fxState.data?.stale ? mockHint({ error: new Error('stale'), reason: `fx ${fxState.data.source}` }) : null;
 
-  if (assets === null) {
+  if (assets === null || !fx?.USD) {
     return (
       <Panel title={title} action={action} className="panel-wide">
         <div className="muted" style={{ padding: 16 }}>

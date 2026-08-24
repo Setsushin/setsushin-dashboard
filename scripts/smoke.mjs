@@ -373,15 +373,15 @@ console.log('\n  /api/assets CRUD round-trip');
   const patched = await fetchJSON(`/api/assets/${id}`, {
     method: 'PATCH',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ jpy_man: 11.5, exposure: 'usd' }),
+    body: JSON.stringify({ jpy_man: 11.5, exposure: 'usd', usd: 730 }),
   });
-  check('PATCH jpy_man + exposure → ok', patched.ok && patched.json?.ok === true,
+  check('PATCH jpy_man + usd + exposure → ok', patched.ok && patched.json?.ok === true,
         `got ${patched.status} ${JSON.stringify(patched.json)}`);
 
   const list2 = await fetchJSON('/api/assets');
   const after = (list2.json || []).find(a => a.id === id);
   check('GET reflects patched values',
-        after?.jpy_man === 11.5 && after?.exposure === 'usd',
+        after?.jpy_man === 11.5 && after?.usd === 730 && after?.exposure === 'usd',
         `got ${JSON.stringify(after)}`);
 
   const del = await fetchJSON(`/api/assets/${id}`, { method: 'DELETE' });
@@ -408,7 +408,14 @@ console.log('\n  /api/assets CRUD round-trip');
 
   // Snapshot round-trip. Same-JST-day overwrite keeps repeated smoke runs
   // from accumulating rows.
-  const snap = await fetchJSON('/api/asset-snapshots', { method: 'POST' });
+  const noRate = await fetchJSON('/api/asset-snapshots', { method: 'POST' });
+  check('POST snapshot without usd_rate → 400', noRate.status === 400, `got ${noRate.status}`);
+
+  const snap = await fetchJSON('/api/asset-snapshots', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ usd_rate: 0.0064 }),
+  });
   check('POST snapshot → id + count', snap.ok && Number.isInteger(snap.json?.id),
         `got ${snap.status} ${JSON.stringify(snap.json)}`);
 

@@ -125,6 +125,7 @@ export interface Asset {
   sublayer?: string | null;
   name: string;
   jpy_man: number;
+  usd?: number | null;
   exposure: AssetExposure;
   account?: string | null;
   sort_order?: number;

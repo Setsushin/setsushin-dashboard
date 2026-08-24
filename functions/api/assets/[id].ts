@@ -1,6 +1,6 @@
 // functions/api/assets/[id].ts — patch/delete a single asset by id.
 //
-// PATCH  /api/assets/123  → body: { layer?, sublayer?, name?, jpy_man?, exposure?, account?, sort_order? }
+// PATCH  /api/assets/123  → body: { layer?, sublayer?, name?, jpy_man?, usd?, exposure?, account?, sort_order? }
 // DELETE /api/assets/123  → remove
 
 import { getUserEmail, json } from '../../_lib/auth';
@@ -22,6 +22,7 @@ export const onRequestPatch: PagesFunction<Env, 'id'> = async ({ request, env, p
     sublayer: 'sublayer',
     name: 'name',
     jpy_man: 'jpy_man',
+    usd: 'usd',
     exposure: 'exposure',
     account: 'account',
     sort_order: 'sort_order',

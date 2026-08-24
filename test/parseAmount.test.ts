@@ -3,7 +3,7 @@
 
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import { fromMan, parseAmount } from '../src/widgets/assets-utils';
+import { fromMan, liveMan, parseAmount, parseAsset, withLiveJpy } from '../src/widgets/assets-utils';
 
 const RATE = 0.0064; // 1 JPY = 0.0064 USD → 1 USD = 156.25 JPY
 
@@ -67,4 +67,30 @@ test('garbage → null', () => {
   assert.equal(parseAmount('', RATE), null);
   assert.equal(parseAmount('$1¥', RATE), null);
   assert.equal(parseAmount('1.2.3', RATE), null);
+});
+
+test('parseAsset splits the entry by exposure', () => {
+  // jpy exposure: everything in jpy_man, $ entries converted
+  assert.deepEqual(parseAsset('12', RATE, 'jpy'), { jpy_man: 12, usd: null });
+  assert.deepEqual(parseAsset('$10000', RATE, 'jpy'), { jpy_man: 156.3, usd: null });
+  assert.deepEqual(parseAsset('12', undefined, 'jpy'), { jpy_man: 12, usd: null });
+  // usd exposure: everything in usd, ¥ entries converted at today's rate
+  assert.deepEqual(parseAsset('$10000', RATE, 'usd'), { jpy_man: 0, usd: 10000 });
+  assert.deepEqual(parseAsset('10000', RATE, 'usd', 'usd'), { jpy_man: 0, usd: 10000 });
+  assert.deepEqual(parseAsset('¥1,562,500', RATE, 'usd'), { jpy_man: 0, usd: 10000 });
+  assert.deepEqual(parseAsset('156.25', RATE, 'usd'), { jpy_man: 0, usd: 10000 });
+  // mixed: half and half
+  assert.deepEqual(parseAsset('$10000', RATE, 'mixed-50-50'), { jpy_man: 78.1, usd: 5000 });
+  assert.deepEqual(parseAsset('100', RATE, 'mixed-50-50'), { jpy_man: 50, usd: 3200 });
+  // rate needed but missing
+  assert.equal(parseAsset('$1', undefined, 'jpy'), null);
+  assert.equal(parseAsset('100', undefined, 'usd'), null);
+  assert.equal(parseAsset('100', undefined, 'mixed-50-50'), null);
+});
+
+test('liveMan / withLiveJpy fold the usd part in at the given rate', () => {
+  assert.equal(liveMan({ jpy_man: 0, usd: 10000 }, 0.008), 125);
+  assert.equal(liveMan({ jpy_man: 50, usd: 3200 }, 0.0064), 100);
+  assert.equal(liveMan({ jpy_man: 12, usd: null }, 0.008), 12);
+  assert.deepEqual(withLiveJpy([{ jpy_man: 0, usd: 10000 }], 0.008), [{ jpy_man: 125, usd: 10000 }]);
 });
