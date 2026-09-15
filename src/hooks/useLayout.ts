@@ -140,6 +140,7 @@ export function useLayout(): UseLayoutResult {
         subtitle: m.subtitle ?? undefined,
         grid: state.overrides[m.page_id] || [],
         userAdded: true,
+        sortOrder: m.sort_order,
       }));
 
     // 3. Build nav: yaml nav (with meta override) + user-added entries.

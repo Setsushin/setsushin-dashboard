@@ -16,6 +16,7 @@ export interface PageMetaInitial {
   title?: string;
   subtitle?: string;
   userAdded?: boolean;
+  sort_order?: number;
 }
 
 export interface PageMetaForm {
@@ -24,6 +25,7 @@ export interface PageMetaForm {
   icon: string;
   title: string | null;
   subtitle: string | null;
+  sort_order: number;
 }
 
 function IconPicker({ value, onChange }: { value: string; onChange: (path: string) => void }) {
@@ -65,6 +67,7 @@ export function PageMetaModal({ initial, mode, existingIds, onSave, onDelete, on
   const [icon, setIcon] = useState(initial?.icon || 'icons/more.svg');
   const [title, setTitle] = useState(initial?.title || '');
   const [subtitle, setSubtitle] = useState(initial?.subtitle || '');
+  const [sortOrder, setSortOrder] = useState(String(initial?.sort_order ?? 100));
   const [idTouched, setIdTouched] = useState(false);
 
   // In add mode, auto-suggest page_id from label until the user types one.
@@ -101,6 +104,7 @@ export function PageMetaModal({ initial, mode, existingIds, onSave, onDelete, on
       icon,
       title: title.trim() || null,
       subtitle: subtitle.trim() || null,
+      sort_order: Number(sortOrder) || 0,
     });
   };
 
@@ -154,6 +158,19 @@ export function PageMetaModal({ initial, mode, existingIds, onSave, onDelete, on
             <span className="pm-label">Icon</span>
             <IconPicker value={icon} onChange={setIcon} />
           </div>
+          {initial?.userAdded && (
+            <label className="pm-row">
+              <span className="pm-label">Order</span>
+              <input
+                className="af-input"
+                type="number"
+                step="1"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                placeholder="Sidebar position among added pages (lower first)"
+              />
+            </label>
+          )}
           {(idConflict || (!idValid && pageId.length > 0)) && (
             <div className="pm-warn">
               {idConflict ? `"${pageId}" already exists` : 'Invalid ID — letters, digits, _, - only'}

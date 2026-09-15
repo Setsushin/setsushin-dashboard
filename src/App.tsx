@@ -177,6 +177,7 @@ export function App() {
       icon: form.icon,
       title: form.title,
       subtitle: form.subtitle,
+      sort_order: form.sort_order,
     });
     setPageMetaModal(null);
     try {
@@ -268,6 +269,7 @@ export function App() {
                     title: page.title || '',
                     subtitle: page.subtitle || '',
                     userAdded: !!page.userAdded,
+                    sort_order: page.sortOrder,
                   },
                 })
               }

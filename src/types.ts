@@ -78,6 +78,7 @@ export interface Page {
   header?: GridItem[];
   grid?: GridItem[];
   userAdded?: boolean;
+  sortOrder?: number;
 }
 
 export interface LayoutYaml {
