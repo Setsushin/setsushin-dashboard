@@ -92,7 +92,7 @@ export function Markets({ size = 'large', symbols = SYMBOLS }: { size?: PanelSiz
             </div>
           );
         })}
-        {loading && rows.length === 0 && <div className="muted" style={{ padding: 8 }}>Loading…</div>}
+        {loading && rows.length === 0 && <div className="empty">Loading…</div>}
       </div>
     </Panel>
   );

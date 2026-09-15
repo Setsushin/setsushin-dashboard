@@ -5,19 +5,8 @@
 .tr-empty { color: var(--fg-muted); font-size: 13px; }
 .tr-edit[aria-pressed="true"] { color: var(--accent); }
 
-/* Day switch — hidden on desktop (both columns visible). */
-.tr-switch {
-  display: none;
-  grid-template-columns: 1fr 1fr; gap: 4px;
-  padding: 3px; margin-bottom: 12px;
-  background: var(--bg-card-soft); border-radius: var(--r-sm);
-}
-.tr-switch button {
-  border: 0; background: transparent; color: var(--fg-muted);
-  font: inherit; font-size: 13px; font-weight: 600;
-  padding: 8px 0; border-radius: calc(var(--r-sm) - 3px); cursor: pointer;
-}
-.tr-switch button[aria-pressed="true"] { background: var(--bg-card); color: var(--accent); box-shadow: var(--shadow-card); }
+/* Day switch (.seg.seg-fill) — hidden on desktop, both columns visible. */
+.tr-switch { display: none; margin-bottom: 12px; }
 
 /* ── History (one cell per JST day) ─────────────────────────── */
 .tr-hist { margin-bottom: var(--gap); }
@@ -25,7 +14,6 @@
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
   margin-bottom: 8px; font-size: 12.5px; color: var(--fg-muted);
 }
-.tr-hist-title { font-weight: 600; color: var(--fg); }
 .tr-hist-sel {
   font: inherit; font-size: 12.5px; color: var(--fg);
   background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-xs);
@@ -64,7 +52,11 @@
   padding: 14px 16px 12px;
   background: var(--accent-soft);
 }
-.tr-day-name { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; color: var(--fg); }
+.tr-day-name {
+  margin: 0; line-height: 1.1; color: var(--fg);
+  font-family: var(--font-display); font-style: italic; font-weight: 500;
+  font-size: 24px; letter-spacing: -0.005em;
+}
 .tr-day-sub { margin: 4px 0 0; font-size: 12px; color: var(--fg-muted); }
 .tr-day-meta {
   display: flex; align-items: center; gap: 6px;
@@ -86,7 +78,7 @@
 .tr-name { margin: 0; font-size: 15px; font-weight: 600; line-height: 1.3; color: var(--fg); }
 .tr-load { display: flex; align-items: baseline; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
 .tr-kg {
-  font-size: 26px; font-weight: 700; letter-spacing: -0.02em; line-height: 1;
+  font-size: 26px; font-weight: 600; letter-spacing: -0.02em; line-height: 1;
   color: var(--accent); font-variant-numeric: tabular-nums;
 }
 .tr-kg-text { font-size: 15px; font-weight: 600; color: var(--fg); }
@@ -98,7 +90,7 @@
   padding-left: 10px; border-left: 2px solid var(--accent-soft);
 }
 .tr-kgin {
-  font: inherit; font-size: 22px; font-weight: 700;
+  font: inherit; font-size: 22px; font-weight: 600;
   width: 5.2ch; padding: 2px 6px;
   border: 1px solid var(--accent); border-radius: var(--r-xs);
   color: var(--accent); background: var(--accent-soft);

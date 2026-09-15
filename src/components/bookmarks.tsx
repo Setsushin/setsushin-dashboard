@@ -75,7 +75,7 @@ export function Bookmarks({ bucket, row = false }: { bucket: string; row?: boole
   }
 
   return (
-    <Panel size="compact" title="Bookmarks" action={<span className="muted" style={{ fontSize: 11 }}>{list.length} saved</span>}>
+    <Panel size="compact" title="Bookmarks" action={<span className="label-mono">{list.length} saved</span>}>
       <div className="bookmark-strip">
         {list.map((b) => (
           <a

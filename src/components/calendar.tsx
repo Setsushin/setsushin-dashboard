@@ -84,7 +84,7 @@ export function Calendar({ size = 'large', limit }: { size?: PanelSize; limit?: 
   const errMsg = isErrorObj ? data.error : error ? String(error.message) : null;
 
   const showChips = Array.isArray(available) && available.length >= 2;
-  const action = <span className="muted" style={{ fontSize: 11 }}>{events.length} upcoming</span>;
+  const action = <span className="label-mono">{events.length} upcoming</span>;
 
   return (
     <Panel size={size} title="Calendar" hint={showingMock ? `(mock — ${errMsg || 'unreachable'})` : null} action={action}>
@@ -93,7 +93,7 @@ export function Calendar({ size = 'large', limit }: { size?: PanelSize; limit?: 
           {available.map((s) => (
             <button
               key={s.key}
-              className={`cal-source-chip ${selected.includes(s.key) ? 'is-active' : ''}`}
+              className={`chip is-outline cal-source-chip ${selected.includes(s.key) ? 'is-active' : ''}`}
               onClick={() => toggleSource(s.key)}
               title={`Toggle ${s.label} calendar`}
             >
@@ -113,8 +113,8 @@ export function Calendar({ size = 'large', limit }: { size?: PanelSize; limit?: 
             </div>
           </div>
         ))}
-        {loading && events.length === 0 && <div className="muted" style={{ padding: 12 }}>Loading…</div>}
-        {!loading && events.length === 0 && <div className="muted" style={{ padding: 12 }}>Nothing upcoming.</div>}
+        {loading && events.length === 0 && <div className="empty">Loading…</div>}
+        {!loading && events.length === 0 && <div className="empty">Nothing upcoming.</div>}
       </div>
     </Panel>
   );

@@ -57,14 +57,5 @@
   align-items: start;
 }
 .feed-col { display: flex; flex-direction: column; min-width: 0; }
-.feed-col-head {
-  font-family: var(--font-mono);
-  font-size: 10px; font-weight: 600;
-  letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--fg-muted);
-  padding: 0 4px 6px;
-  margin-bottom: 2px;
-  border-bottom: 1px solid var(--border);
-}
 .feed-cols .feed-item { padding: 8px 4px; gap: 8px; }
 .feed-cols .feed-kind { display: none; }

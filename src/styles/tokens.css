@@ -27,6 +27,11 @@
   --font-mono: "SF Mono", "SF Pro Text", "Helvetica Neue", "Segoe UI",
                "Arial", monospace;
 
+  /* Real monospace — code blocks and copyable reference values (Rx,
+     IDs) where columns must line up. --font-mono above is the label
+     small-caps voice and may fall back to sans. */
+  --font-code: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+
   /* Warm cream content surface (overwritten by tone/mode below) */
   --bg-app:       #f6f1e8;
   --bg-content:   #fbf7f0;
@@ -50,12 +55,10 @@
   /* Accent — soft peach/terracotta */
   --accent:        #d97757;
   --accent-hover:  #e08a6e;
-  --accent-soft:   #f6e3d8;
   --accent-fg:     #ffffff;
 
   /* Status */
   --success:      #7ba05b;
-  --success-soft: #e2ebd5;
   --warning:      #d9a85a;
   --danger:       #c75a4a;
 
@@ -107,6 +110,12 @@
   --num-down: #b15546;
 }
 
+/* Derived on body (not :root) so it sees the tone/mode overrides declared
+   there: a 28% wash of the accent over the card surface, light or dark. */
+body {
+  --accent-soft: color-mix(in srgb, var(--accent) 28%, var(--bg-card));
+}
+
 /* ── Tone variants (light mode) ──────────────────────────────── */
 body[data-tone="cool"] {
   --bg-app: #eef0f3;
@@ -124,7 +133,6 @@ body[data-tone="cool"] {
   --fg-subtle: #c3cad5;
   --accent: #5b6cff;
   --accent-hover: #6d7cff;
-  --accent-soft: #e2e6ff;
   --border-soft: rgba(60, 80, 110, 0.06);
   --border: rgba(60, 80, 110, 0.12);
   --border-strong: rgba(60, 80, 110, 0.2);
@@ -146,7 +154,6 @@ body[data-tone="sage"] {
   --fg-subtle: #c0c9b9;
   --accent: #6f8e5a;
   --accent-hover: #7d9c68;
-  --accent-soft: #e0e8d4;
   --border-soft: rgba(60, 80, 60, 0.07);
   --border: rgba(60, 80, 60, 0.14);
   --border-strong: rgba(60, 80, 60, 0.22);
@@ -168,7 +175,6 @@ body[data-tone="lavender"] {
   --fg-subtle: #c8bfd0;
   --accent: #9a72c4;
   --accent-hover: #a886cf;
-  --accent-soft: #ebe1f2;
   --border-soft: rgba(80, 60, 100, 0.07);
   --border: rgba(80, 60, 100, 0.14);
   --border-strong: rgba(80, 60, 100, 0.22);

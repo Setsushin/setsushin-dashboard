@@ -12,7 +12,6 @@ import { PAGES } from './pages';
 import { useHashRoute } from './hooks/useHashRoute';
 import { useTweaks } from './hooks/useTweaks';
 import { onFocusTaskInput, onOpenTaskModal } from './lib/events';
-import { hexToSoft } from './lib/color';
 import type { Me, Task } from './types';
 
 interface Tweaks {
@@ -94,7 +93,6 @@ export function App() {
     document.body.dataset.radius = t.radius;
     document.body.dataset.mode = t.mode;
     document.documentElement.style.setProperty('--accent', t.accent);
-    document.documentElement.style.setProperty('--accent-soft', hexToSoft(t.accent));
   }, [t]);
 
   useEffect(() => {

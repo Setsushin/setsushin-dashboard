@@ -43,32 +43,11 @@
   display: flex; flex-wrap: wrap; gap: 4px;
   margin: -4px 0 8px;
 }
-.cal-source-chip {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 3px 9px;
-  border-radius: var(--r-pill);
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--fg-muted);
-  cursor: pointer;
-  transition: background var(--dur-q) var(--ease-out-expo),
-              color var(--dur-q) var(--ease-out-expo),
-              border-color var(--dur-q) var(--ease-out-expo);
-}
-.cal-source-chip:hover { color: var(--fg); border-color: var(--border-strong); }
-.cal-source-chip.is-active {
-  background: var(--accent-soft);
-  color: var(--accent);
-  border-color: var(--accent);
-}
+.cal-source-chip { cursor: pointer; }
 
 /* Per-source dot color for merged feeds — palette cycles by source key
    so 2-3 calendars stay visually distinct. New keys can add their own. */
 .agenda-dot.src-primary { background: var(--accent); }
-.agenda-dot.src-work    { background: #5b8db8; }
+.agenda-dot.src-work    { background: var(--fg-muted); }
 .agenda-dot.src-personal{ background: var(--success); }
 .agenda-dot.src-family  { background: var(--warning); }

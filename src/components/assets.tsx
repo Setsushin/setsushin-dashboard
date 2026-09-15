@@ -397,26 +397,26 @@ function AssetForm({
     <div className="assets-row assets-row-form" onKeyDown={onKey}>
       <input
         ref={nameRef}
-        className="af-input af-name"
+        className="field af-name"
         placeholder="Name"
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
       <div className="af-amount-wrap">
         <input
-          className="af-input af-amount"
+          className="field af-amount"
           inputMode="decimal"
           placeholder={unit === 'usd' ? 'USD' : '円'}
           title="$…=USD · ¥…=円 (符号优先于下拉) · k=千 m=万"
           value={jpyMan}
           onChange={(e) => setJpyMan(e.target.value)}
         />
-        <select className="af-input af-unit" value={unit} onChange={(e) => switchUnit(e.target.value as AmountUnit)}>
+        <select className="field af-unit" value={unit} onChange={(e) => switchUnit(e.target.value as AmountUnit)}>
           <option value="yen">¥</option>
           <option value="usd">$</option>
         </select>
       </div>
-      <select className="af-input af-layer" value={layer} onChange={(e) => setLayer(e.target.value)}>
+      <select className="field af-layer" value={layer} onChange={(e) => setLayer(e.target.value)}>
         {LAYER_ORDER.map((L) => (
           <option key={L} value={L}>
             {L}
@@ -424,7 +424,7 @@ function AssetForm({
         ))}
       </select>
       <select
-        className="af-input af-exp"
+        className="field af-exp"
         value={exposure}
         onChange={(e) => setExposure(e.target.value as AssetExposure)}
       >
@@ -435,7 +435,7 @@ function AssetForm({
         ))}
       </select>
       <input
-        className="af-input af-acct"
+        className="field af-acct"
         placeholder="Account"
         value={account ?? ''}
         onChange={(e) => setAccount(e.target.value)}
@@ -478,7 +478,7 @@ function AmountInline({
   return (
     <input
       ref={ref}
-      className="af-input assets-amount-inline"
+      className="field assets-amount-inline"
       defaultValue={initial}
       inputMode="decimal"
       onBlur={() => finish(true)}
@@ -541,7 +541,7 @@ function AssetRow({
         </span>
       )}
       <span className="assets-row-pct">{pct(item.jpy_man, grand)}%</span>
-      <span className={`assets-row-tag ex-${item.exposure}`}>{EXPOSURE_LABEL[item.exposure] ?? item.exposure}</span>
+      <span className={`chip assets-row-tag ex-${item.exposure}`}>{EXPOSURE_LABEL[item.exposure] ?? item.exposure}</span>
       <span className="assets-row-account muted">{item.account}</span>
       <div className="assets-row-actions">
         <button className="assets-row-act" onClick={onEditStart} title="Edit">
@@ -639,7 +639,7 @@ function SnapsMenu({
   return (
     <span className="snaps-menu" ref={wrapRef}>
       <button
-        className="assets-md-chip"
+        className="chip assets-md-chip"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open ? 'true' : 'false'}
         title="Asset snapshots"
@@ -650,7 +650,7 @@ function SnapsMenu({
         <div className="snaps-pop">
           <div className="snaps-pop-actions">
             <button
-              className="assets-md-chip"
+              className="chip assets-md-chip"
               onClick={save}
               disabled={!canSave}
               data-ack={saveAck ? '1' : '0'}
@@ -658,14 +658,14 @@ function SnapsMenu({
             >
               {saveAck ? '✓ saved' : 'save today'}
             </button>
-            <select className="assets-hist-range" value={range} onChange={(e) => setRange(e.target.value)}>
+            <select className="chip assets-hist-range" value={range} onChange={(e) => setRange(e.target.value)}>
               <option value="7">7d</option>
               <option value="30">30d</option>
               <option value="90">90d</option>
               <option value="all">all</option>
             </select>
             <button
-              className="assets-md-chip"
+              className="chip assets-md-chip"
               onClick={copy}
               data-ack={copyAck ? '1' : '0'}
               title="Copy snapshot history as Markdown (for LLM)"
@@ -840,7 +840,7 @@ export function Assets() {
     <span className="assets-title">
       <span>Portfolio</span>
       <button
-        className="assets-md-chip"
+        className="chip assets-md-chip"
         onClick={onCopyMd}
         disabled={!items.length}
         data-ack={copyAck ? '1' : '0'}
@@ -869,7 +869,7 @@ export function Assets() {
   if (assets === null || !fx?.USD) {
     return (
       <Panel size="full" rows={3} title={title} action={action}>
-        <div className="muted" style={{ padding: 16 }}>
+        <div className="empty">
           Loading…
         </div>
       </Panel>
@@ -972,7 +972,7 @@ export function Assets() {
           {grandJpyMan > 0 ? (
             <Sunburst groups={groups} ccy={ccy} fx={fx} total={grandJpyMan} />
           ) : (
-            <div className="muted" style={{ padding: 60, textAlign: 'center' }}>
+            <div className="empty">
               No assets yet — add one on the left.
             </div>
           )}

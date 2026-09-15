@@ -9,14 +9,6 @@
 
 /* ── Category section ─────────────────────────────────────────── */
 .profile-group { display: flex; flex-direction: column; }
-.profile-group-head {
-  font-size: 11px; font-weight: 700; letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--fg-faded);
-  padding: 0 6px 6px;
-  border-bottom: 1px solid var(--border, var(--bg-hover));
-  margin-bottom: 4px;
-}
 .profile-group-body { display: flex; flex-direction: column; gap: 2px; }
 
 /* ── Item row ─────────────────────────────────────────────────── */
@@ -47,7 +39,7 @@
 .profile-row-value { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .profile-value-text {
   color: var(--fg);
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-family: var(--font-code);
   font-size: 13px;
   white-space: pre-wrap; word-break: break-word;
   user-select: text;
@@ -67,14 +59,14 @@
   padding: 3px 6px; border-radius: var(--r-xs);
 }
 .profile-row-act:hover { background: var(--bg-card-soft); color: var(--fg); }
-.profile-row-act.profile-row-del:hover { color: var(--danger, #c0584a); }
+.profile-row-act.profile-row-del:hover { color: var(--danger); }
 .profile-row-act[data-ack='1'] { color: var(--accent); }
 
 /* ── Inline add/edit form ─────────────────────────────────────── */
 .profile-form {
   display: flex; flex-direction: column; gap: 8px;
   padding: 12px; margin: 2px 0 8px;
-  border: 1px solid var(--border, var(--bg-hover));
+  border: 1px solid var(--border);
   border-radius: var(--r-sm);
   background: var(--bg-card-soft);
 }
@@ -82,7 +74,7 @@
 
 /* Category combobox: input + caret + dropdown of existing categories. */
 .profile-combo { position: relative; }
-.profile-combo .af-input { width: 100%; padding-right: 24px; }
+.profile-combo .field { width: 100%; padding-right: 24px; }
 .profile-combo-caret {
   position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
   border: none; background: transparent; cursor: pointer;
@@ -92,13 +84,13 @@
 .profile-combo-list {
   position: absolute; z-index: 30; top: calc(100% + 2px); left: 0; right: 0;
   max-height: 180px; overflow-y: auto;
-  background: var(--bg-card); border: 1px solid var(--border, var(--bg-hover));
+  background: var(--bg-card); border: 1px solid var(--border);
   border-radius: var(--r-sm); box-shadow: var(--shadow-card);
 }
 .profile-combo-opt { padding: 6px 10px; cursor: pointer; font-size: 13px; }
 .profile-combo-opt:hover { background: var(--bg-hover); }
 .profile-form-value {
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-family: var(--font-code);
   resize: vertical; min-height: 38px;
 }
 .profile-form-foot { display: flex; align-items: center; gap: 8px; }

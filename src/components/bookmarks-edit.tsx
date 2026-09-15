@@ -117,7 +117,7 @@ export function AddBookmarkModal({
           <label className="pm-row">
             <span className="pm-label">Name</span>
             <input
-              className="af-input"
+              className="field"
               autoFocus
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -127,7 +127,7 @@ export function AddBookmarkModal({
           <label className="pm-row">
             <span className="pm-label">URL</span>
             <input
-              className="af-input"
+              className="field"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="example.com (https:// auto-prepended)"
@@ -136,7 +136,7 @@ export function AddBookmarkModal({
           <label className="pm-row">
             <span className="pm-label">Mark</span>
             <input
-              className="af-input"
+              className="field"
               value={mark}
               maxLength={2}
               onChange={(e) => setMark(e.target.value)}
@@ -164,7 +164,7 @@ export function AddBookmarkModal({
           <button className="panel-action" onClick={onClose}>
             Cancel
           </button>
-          <button className="panel-action edit-save" disabled={!canSave} onClick={submit}>
+          <button className="panel-action btn-primary" disabled={!canSave} onClick={submit}>
             Add
           </button>
         </div>

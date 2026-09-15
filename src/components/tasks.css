@@ -1,6 +1,6 @@
 /* tasks.css — task list with checkbox / strike-through / tag pill.
    The form modal reuses the global modal kit (.modal-backdrop / .modal /
-   .pm-row / .af-input / .modal-foot / .panel-action / .edit-save / .pm-delete);
+   .pm-row / .field / .modal-foot / .panel-action / .btn-primary / .btn-danger);
    only the task-specific row/chip/button styles live here. */
 
 .task-list { display: flex; flex-direction: column; flex: 1; min-width: 0; }
@@ -12,7 +12,7 @@
 }
 .task:last-of-type { border-bottom: none; }
 .task-check {
-  width: 18px; height: 18px; border-radius: 6px;
+  width: 18px; height: 18px; border-radius: var(--r-xs);
   border: 1.5px solid var(--border-strong);
   display: grid; place-items: center;
   background: var(--bg-card);
@@ -26,7 +26,7 @@
 }
 .task-check.done::after {
   content: ""; width: 10px; height: 6px;
-  border-left: 2px solid #fff; border-bottom: 2px solid #fff;
+  border-left: 2px solid var(--accent-fg); border-bottom: 2px solid var(--accent-fg);
   transform: rotate(-45deg) translate(1px, -1px);
 }
 .task-text {
@@ -53,29 +53,17 @@
 .task-due:hover { color: var(--accent); }
 .task-due.overdue { color: var(--danger); font-weight: 600; }
 .task.done .task-due { color: var(--fg-faded); }
-/* Tag chips read as metadata (mono small caps), not as decoration.  The
-   work variant gets a hairline border to set itself apart from personal,
-   instead of borrowing the peach accent — peach belongs to "your place"
-   (active nav, focus, status), not to a category. */
-.task-tag {
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 2px 8px;
-  border-radius: var(--r-pill);
-  background: var(--bg-card-soft);
-  color: var(--fg-muted);
-  flex-shrink: 0;
-}
-.task-tag.work     { color: var(--fg); border: 1px solid var(--border); padding: 1px 7px; }
+/* Tag chips ride the .chip kit. The work variant gets a hairline border
+   instead of borrowing the accent — peach belongs to "your place", not to
+   a category. */
+.task-tag { padding: 2px 8px; }
+.task-tag.work     { color: var(--fg); border-color: var(--border); }
 .task-tag.personal { color: var(--fg-faded); }
 .task-remove {
   width: 20px; height: 20px;
   display: grid; place-items: center;
   border: none; background: transparent;
-  border-radius: 5px;
+  border-radius: var(--r-xs);
   color: var(--fg-faded);
   cursor: pointer;
   opacity: 0;
@@ -106,15 +94,13 @@
 .task-add-btn:hover { color: var(--fg); }
 .task-add-btn .plus {
   width: 16px; height: 16px;
-  border-radius: 5px;
+  border-radius: var(--r-xs);
   display: grid; place-items: center;
   font-size: 14px; line-height: 1;
 }
 
-/* Dark-mode tag tweaks (token bg already follows mode; only the work
-   border needs a brighter shade since border-soft loses contrast on dark). */
-body[data-mode="dark"] .task-tag.work     { border-color: var(--border-strong); }
-body[data-mode="dark"] .task-tag.personal { color: var(--fg-faded); }
+/* border-soft loses contrast on dark; lift the work outline a step. */
+body[data-mode="dark"] .task-tag.work { border-color: var(--border-strong); }
 
 /* TaskFormModal — task-specific overrides on top of the global modal kit. */
 .modal-task { width: min(480px, calc(100vw - 24px)); }

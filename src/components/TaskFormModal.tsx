@@ -127,7 +127,7 @@ export function TaskFormModal({ open, task, onClose }: TaskFormModalProps) {
             <span className="pm-label">Topic *</span>
             <input
               ref={topicRef}
-              className="af-input"
+              className="field"
               type="text"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
@@ -143,7 +143,7 @@ export function TaskFormModal({ open, task, onClose }: TaskFormModalProps) {
           <label className="pm-row">
             <span className="pm-label">Description</span>
             <textarea
-              className="af-input task-form-area"
+              className="field task-form-area"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
@@ -153,7 +153,7 @@ export function TaskFormModal({ open, task, onClose }: TaskFormModalProps) {
           <label className="pm-row">
             <span className="pm-label">Tag</span>
             <input
-              className="af-input"
+              className="field"
               type="text"
               list="task-tag-presets"
               value={tag}
@@ -164,7 +164,7 @@ export function TaskFormModal({ open, task, onClose }: TaskFormModalProps) {
           <label className="pm-row">
             <span className="pm-label">Until</span>
             <input
-              className="af-input"
+              className="field"
               type="datetime-local"
               value={due}
               onChange={(e) => setDue(e.target.value)}
@@ -178,7 +178,7 @@ export function TaskFormModal({ open, task, onClose }: TaskFormModalProps) {
         </div>
         <div className="modal-foot">
           {isEdit && (
-            <button className="panel-action pm-delete" onClick={handleDelete} disabled={busy}>
+            <button className="panel-action btn-danger" onClick={handleDelete} disabled={busy}>
               Delete
             </button>
           )}
@@ -187,7 +187,7 @@ export function TaskFormModal({ open, task, onClose }: TaskFormModalProps) {
           <button className="panel-action" onClick={onClose}>
             Cancel
           </button>
-          <button className="panel-action edit-save" disabled={!canSubmit} onClick={submit}>
+          <button className="panel-action btn-primary" disabled={!canSubmit} onClick={submit}>
             {isEdit ? 'Save' : 'Add task'}
           </button>
         </div>

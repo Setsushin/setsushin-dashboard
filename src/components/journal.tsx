@@ -71,7 +71,7 @@ function Composer({ onCreate }: { onCreate: (draft: EntryDraft) => Promise<void>
   return (
     <div className="journal-composer">
       <input
-        className="af-input journal-composer-title"
+        className="field journal-composer-title"
         type="text"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
@@ -80,7 +80,7 @@ function Composer({ onCreate }: { onCreate: (draft: EntryDraft) => Promise<void>
       />
       <textarea
         ref={taRef}
-        className={`journal-composer-body af-input${img.dragOver ? ' is-dragover' : ''}`}
+        className={`journal-composer-body field${img.dragOver ? ' is-dragover' : ''}`}
         value={body}
         onChange={(e) => setBody(e.target.value)}
         onKeyDown={onKey}
@@ -93,7 +93,7 @@ function Composer({ onCreate }: { onCreate: (draft: EntryDraft) => Promise<void>
       />
       <div className="journal-composer-foot">
         <input
-          className="af-input journal-composer-tags"
+          className="field journal-composer-tags"
           type="text"
           value={tagsInput}
           onChange={(e) => setTagsInput(e.target.value)}
@@ -112,7 +112,7 @@ function Composer({ onCreate }: { onCreate: (draft: EntryDraft) => Promise<void>
           onChange={img.onFileChange}
         />
         <span className="muted journal-hint">{img.uploading ? '上传中…' : '⌘↵ to save'}</span>
-        <button className="panel-action edit-save" onClick={submit} disabled={!body.trim() || busy}>
+        <button className="panel-action btn-primary" onClick={submit} disabled={!body.trim() || busy}>
           Save
         </button>
       </div>
@@ -176,7 +176,7 @@ function EntryEditor({
       </div>
       <div className="journal-entry-main">
         <input
-          className="af-input journal-entry-title-edit"
+          className="field journal-entry-title-edit"
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -185,7 +185,7 @@ function EntryEditor({
         />
         <textarea
           ref={taRef}
-          className={`af-input journal-entry-body-edit${img.dragOver ? ' is-dragover' : ''}`}
+          className={`field journal-entry-body-edit${img.dragOver ? ' is-dragover' : ''}`}
           value={body}
           onChange={(e) => setBody(e.target.value)}
           onKeyDown={onKey}
@@ -196,7 +196,7 @@ function EntryEditor({
           rows={rows}
         />
         <input
-          className="af-input journal-entry-tags-edit"
+          className="field journal-entry-tags-edit"
           type="text"
           value={tagsInput}
           onChange={(e) => setTagsInput(e.target.value)}
@@ -204,7 +204,7 @@ function EntryEditor({
           placeholder="tags"
         />
         <div className="journal-entry-actions">
-          <button className="panel-action pm-delete" onClick={onDelete} disabled={busy}>
+          <button className="panel-action btn-danger" onClick={onDelete} disabled={busy}>
             Delete
           </button>
           <button className="journal-img-btn" onClick={img.openPicker} title="插入图片" type="button">
@@ -223,7 +223,7 @@ function EntryEditor({
           <button className="panel-action" onClick={onCancel}>
             Cancel
           </button>
-          <button className="panel-action edit-save" onClick={submit} disabled={!body.trim() || busy}>
+          <button className="panel-action btn-primary" onClick={submit} disabled={!body.trim() || busy}>
             Save
           </button>
         </div>
@@ -274,7 +274,7 @@ function EntryView({
             {entry.tags.map((t) => (
               <span
                 key={t}
-                className="journal-tag-chip"
+                className="chip journal-tag-chip"
                 onClick={(e) => {
                   e.stopPropagation();
                   onTagClick(t);
@@ -350,15 +350,15 @@ function FilterBar(props: FilterBarProps) {
     <div className="journal-filter">
       <div className="journal-filter-row">
         <input
-          className="af-input journal-filter-q"
+          className="field journal-filter-q"
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="搜索标题 / 正文…"
         />
-        <input className="af-input journal-filter-date" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+        <input className="field journal-filter-date" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
         <span className="muted journal-filter-arrow">→</span>
-        <input className="af-input journal-filter-date" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+        <input className="field journal-filter-date" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
         <span className="muted journal-filter-count">{count} 条</span>
         {hasFilters && (
           <button className="panel-action" onClick={onClear}>
@@ -374,7 +374,7 @@ function FilterBar(props: FilterBarProps) {
           {allTags.map((t) => (
             <span
               key={t}
-              className={`journal-tag-chip ${activeTags.has(t) ? 'is-active' : ''}`}
+              className={`chip journal-tag-chip ${activeTags.has(t) ? 'is-active' : ''}`}
               onClick={() => toggleTag(t)}
             >
               {t}
@@ -541,9 +541,9 @@ export function Journal() {
           copyAck={copyAck}
         />
         <div className="journal-list">
-          {entries === null && <div className="muted journal-empty">Loading…</div>}
+          {entries === null && <div className="empty">Loading…</div>}
           {entries !== null && filtered.length === 0 && (
-            <div className="muted journal-empty">
+            <div className="empty">
               {list.length === 0 ? '还没有条目 — 在上面写一条试试。' : '没有条目匹配当前筛选。'}
             </div>
           )}

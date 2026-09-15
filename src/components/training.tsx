@@ -168,7 +168,7 @@ function History({ plan, docs, todayDate, activeDate, onPick }: { plan: Plan; do
   return (
     <div className="tr-hist">
       <div className="tr-hist-head">
-        <span className="tr-hist-title">History</span>
+        <span className="label-mono">History</span>
         <select className="tr-hist-sel" value={mode} onChange={(e) => setMode(e.target.value as HistMode)}>
           <option value="14d">Last 14 days</option>
           <option value="month">Month</option>
@@ -329,9 +329,9 @@ export function Training() {
           </button>
         </div>
       )}
-      <div className="tr-switch" role="group" aria-label="Day">
+      <div className="seg seg-fill tr-switch" role="group" aria-label="Day">
         {dayKeys.map((k) => (
-          <button key={k} type="button" aria-pressed={shown === k} onClick={() => setActive(k)}>
+          <button key={k} type="button" className="seg-btn" aria-pressed={shown === k} onClick={() => setActive(k)}>
             {plan.days[k].name}
           </button>
         ))}

@@ -66,7 +66,7 @@ src/
 │   └── tasks-utils.ts · assets-utils.ts · journal-images.ts
 ├── hooks/  useFetch.ts · useHashRoute.ts · useTasksList.ts · useTweaks.ts
 ├── lib/    api.ts · color.ts · markdown.ts · events.ts
-└── styles/ tokens.css · styles.css (shell, grid, modal kit, responsive)
+└── styles/ tokens.css · styles.css (shell, grid, kits, responsive)
 
 public/                       ← copied verbatim to dist/ (served at /)
 ├── icons/  training.yml
@@ -117,8 +117,17 @@ A new feature component is `src/components/<name>.tsx` + co-located
 5. **Tone + mode are body data attrs.** `App.tsx` writes `data-tone`,
    `data-density`, `data-sidebar`, `data-radius`, `data-mode` on `<body>`, and
    `tokens.css` swaps CSS variables off those selectors. `--accent` is set inline;
-   `--accent-soft` is derived live by `hexToSoft` (`src/lib/color.ts`).
-6. **Request bodies in Functions are untrusted at the boundary** — validate +
+   `--accent-soft` is a `color-mix` of accent over `--bg-card`, declared on
+   `body` so it follows tone and dark mode.
+6. **Shared style kits live in `styles.css`; component CSS only adds modifiers.**
+   `.field` (inputs), `.chip` (+ `is-outline` / `is-active`), `.section-head`,
+   `.label-mono`, `.seg`/`.seg-btn` (+ `seg-fill`), `.panel-action` with
+   `.btn-primary` / `.btn-danger`, `.empty`, `.muted`. No hex colors or font
+   stacks outside `tokens.css` — the two exceptions are the assets chart
+   palette and bookmark swatches, which are data, not chrome. Display type is
+   the serif italic (`--font-display`, weight 500): page H1, journal titles,
+   training day names, the avatar and brand mark.
+7. **Request bodies in Functions are untrusted at the boundary** — validate +
    coerce with zod (`functions/_lib/schemas.ts` through `parse.ts`, errors via
    `http.ts`). Component props are plain typed TypeScript.
 

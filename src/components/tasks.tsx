@@ -53,7 +53,7 @@ export function Tasks({ size = 'large' }: { size?: PanelSize }) {
     const open = list.filter((t) => !t.done);
     const next = open.slice(0, 3);
     return (
-      <Panel size="compact" title="Tasks" action={<span className="muted" style={{ fontSize: 11 }}>{open.length} open</span>}>
+      <Panel size="compact" title="Tasks" action={<span className="label-mono">{open.length} open</span>}>
         <div className="task-list" style={{ padding: '4px 0' }}>
           {next.map((t) => (
             <div key={t.id} className="task" style={{ padding: '6px 4px' }}>
@@ -75,11 +75,11 @@ export function Tasks({ size = 'large' }: { size?: PanelSize }) {
                   {fmtDue(t.due_at)}
                 </div>
               ) : null}
-              <div className={`task-tag ${t.kind || 'personal'}`}>{t.tag || ''}</div>
+              <div className={`chip task-tag ${t.kind || 'personal'}`}>{t.tag || ''}</div>
             </div>
           ))}
-          {!loading && open.length === 0 && <div className="muted" style={{ padding: 8 }}>All clear ✓</div>}
-          {loading && <div className="muted" style={{ padding: 8 }}>Loading…</div>}
+          {!loading && open.length === 0 && <div className="empty">All clear ✓</div>}
+          {loading && <div className="empty">Loading…</div>}
         </div>
       </Panel>
     );
@@ -107,7 +107,7 @@ export function Tasks({ size = 'large' }: { size?: PanelSize }) {
                 {fmtDue(t.due_at)}
               </div>
             ) : null}
-            <div className={`task-tag ${t.kind || 'personal'}`}>{t.tag || ''}</div>
+            <div className={`chip task-tag ${t.kind || 'personal'}`}>{t.tag || ''}</div>
             <button
               type="button"
               className="task-remove"
@@ -119,9 +119,9 @@ export function Tasks({ size = 'large' }: { size?: PanelSize }) {
             </button>
           </div>
         ))}
-        {loading && <div className="muted" style={{ padding: 12 }}>Loading…</div>}
+        {loading && <div className="empty">Loading…</div>}
         {!loading && list.length === 0 && (
-          <div className="muted" style={{ padding: 12 }}>No tasks yet — click + to add one.</div>
+          <div className="empty">No tasks yet — click + to add one.</div>
         )}
       </div>
       <button type="button" className="task-add-btn" onClick={() => openTaskModal()}>

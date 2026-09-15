@@ -96,26 +96,9 @@
   display: flex; flex-wrap: wrap; gap: 6px;
 }
 
-/* ── Tag chip (shared between entry display + filter row) ── */
-.journal-tag-chip {
-  display: inline-flex; align-items: center;
-  font-size: 11px; font-weight: 500;
-  padding: 2px 8px;
-  border-radius: var(--r-pill);
-  background: var(--bg-card-soft);
-  color: var(--fg-muted);
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
-  letter-spacing: 0.01em;
-  user-select: none;
-}
-.journal-tag-chip:hover { color: var(--fg); }
-.journal-tag-chip.is-active {
-  background: var(--accent-soft);
-  color: var(--accent);
-  border-color: var(--accent);
-}
+/* ── Tag chip (entry display + filter row) rides the .chip kit ── */
+.journal-tag-chip { cursor: pointer; user-select: none; }
+.journal-tag-chip:not(.is-active):hover { color: var(--fg); }
 
 /* ── Timeline list ─────────────────────────────────────────── */
 .journal-list {
@@ -230,7 +213,7 @@
 .journal-entry-body li { margin: 0.15em 0; }
 .journal-entry-body li > p { margin: 0.15em 0; }
 .journal-entry-body code {
-  font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
+  font-family: var(--font-code);
   font-size: 0.92em;
   padding: 1px 5px;
   background: var(--bg-card-soft);

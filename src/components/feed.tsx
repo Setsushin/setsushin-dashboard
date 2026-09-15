@@ -31,7 +31,7 @@ export function Feed({
 
   const items = data ?? FEED_MOCK;
   const showingMock = error || !data;
-  const action = <span className="muted" style={{ fontSize: 11 }}>{items.length} items</span>;
+  const action = <span className="label-mono">{items.length} items</span>;
 
   return (
     <Panel
@@ -55,7 +55,7 @@ function FeedList({ items, loading }: { items: FeedItem[]; loading: boolean }) {
       {items.map((item, i) => (
         <FeedRow key={i} item={item} showSource />
       ))}
-      {loading && items.length === 0 && <div className="muted" style={{ padding: 12 }}>Loading…</div>}
+      {loading && items.length === 0 && <div className="empty">Loading…</div>}
     </div>
   );
 }
@@ -76,13 +76,13 @@ function FeedColumns({ items, loading }: { items: FeedItem[]; loading: boolean }
     <div className="feed feed-cols">
       {groups.map((g) => (
         <div key={g.source} className="feed-col">
-          <div className="feed-col-head">{g.source}</div>
+          <div className="section-head">{g.source}</div>
           {g.items.map((it, i) => (
             <FeedRow key={i} item={it} />
           ))}
         </div>
       ))}
-      {loading && groups.length === 0 && <div className="muted" style={{ padding: 12 }}>Loading…</div>}
+      {loading && groups.length === 0 && <div className="empty">Loading…</div>}
     </div>
   );
 }

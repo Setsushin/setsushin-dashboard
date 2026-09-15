@@ -64,7 +64,7 @@ function CategorySelect({
   return (
     <div className="profile-combo" ref={wrapRef}>
       <input
-        className="af-input"
+        className="field"
         placeholder="Category"
         value={value}
         onChange={(e) => {
@@ -171,7 +171,7 @@ function ProfileForm({
         <CategorySelect value={category ?? ''} onChange={setCategory} categories={categories} onKeyDown={onKeyLine} />
         <input
           ref={labelRef}
-          className="af-input"
+          className="field"
           placeholder="Label *"
           value={label}
           onChange={(e) => setLabel(e.target.value)}
@@ -179,7 +179,7 @@ function ProfileForm({
         />
       </div>
       <textarea
-        className="af-input profile-form-value"
+        className="field profile-form-value"
         placeholder="Value"
         rows={2}
         value={value ?? ''}
@@ -187,7 +187,7 @@ function ProfileForm({
         onKeyDown={onKeyArea}
       />
       <input
-        className="af-input"
+        className="field"
         placeholder="Note (optional)"
         value={note ?? ''}
         onChange={(e) => setNote(e.target.value)}
@@ -198,7 +198,7 @@ function ProfileForm({
         <button className="panel-action" onClick={onCancel}>
           Cancel
         </button>
-        <button className="panel-action edit-save" disabled={!label.trim()} onClick={submit}>
+        <button className="panel-action btn-primary" disabled={!label.trim()} onClick={submit}>
           Save
         </button>
       </div>
@@ -440,7 +440,7 @@ export function Profile() {
   if (items === null) {
     return (
       <Panel size="full" rows={3} title="Profile" action={action}>
-        <div className="muted" style={{ padding: 16 }}>
+        <div className="empty">
           Loading…
         </div>
       </Panel>
@@ -458,7 +458,7 @@ export function Profile() {
 
         {groups.map((g) => (
           <div key={g.cat} className="profile-group">
-            <div className="profile-group-head">{g.cat}</div>
+            <div className="section-head">{g.cat}</div>
             <div className="profile-group-body">
               {g.items.map((it) =>
                 editingId === it.id ? (
@@ -489,7 +489,7 @@ export function Profile() {
         ))}
 
         {list.length === 0 && !adding && (
-          <div className="muted" style={{ padding: 16 }}>
+          <div className="empty">
             Nothing here yet — click + Add to stash a number you always forget.
           </div>
         )}
