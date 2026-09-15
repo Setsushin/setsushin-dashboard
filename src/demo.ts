@@ -69,8 +69,6 @@ export function installDemoMode(): void {
     journal: [
       { id: 1, title: 'Welcome to the demo', body: 'This dashboard is running in **demo mode**.\n\n- Everything you see is dummy data.\n- You can add, edit, drag and delete — changes are saved **only in this browser**.\n- Nothing is sent to a server.\n\nHit *Reset demo* (bottom-right) to wipe your changes.', tags: ['meta'], created_at: nowSec(), updated_at: nowSec() },
     ],
-    layout: {},
-    pages: [],
   };
 
   if (!load('seeded', false)) {
@@ -139,27 +137,6 @@ export function installDemoMode(): void {
     if (path === '/api/calendar/sources') return ok([{ key: 'primary', label: 'Primary' }]);
     if (path === '/api/calendar') return ok(calendar());
 
-    if (path === '/api/layout') {
-      const map = load<Record<string, unknown>>('layout', {});
-      if (method === 'GET') return ok(map);
-      if (method === 'PUT') {
-        if (body && body.page_id) {
-          map[body.page_id] = body.grid;
-          save('layout', map);
-        }
-        return ok({ ok: true });
-      }
-      if (method === 'DELETE') {
-        const pid = u.searchParams.get('page_id');
-        if (pid) {
-          delete map[pid];
-          save('layout', map);
-          return ok({ deleted: pid });
-        }
-        save('layout', {});
-        return ok({ deleted: 'all' });
-      }
-    }
     if (path === '/api/training') {
       const map = load<Record<string, unknown>>('training', {});
       if (method === 'GET') return ok(map);
@@ -167,24 +144,6 @@ export function installDemoMode(): void {
         map[body.key] = body.data;
         save('training', map);
         return ok({ ok: true, key: body.key });
-      }
-    }
-    if (path === '/api/pages') return ok(load('pages', []));
-    const pageM = /^\/api\/pages\/(.+)$/.exec(path);
-    if (pageM) {
-      const pages = load<Row[]>('pages', []);
-      const id = decodeURIComponent(pageM[1]);
-      if (method === 'PUT') {
-        const i = pages.findIndex((p) => p.page_id === id);
-        const row = { page_id: id, sort_order: 100, ...body };
-        if (i >= 0) pages[i] = { ...pages[i], ...row };
-        else pages.push(row);
-        save('pages', pages);
-        return ok({ ok: true, page_id: id });
-      }
-      if (method === 'DELETE') {
-        save('pages', pages.filter((p) => p.page_id !== id));
-        return ok({ ok: true, page_id: id });
       }
     }
 

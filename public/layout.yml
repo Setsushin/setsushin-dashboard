@@ -95,6 +95,7 @@ pages:
 
   # ── Feed: feed is hero, everything else is context rail ────────────────
   - id: feed
+    title: What's new today?
     header:
       - type: bookmarks
         config: { layout: row, bucket: feed }

@@ -1,5 +1,4 @@
-// Sidebar — brand, nav, Quick Capture. nav.id matching a page.id routes via
-// the URL hash; otherwise it scrolls to a widget with that id (legacy mode).
+// Sidebar — brand, nav (hash routes), Quick Capture.
 
 import { focusTaskInput } from '../lib/events';
 import type { NavItem } from '../types';
@@ -8,20 +7,13 @@ export interface SidebarProps {
   brand: string;
   nav: NavItem[];
   activeId?: string;
-  pageIds: Set<string>;
-  onAddPage?: () => void;
   open: boolean;
   onClose?: () => void;
 }
 
-export function Sidebar({ brand, nav, activeId, pageIds, onAddPage, open, onClose }: SidebarProps) {
+export function Sidebar({ brand, nav, activeId, open, onClose }: SidebarProps) {
   const onClick = (id: string) => {
-    if (pageIds.has(id)) {
-      window.location.hash = id;
-    } else {
-      const el = document.querySelector(`#widget-${id}-0`);
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    window.location.hash = id;
     onClose?.();
   };
   const dataOpen = open ? 'true' : undefined;
@@ -45,19 +37,6 @@ export function Sidebar({ brand, nav, activeId, pageIds, onAddPage, open, onClos
               {n.badge && <span className="badge">{n.badge}</span>}
             </button>
           ))}
-          {onAddPage && (
-            <button
-              className="sb-item sb-add-page"
-              onClick={() => {
-                onAddPage();
-                onClose?.();
-              }}
-              title="Create a new page (label, icon, title, subtitle)"
-            >
-              <span className="sb-add-plus">+</span>
-              <span>Add page</span>
-            </button>
-          )}
         </nav>
         <div
           className="sb-quick-capture"

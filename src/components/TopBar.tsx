@@ -1,4 +1,4 @@
-// TopBar — search, theme toggle, edit-mode toggle, user menu.
+// TopBar — search, theme toggle, user menu.
 
 import { useEffect, useRef } from 'react';
 import { UserMenu } from './UserMenu';
@@ -7,13 +7,11 @@ import type { Me } from '../types';
 export interface TopBarProps {
   mode: string;
   onToggleMode: () => void;
-  editMode: boolean;
-  onToggleEditMode: () => void;
   onMenuClick: () => void;
   me: Me | null;
 }
 
-export function TopBar({ mode, onToggleMode, editMode, onToggleEditMode, onMenuClick, me }: TopBarProps) {
+export function TopBar({ mode, onToggleMode, onMenuClick, me }: TopBarProps) {
   const isDark = mode === 'dark';
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -60,17 +58,6 @@ export function TopBar({ mode, onToggleMode, editMode, onToggleEditMode, onMenuC
             <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
           </svg>
         )}
-      </button>
-      <button
-        className={`icon-btn ${editMode ? 'is-active' : ''}`}
-        aria-label="Toggle edit mode"
-        onClick={onToggleEditMode}
-        title={editMode ? 'Exit edit mode' : 'Edit layout (drag, resize, add, remove)'}
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-        </svg>
       </button>
       <UserMenu me={me} />
     </header>

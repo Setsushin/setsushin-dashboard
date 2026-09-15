@@ -1,4 +1,4 @@
-// App — root composition. Pulls the shell + grid/edit + widgets + tweaks panel
+// App — root composition. Pulls the shell + grid + widgets + tweaks panel
 // together. main.tsx mounts it.
 
 import { useCallback, useEffect, useState } from 'react';
@@ -8,18 +8,15 @@ import { PageHeader } from './components/PageHeader';
 import { StatStrip } from './components/Stat';
 import { HeaderStrip } from './components/HeaderStrip';
 import { DashboardGrid } from './components/DashboardGrid';
-import { PageMetaModal, type PageMetaForm, type PageMetaInitial } from './components/PageMetaModal';
 import { TweaksPanel, TweakSection, TweakRadio, TweakColor, TweakText } from './components/tweaks';
-import { EditableGrid } from './edit/EditableGrid';
 import { TaskFormModal } from './widgets/TaskFormModal';
 import { ToastHost } from './components/Toast';
 import { useLayout } from './hooks/useLayout';
 import { useHashRoute } from './hooks/useHashRoute';
 import { useTweaks } from './hooks/useTweaks';
-import { onFocusTaskInput, onOpenTaskModal, showToast } from './lib/events';
-import { apiFetch } from './lib/api';
+import { onFocusTaskInput, onOpenTaskModal } from './lib/events';
 import { hexToSoft } from './lib/color';
-import type { GridItem, Me, Task } from './types';
+import type { Me, Task } from './types';
 
 interface Tweaks {
   tone: string;
@@ -53,7 +50,6 @@ function nameFromEmail(email?: string): string {
 }
 
 type TaskModalState = Task | 'add' | null;
-type PageMetaModalState = { mode: 'add' | 'edit'; initial: PageMetaInitial | null } | null;
 
 export function App() {
   const [t, setTweak] = useTweaks<Tweaks>(TWEAK_DEFAULTS);
@@ -66,20 +62,10 @@ export function App() {
   }, []);
   const displayName = t.userName?.trim() || nameFromEmail(me?.email) || 'You';
 
-  const {
-    loading: layoutLoading,
-    layout,
-    error: layoutError,
-    reloadOverrides,
-    setOverrideLocal,
-    reloadPagesMeta,
-    setPageMetaLocal,
-  } = useLayout();
+  const { loading: layoutLoading, layout, error: layoutError } = useLayout();
 
-  const [editMode, setEditMode] = useState(false);
   // Mobile-only sidebar drawer (CSS hides it >768px).
   const [navOpen, setNavOpen] = useState(false);
-  const [pageMetaModal, setPageMetaModal] = useState<PageMetaModalState>(null);
   // Single global task modal: null | 'add' | <task>.
   const [taskModal, setTaskModal] = useState<TaskModalState>(null);
   const closeTaskModal = useCallback(() => setTaskModal(null), []);
@@ -88,7 +74,7 @@ export function App() {
     const offFocus = onFocusTaskInput(() => setTaskModal((prev) => prev ?? 'add'));
     const offOpen = onOpenTaskModal((task?: Task) => setTaskModal(task || 'add'));
     const onKey = (e: KeyboardEvent) => {
-      if (taskModal !== null || pageMetaModal !== null) return;
+      if (taskModal !== null) return;
       const target = e.target as HTMLElement | null;
       const tag = (target?.tagName || '').toLowerCase();
       if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
@@ -104,7 +90,7 @@ export function App() {
       offOpen();
       window.removeEventListener('keydown', onKey);
     };
-  }, [taskModal, pageMetaModal]);
+  }, [taskModal]);
 
   useEffect(() => {
     document.body.dataset.tone = t.tone;
@@ -129,10 +115,7 @@ export function App() {
 
   const hash = useHashRoute();
 
-  // Switching pages while editing exits edit mode (drops the draft) and closes
-  // the mobile nav drawer.
   useEffect(() => {
-    setEditMode(false);
     setNavOpen(false);
   }, [hash]);
 
@@ -150,81 +133,7 @@ export function App() {
     return <div className="boot boot-err">Failed to load layout.yml: {String(layoutError?.message)}</div>;
 
   const pages = layout.pages || [];
-  const pageIds = new Set(pages.map((p) => p.id));
   const page = pages.find((p) => p.id === hash) || pages[0];
-
-  const onSaveLayout = async (grid: GridItem[]) => {
-    if (!page) return;
-    setOverrideLocal(page.id, grid);
-    try {
-      await apiFetch('/api/layout', {
-        method: 'PUT',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ page_id: page.id, grid }),
-      });
-      setEditMode(false);
-    } catch (err) {
-      console.error('layout save failed:', err);
-      showToast(`Save failed: ${(err as Error).message} — changes kept in the editor`, 'error');
-      reloadOverrides();
-    }
-  };
-
-  const onSavePageMeta = async (form: PageMetaForm) => {
-    const isAdd = pageMetaModal?.mode === 'add';
-    setPageMetaLocal(form.page_id, {
-      label: form.label,
-      icon: form.icon,
-      title: form.title,
-      subtitle: form.subtitle,
-      sort_order: form.sort_order,
-    });
-    setPageMetaModal(null);
-    try {
-      await apiFetch(`/api/pages/${encodeURIComponent(form.page_id)}`, {
-        method: 'PUT',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-      reloadPagesMeta();
-      if (isAdd) window.location.hash = form.page_id;
-    } catch (err) {
-      console.error('page meta save failed:', err);
-      showToast(`Save failed: ${(err as Error).message}`, 'error');
-      reloadPagesMeta();
-    }
-  };
-
-  const onDeletePage = async (pageId: string) => {
-    if (!window.confirm(`Delete page "${pageId}" and its layout? This cannot be undone.`)) return;
-    setPageMetaLocal(pageId, null);
-    setOverrideLocal(pageId, null);
-    setPageMetaModal(null);
-    try {
-      await apiFetch(`/api/pages/${encodeURIComponent(pageId)}`, { method: 'DELETE' });
-      reloadPagesMeta();
-      reloadOverrides();
-      if (window.location.hash.slice(1) === pageId) window.location.hash = '';
-    } catch (err) {
-      console.error('page delete failed:', err);
-      showToast(`Delete failed: ${(err as Error).message}`, 'error');
-      reloadPagesMeta();
-      reloadOverrides();
-    }
-  };
-
-  const onResetPage = async () => {
-    if (!page) return;
-    if (!window.confirm(`Reset "${page.id}" to layout.yml default?`)) return;
-    try {
-      await apiFetch(`/api/layout?page_id=${encodeURIComponent(page.id)}`, { method: 'DELETE' });
-      setOverrideLocal(page.id, null);
-      setEditMode(false);
-    } catch (err) {
-      console.error('layout reset failed:', err);
-      showToast(`Reset failed: ${(err as Error).message}`, 'error');
-    }
-  };
 
   return (
     <div className="app">
@@ -232,8 +141,6 @@ export function App() {
         brand={displayName}
         nav={layout.nav}
         activeId={page?.id}
-        pageIds={pageIds}
-        onAddPage={() => setPageMetaModal({ mode: 'add', initial: null })}
         open={navOpen}
         onClose={() => setNavOpen(false)}
       />
@@ -244,60 +151,20 @@ export function App() {
             const nextMode = t.mode === 'dark' ? 'light' : 'dark';
             setTweak({ mode: nextMode, sidebar: nextMode });
           }}
-          editMode={editMode}
-          onToggleEditMode={() => setEditMode((v) => !v)}
           onMenuClick={() => setNavOpen(true)}
           me={me}
         />
-        <div className="content" data-screen-label={page?.id} data-edit-mode={editMode || undefined}>
+        <div className="content" data-screen-label={page?.id}>
           <PageHeader name={displayName} dateStr={dateStr} weekday={weekday} title={page?.title} subtitle={page?.subtitle} />
           <StatStrip stats={page?.stats} />
           <HeaderStrip items={page?.header} />
-          {editMode && page ? (
-            <EditableGrid
-              page={page}
-              onSave={onSaveLayout}
-              onCancel={() => setEditMode(false)}
-              onResetPage={onResetPage}
-              onEditPageMeta={() =>
-                setPageMetaModal({
-                  mode: 'edit',
-                  initial: {
-                    page_id: page.id,
-                    label: layout.nav.find((n) => n.id === page.id)?.label || '',
-                    icon: layout.nav.find((n) => n.id === page.id)?.icon || 'icons/more.svg',
-                    title: page.title || '',
-                    subtitle: page.subtitle || '',
-                    userAdded: !!page.userAdded,
-                    sort_order: page.sortOrder,
-                  },
-                })
-              }
-            />
-          ) : (
-            <DashboardGrid items={page?.grid} />
-          )}
+          <DashboardGrid items={page?.grid} />
         </div>
         <div className="footer">
           <span>Simplicity is the ultimate sophistication.</span>
           <span className="att">— Leonardo da Vinci</span>
         </div>
       </main>
-
-      {pageMetaModal && (
-        <PageMetaModal
-          mode={pageMetaModal.mode}
-          initial={pageMetaModal.initial}
-          existingIds={pages.map((p) => p.id)}
-          onSave={onSavePageMeta}
-          onDelete={
-            pageMetaModal.mode === 'edit' && pageMetaModal.initial?.page_id
-              ? () => onDeletePage(pageMetaModal.initial!.page_id!)
-              : undefined
-          }
-          onClose={() => setPageMetaModal(null)}
-        />
-      )}
 
       <TaskFormModal
         open={taskModal !== null}

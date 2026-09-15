@@ -6,8 +6,8 @@
 // What it does:
 //   1. Asserts wrangler dev is up at $SMOKE_URL (default http://127.0.0.1:8787)
 //   2. Hits every static asset + Function endpoint and checks status / shape
-//   3. Round-trips /api/layout (PUT → GET → DELETE → GET) — D1 + auth
-//      together, so any regression in either lights up here
+//   3. Round-trips every D1-backed API (tasks/bookmarks/assets/profile/
+//      training) so D1 + auth + Function regressions light up here
 //
 // Exits 0 on green, 1 on first red. Designed to be cheap (~2s).
 //
@@ -66,16 +66,16 @@ for (const p of ['/layout.yml', '/schedule.yml', '/training.yml', '/icons/home.s
   check(`GET ${p}`, r.ok, r.error || (r.ok ? '' : `${r.status}`));
 }
 
-// 2. Pages Functions reachable. /api/layout, /api/tasks, /api/assets are
-// fully self-contained (D1 only, no upstream). /api/fx hits a public API
-// but always returns 200 (falls back to hardcoded rates on error). /api/feed
+// 2. Pages Functions reachable. /api/tasks, /api/assets are fully
+// self-contained (D1 only, no upstream). /api/fx hits a public API but
+// always returns 200 (falls back to hardcoded rates on error). /api/feed
 // and /api/calendar hit external services that are commonly blocked from
 // this Mac's proxy — we just check they don't 500, accepting any 2xx/4xx
 // as "function ran".
 console.log('\n  functions');
 {
-  const layout = await fetchOK('/api/layout');
-  check('GET /api/layout (D1)', layout.ok, layout.ok ? '' : `${layout.status}`);
+  const tasks = await fetchOK('/api/tasks');
+  check('GET /api/tasks (D1)', tasks.ok, tasks.ok ? '' : `${tasks.status}`);
   const fx = await fetchJSON('/api/fx');
   check('GET /api/fx (always 200, may be stale)',
         fx.ok && typeof fx.json?.rates?.USD === 'number',
@@ -98,11 +98,11 @@ for (const p of ['/api/feed', '/api/calendar?source=primary&limit=2']) {
 // 3. Source code does NOT leak — paths outside public/ should fall back
 // to index.html (status 200 but body is HTML), or 404.
 console.log('\n  source code is fenced off');
-for (const p of ['/migrations/0001_init.sql', '/migrations/0003_pages.sql',
+for (const p of ['/migrations/0001_init.sql', '/migrations/0010_training.sql',
                  '/migrations/0007_profile.sql',
                  '/test/parseFeed.test.ts', '/src/main.tsx', '/src/App.tsx',
                  '/package.json', '/wrangler.toml', '/functions/api/feed.ts',
-                 '/functions/api/pages/[id].ts', '/functions/api/profile/[id].ts']) {
+                 '/functions/api/training.ts', '/functions/api/profile/[id].ts']) {
   const r = await fetchOK(p);
   const isHtmlFallback = r.body.startsWith('<!DOCTYPE html>') || r.body.startsWith('<html');
   const is404 = r.status === 404;
@@ -110,46 +110,7 @@ for (const p of ['/migrations/0001_init.sql', '/migrations/0003_pages.sql',
         `got ${r.status} body=${r.body.slice(0, 30).replace(/\n/g, ' ')}…`);
 }
 
-// 4. /api/layout round-trip — D1 + auth + Function together.
-console.log('\n  /api/layout CRUD round-trip');
-{
-  await fetchJSON('/api/layout', { method: 'DELETE' });
-
-  const initial = await fetchJSON('/api/layout');
-  check('GET initial → {}', initial.ok && JSON.stringify(initial.json) === '{}',
-        `got ${JSON.stringify(initial.json)}`);
-
-  const put = await fetchJSON('/api/layout', {
-    method: 'PUT',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ page_id: 'smoke', grid: [{ type: 'tasks', size: 'compact' }] }),
-  });
-  check('PUT smoke → ok', put.ok && put.json?.ok === true,
-        `got ${put.status} ${JSON.stringify(put.json)}`);
-
-  const after = await fetchJSON('/api/layout');
-  const got = after.json?.smoke;
-  check('GET after PUT → smoke override present',
-        Array.isArray(got) && got[0]?.type === 'tasks' && got[0]?.size === 'compact',
-        `got ${JSON.stringify(after.json)}`);
-
-  const del = await fetchJSON('/api/layout?page_id=smoke', { method: 'DELETE' });
-  check('DELETE smoke → ok', del.ok && del.json?.deleted === 'smoke',
-        `got ${JSON.stringify(del.json)}`);
-
-  const final = await fetchJSON('/api/layout');
-  check('GET final → {}', final.ok && JSON.stringify(final.json) === '{}',
-        `got ${JSON.stringify(final.json)}`);
-
-  const bad = await fetchJSON('/api/layout', {
-    method: 'PUT',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ oops: true }),
-  });
-  check('PUT bad body → 400', bad.status === 400, `got ${bad.status}`);
-}
-
-// 5. /api/tasks round-trip — POST → GET → PATCH → GET → DELETE → GET.
+// 4. /api/tasks round-trip — POST → GET → PATCH → GET → DELETE → GET.
 console.log('\n  /api/tasks CRUD round-trip');
 {
   // Capture initial set so we can scope cleanup to what this run created.
@@ -292,59 +253,7 @@ console.log('\n  /api/bookmarks CRUD round-trip');
   check('PATCH non-existent → 404', nf.status === 404, `got ${nf.status}`);
 }
 
-// 6. /api/pages CRUD — PUT (create) → GET (find row) → PUT (update) →
-//    GET (verify) → DELETE → GET (no row). Plus 400 negative cases.
-console.log('\n  /api/pages CRUD round-trip');
-{
-  const id = `smoke_${Date.now()}`;
-  const before = await fetchJSON('/api/pages');
-  const beforeIds = new Set((before.json || []).map(p => p.page_id));
-
-  const put = await fetchJSON(`/api/pages/${id}`, {
-    method: 'PUT',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ label: 'Smoke', icon: 'icons/more.svg', title: 'T' }),
-  });
-  check('PUT new page → ok', put.ok && put.json?.ok === true,
-        `got ${put.status} ${JSON.stringify(put.json)}`);
-
-  const list = await fetchJSON('/api/pages');
-  const found = (list.json || []).find(p => p.page_id === id);
-  check('GET shows new page',
-        found && found.label === 'Smoke' && found.title === 'T',
-        `got ${JSON.stringify(found)}`);
-
-  const updated = await fetchJSON(`/api/pages/${id}`, {
-    method: 'PUT',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ label: 'Smoke 2', icon: 'icons/more.svg', title: 'T2', subtitle: 'sub' }),
-  });
-  check('PUT (update) → ok', updated.ok && updated.json?.ok === true,
-        `got ${updated.status} ${JSON.stringify(updated.json)}`);
-
-  const list2 = await fetchJSON('/api/pages');
-  const after = (list2.json || []).find(p => p.page_id === id);
-  check('GET reflects update',
-        after?.label === 'Smoke 2' && after?.subtitle === 'sub',
-        `got ${JSON.stringify(after)}`);
-
-  const del = await fetchJSON(`/api/pages/${id}`, { method: 'DELETE' });
-  check('DELETE → ok', del.ok && del.json?.ok === true && del.json?.page_id === id,
-        `got ${JSON.stringify(del.json)}`);
-
-  const list3 = await fetchJSON('/api/pages');
-  const remaining = (list3.json || []).filter(p => !beforeIds.has(p.page_id));
-  check('GET no smoke page remains', remaining.length === 0,
-        `leftover: ${JSON.stringify(remaining)}`);
-
-  const bad = await fetchJSON('/api/pages/!!bad!!', {
-    method: 'PUT', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ label: 'x' }),
-  });
-  check('PUT bad page_id → 400', bad.status === 400, `got ${bad.status}`);
-}
-
-// 7. /api/assets round-trip — POST → GET → PATCH → GET → DELETE → GET.
+// 6. /api/assets round-trip — POST → GET → PATCH → GET → DELETE → GET.
 // Scoped to what this run created so we don't trample seeded portfolio rows.
 console.log('\n  /api/assets CRUD round-trip');
 {

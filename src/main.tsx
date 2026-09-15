@@ -2,7 +2,6 @@ import { createRoot } from 'react-dom/client';
 import { installDemoMode } from './demo';
 import './styles/tokens.css';
 import './styles/styles.css';
-import './styles/edit-mode.css';
 import './widgets';
 import { App } from './App';
 

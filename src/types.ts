@@ -77,8 +77,6 @@ export interface Page {
   stats?: StatConfig[];
   header?: GridItem[];
   grid?: GridItem[];
-  userAdded?: boolean;
-  sortOrder?: number;
 }
 
 export interface LayoutYaml {
@@ -90,15 +88,6 @@ export interface LayoutYaml {
 export interface Layout extends LayoutYaml {
   nav: NavItem[];
   pages: Page[];
-}
-
-export interface PageMeta {
-  page_id: string;
-  label?: string | null;
-  icon?: string | null;
-  title?: string | null;
-  subtitle?: string | null;
-  sort_order?: number;
 }
 
 // ── Data records (D1 + API responses) ────────────────────────────────────

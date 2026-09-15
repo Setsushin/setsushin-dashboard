@@ -124,9 +124,9 @@ export function AddBookmarkModal({
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal modal-page-meta" onClick={(e) => e.stopPropagation()}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-title">Add bookmark</div>
-        <div className="page-meta-form" onKeyDown={onKey}>
+        <div className="modal-form" onKeyDown={onKey}>
           <label className="pm-row">
             <span className="pm-label">Name</span>
             <input
