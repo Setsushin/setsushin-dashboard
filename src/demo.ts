@@ -160,6 +160,15 @@ export function installDemoMode(): void {
         return ok({ deleted: 'all' });
       }
     }
+    if (path === '/api/training') {
+      const map = load<Record<string, unknown>>('training', {});
+      if (method === 'GET') return ok(map);
+      if (method === 'PUT' && typeof body.key === 'string') {
+        map[body.key] = body.data;
+        save('training', map);
+        return ok({ ok: true, key: body.key });
+      }
+    }
     if (path === '/api/pages') return ok(load('pages', []));
     const pageM = /^\/api\/pages\/(.+)$/.exec(path);
     if (pageM) {

@@ -75,12 +75,12 @@ src/
 └── styles/                   # tokens.css, styles.css, edit-mode.css (global)
 
 public/                       ← copied verbatim to dist/ (served at /)
-├── icons/  layout.yml  schedule.yml
+├── icons/  layout.yml  schedule.yml  training.yml
 
 functions/                    ← CF Pages Functions (TypeScript)
-├── _lib/  auth.ts · types.ts · coerce.ts · patch.ts · journal-tags.ts
+├── _lib/  auth.ts · types.ts · schemas.ts · parse.ts · http.ts · journal-tags.ts
 └── api/   markets.ts feed.ts calendar.ts fx.ts me.ts layout.ts pages.ts
-          assets.ts tasks.ts bookmarks.ts profile.ts journal.ts
+          assets.ts tasks.ts bookmarks.ts profile.ts journal.ts training.ts
           <name>/[id].ts (PATCH/DELETE) · calendar/sources.ts · pages/[id].ts
 
 migrations/   D1 schema (dev-only)        test/   vitest units (.test.ts)
@@ -131,8 +131,8 @@ and asserting 404 / SPA fallback.
    `--accent-soft` is derived live by `hexToSoft` (`src/lib/color.ts`).
 7. **Widget config is `Record<string, unknown>`.** Each widget reads the fields
    it needs with a local cast (`config?.endpoint as string`). Request bodies in
-   Functions are likewise untrusted at the boundary — validate + coerce
-   (`functions/_lib/coerce.ts`, `patch.ts`).
+   Functions are likewise untrusted at the boundary — validate + coerce with
+   zod (`functions/_lib/schemas.ts` through `parse.ts`, errors via `http.ts`).
 
 ## Data layer (D1)
 
@@ -146,6 +146,7 @@ and asserting 404 / SPA fallback.
 | `/api/bookmarks` | `bookmarks_local`  | yes | GET (by bucket) · POST · `bookmarks/[id]` PATCH/DELETE |
 | `/api/journal`   | `journal_entries`  | yes | GET list · POST · `journal/[id]` PATCH/DELETE |
 | `/api/profile`   | `profile_items`    | yes | GET list · POST · `profile/[id]` PATCH/DELETE |
+| `/api/training`  | `training_state`   | yes | GET fold `{key: doc}` · PUT one key (`weights` / `log:YYYY-MM-DD`) |
 
 User identity comes from `getUserEmail(request, env)` in
 `functions/_lib/auth.ts`: prod reads the `Cf-Access-Authenticated-User-Email`

@@ -20,6 +20,7 @@ nav:
   - { id: finance, label: Finance, icon: icons/points.svg }
   - { id: feed,    label: Feed,    icon: icons/library.svg }
   - { id: journal, label: Journal, icon: icons/book.svg }
+  - { id: training, label: Training, icon: icons/check.svg }
   - { id: profile, label: Profile, icon: icons/account.svg }
 
 pages:
@@ -127,6 +128,15 @@ pages:
     title: Journal
     grid:
       - type: journal
+
+  # ── Training: upper/lower split card. Plan text lives in training.yml
+  # (not widget config — a D1 grid override would freeze it); weights and
+  # per-day set ticks live in D1 via /api/training.
+  - id: training
+    title: Training
+    grid:
+      - type: training
+        config: { source: training.yml }
 
   # ── Profile: personal reference vault, single full-width widget ────────
   - id: profile

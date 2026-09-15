@@ -11,3 +11,4 @@ import './feed';
 import './assets';
 import './journal';
 import './profile';
+import './training';

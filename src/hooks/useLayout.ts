@@ -59,7 +59,7 @@ export function useLayout(): UseLayoutResult {
     let cancelled = false;
     Promise.all([
       // Bump ?v= whenever layout.yml changes — CF's edge caches it.
-      fetch('layout.yml?v=2')
+      fetch('layout.yml?v=3')
         .then((r) => (r.ok ? r.text() : Promise.reject(new Error(`HTTP ${r.status}`))))
         .then((t) => yaml.load(t) as LayoutYaml),
       loadOverrides(),

@@ -61,7 +61,7 @@ console.log('  static assets');
         /<script type="module"[^>]*src="\/assets\//.test(root.body),
         'index.html has no /assets/*.js module script');
 }
-for (const p of ['/layout.yml', '/schedule.yml', '/icons/home.svg']) {
+for (const p of ['/layout.yml', '/schedule.yml', '/training.yml', '/icons/home.svg']) {
   const r = await fetchOK(p);
   check(`GET ${p}`, r.ok, r.error || (r.ok ? '' : `${r.status}`));
 }
@@ -529,6 +529,40 @@ console.log('\n  /api/images round-trip');
     body: 'not an image',
   });
   check('POST text/plain → 400', bad.status === 400, `got ${bad.status}`);
+}
+
+// 10. /api/training — generic per-user KV behind the training card. Uses a
+//     1970 log key so repeated runs never touch real weights or today's log;
+//     the final PUT empties it so the widget's "latest log" logic ignores it.
+console.log('\n  /api/training round-trip');
+{
+  const key = 'log:1970-01-01';
+  const data = { day: 'upper', ticks: { u_scap: [true] } };
+  const put = await fetchJSON('/api/training', {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ key, data }),
+  });
+  check('PUT log:1970-01-01 → {ok, key}', put.ok && put.json?.ok === true && put.json.key === key,
+        `got ${put.status} ${JSON.stringify(put.json)}`);
+
+  const get = await fetchJSON('/api/training');
+  check('GET folds key → data', get.ok && JSON.stringify(get.json?.[key]) === JSON.stringify(data),
+        `got ${get.status} ${JSON.stringify(get.json?.[key])}`);
+
+  const bad = await fetchJSON('/api/training', {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ key: 'nope', data: {} }),
+  });
+  check('PUT bad key → 400', bad.status === 400, `got ${bad.status}`);
+
+  const clear = await fetchJSON('/api/training', {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ key, data: {} }),
+  });
+  check('PUT empty doc (clear) → ok', clear.ok && clear.json?.ok === true, `got ${clear.status}`);
 }
 
 console.log(`\n  ${pass} passed, ${fail} failed\n`);

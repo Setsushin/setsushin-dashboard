@@ -1,0 +1,177 @@
+# Training plan — upper/lower split. Rendered by widgets/training.tsx.
+# Edit freely: text is shown as-is. Weights here are starting defaults;
+# the widget's "Edit weights" overrides live in D1 and win when set.
+#
+# Item shapes:
+#   single   — id, name, (load text | kg + unit), scheme, sets, cue, prog
+#   superset — id, label, rounds, rest, exercises[]  (each: id, name, kg, unit, scheme, cue)
+#   cardio   — id, name, scheme, cue
+# Every id must be unique across both days (ticks + weights are keyed by it).
+
+days:
+  upper:
+    name: 上肢日
+    sub: 力量约55–60分钟 + 有氧30分钟
+    items:
+      - type: single
+        id: u_scap
+        name: 肩胛引体
+        load: 徒手
+        scheme: 8–10 × 1组
+        sets: 1
+        cue: '手臂锁直不弯肘，只做肩胛下沉，顶点停一秒，放回完全悬垂。'
+      - type: single
+        id: u_pull
+        name: 死悬引体
+        load: 徒手
+        scheme: 单次 × 5–6组 · 组间90秒
+        sets: 6
+        cue: '锁肘悬垂起，下巴过杠，放回锁肘悬垂。少任何一段不算。'
+        prog: '第一组能做3个 → 每组2次 × 4组'
+      - type: single
+        id: u_incline
+        name: 器械上斜推（或上斜哑铃卧推）
+        kg: null
+        scheme: 8–10 × 3组
+        sets: 3
+        cue: '上胸优先，先做。30度，不要45度以上。器械约45–50kg起，哑铃约18–20kg/侧起，第一次以8–10次做得完为准。'
+      - type: single
+        id: u_press
+        name: 胸推
+        kg: 70
+        scheme: 8–10 × 3组
+        sets: 3
+        cue: '同一台机器调平。跟在上斜推后面重量会掉一档，按新数字记录。'
+      - type: single
+        id: u_lat
+        name: 高位下拉
+        kg: 65
+        scheme: 8–10 × 3组
+        sets: 3
+        cue: '组间60–75秒。机器被占就先做划船。'
+      - type: single
+        id: u_row
+        name: 坐姿划船
+        kg: 70
+        scheme: 8–10 × 3组
+        sets: 3
+        cue: '组间60–75秒。'
+      - type: superset
+        id: u_ssC
+        label: 超级组（两副哑铃，同一位置）
+        rounds: 4
+        rest: 3–4轮 · 轮间60秒
+        exercises:
+          - id: u_lateral
+            name: 侧平举
+            kg: 5
+            unit: kg/侧
+            scheme: 12–15
+          - id: u_rear
+            name: 后束飞鸟
+            kg: 8
+            unit: kg/侧
+            scheme: 12–15
+            cue: '标准俯身、肘微屈，靠肩后侧收缩，不甩。'
+      - type: single
+        id: u_crunch
+        name: 反向山羊挺身卷腹（45°）
+        load: 徒手
+        scheme: 12–15 × 3组
+        sets: 3
+        cue: '卷脊柱不折髋：上背先离开，一节节弯；大腿根发酸就是髋在干活。'
+        prog: '做满15次 → 抱片加重，从5kg起'
+      - type: cardio
+        id: u_cardio
+        name: 坡走
+        scheme: 30分钟
+        cue: '全程不扶把手。心率<130加1%坡，上限12%。'
+
+  lower:
+    name: 下肢日
+    sub: 力量约50–55分钟 + 有氧30分钟
+    items:
+      - type: single
+        id: l_scap
+        name: 肩胛引体
+        load: 徒手
+        scheme: 8–10 × 1组
+        sets: 1
+        cue: '手臂锁直不弯肘，只做肩胛下沉，顶点停一秒，放回完全悬垂。'
+      - type: single
+        id: l_pull
+        name: 死悬引体
+        load: 徒手
+        scheme: 单次 × 5–6组 · 组间90秒
+        sets: 6
+        cue: '锁肘悬垂起，下巴过杠，放回锁肘悬垂。'
+        prog: '第一组能做3个 → 每组2次 × 4组'
+      - type: single
+        id: l_rdl
+        name: 罗马尼亚硬拉
+        kg: 80
+        scheme: 8–10 × 4组
+        sets: 4
+        cue: '先做递增组 40×5、60×3。如果之前80是常规硬拉，RDL从60–70起。'
+        prog: '超过90kg → 用助力带'
+      - type: single
+        id: l_legpress
+        name: 腿举
+        kg: 140
+        scheme: 8–10 × 3组
+        sets: 3
+        cue: '底部骨盆不离靠背、下背不拱起，大腿贴近躯干前就停。'
+      - type: single
+        id: l_curl
+        name: 坐姿腿弯举
+        kg: null
+        scheme: 10–12 × 3组
+        sets: 3
+        cue: '垫子在脚踝后面（不是小腿前面）。膝对准转轴，屁股贴住座椅，勾到底停一下，两秒放回。第一次找到10–12次能完成的重量。'
+      - type: single
+        id: l_lunge
+        name: 后弓步
+        kg: 18
+        unit: kg 高脚杯
+        scheme: 10/侧 × 2组
+        sets: 2
+        cue: '哑铃抱胸前，两脚各走各的轨道（不站一条线），下放两秒，后脚脚尖先着地。'
+        prog: '还是晃 → 换史密斯机分腿蹲'
+      - type: single
+        id: l_hlr
+        name: 悬垂屈膝举腿
+        load: 徒手
+        scheme: 10–15 × 3组
+        sets: 3
+        cue: '顶点要有骨盆后倾，不是腿抬到水平就完。'
+        prog: '做满15次 → 换直腿版，再往后夹哑铃'
+      - type: cardio
+        id: l_cardio
+        name: 坡走
+        scheme: 30分钟
+        cue: '全程不扶把手。心率<130加1%坡，上限12%。'
+
+rules: |
+  ### 周排（默认值，漏课做序列里的下一个）
+
+  | 一 | 二 | 三 | 四 | 五 | 六 | 日 |
+  |---|---|---|---|---|---|---|
+  | **上** | **下** | 休 | **上** | 休 | **下** | 休 |
+
+  ### 进阶
+
+  每组停在还剩2次余力。三组都做满区间上限，下次加重，回到区间下限。腿举每次加10kg（雪橇式）或5–10kg（配重式），其他动作加2.5–5kg。
+
+  引体：第一组能做3个 → 每组2次 × 4组；极限到5 → 每组3次。
+
+  ### 有氧
+
+  参数以全程不扶把手为准。心率掉到130以下加1%坡，上限12%左右。恢复出问题先砍掉一个上肢日的有氧，不动力量。
+
+  ### 监控
+
+  正式组重量连续两次训练往下掉、或睡眠变差 → 先加训练日碳水，不改训练内容。
+
+  ### 每周有效组数
+
+  胸12 · 背12+引体 · 中束6–8 · 后束6–8 · 股四头10 · 腘绳14 · 臀约14 · 腹12。缺口期封顶，不加组。

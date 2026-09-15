@@ -160,6 +160,12 @@ export const layoutPut = z.object({
   grid: z.array(z.unknown()),
 });
 
+// training_state KV: one JSON doc per key.
+export const trainingPut = z.object({
+  key: z.string().regex(/^(weights|log:\d{4}-\d{2}-\d{2})$/),
+  data: z.record(z.string(), z.unknown()),
+});
+
 const pageText = z.string().transform((s) => s.trim() || null).nullable().optional();
 
 export const pagesPut = z.object({
