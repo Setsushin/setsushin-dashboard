@@ -1,70 +1,15 @@
 // tasks — D1-backed tasks via /api/tasks. Add/edit goes through the global
 // TaskFormModal (opened via openTaskModal); toggle/remove are optimistic.
 
-import { useEffect } from 'react';
-import { Panel } from './Panel';
-import { registerWidget, useWidgetSize } from './registry';
+import { Panel, type PanelSize } from './Panel';
 import { useTasksList } from '../hooks/useTasksList';
-import { dispatchTasksUpdated, mutateTasks, openTaskModal } from '../lib/events';
+import { mutateTasks, openTaskModal } from '../lib/events';
 import { apiFetch } from '../lib/api';
 import { fmtDue } from './tasks-utils';
-import type { WidgetProps } from '../types';
 import './tasks.css';
 
-const LEGACY_KEY = 'tasks';
-
-// Module-scoped guard — multiple TasksWidget instances share one migration
-// attempt to avoid racing the initial GET and double-INSERTing into empty D1.
-let migrated = false;
-
-interface LegacyTask {
-  text: string;
-  tag?: string;
-  kind?: string;
-  done?: boolean;
-}
-
-async function migrateLegacyLocalStorage(legacyKey: string): Promise<number> {
-  let local: LegacyTask[];
-  try {
-    local = JSON.parse(localStorage.getItem(legacyKey) || '[]') as LegacyTask[];
-  } catch {
-    local = [];
-  }
-  if (!Array.isArray(local) || local.length === 0) return 0;
-  const r = await fetch('/api/tasks');
-  if (!r.ok) return 0;
-  const existing = (await r.json()) as unknown[];
-  if (existing.length > 0) {
-    localStorage.removeItem(legacyKey);
-    return 0;
-  }
-  for (const t of local) {
-    await fetch('/api/tasks', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ text: t.text, tag: t.tag, kind: t.kind, done: !!t.done }),
-    }).catch(() => {});
-  }
-  localStorage.removeItem(legacyKey);
-  return local.length;
-}
-
-function TasksWidget({ config }: WidgetProps) {
+export function Tasks({ size = 'large' }: { size?: PanelSize }) {
   const [tasks] = useTasksList(true);
-  const size = useWidgetSize();
-
-  useEffect(() => {
-    if (migrated) return;
-    migrated = true;
-    const legacyKey = (config?.storageKey as string) || LEGACY_KEY;
-    void migrateLegacyLocalStorage(legacyKey).then((n) => {
-      if (n > 0) {
-        console.log(`tasks: migrated ${n} legacy localStorage tasks to D1`);
-        dispatchTasksUpdated();
-      }
-    });
-  }, [config?.storageKey]);
 
   const toggle = (id: number) => {
     const t = tasks?.find((x) => x.id === id);
@@ -108,7 +53,7 @@ function TasksWidget({ config }: WidgetProps) {
     const open = list.filter((t) => !t.done);
     const next = open.slice(0, 3);
     return (
-      <Panel title="Tasks" action={<span className="muted" style={{ fontSize: 11 }}>{open.length} open</span>}>
+      <Panel size="compact" title="Tasks" action={<span className="muted" style={{ fontSize: 11 }}>{open.length} open</span>}>
         <div className="task-list" style={{ padding: '4px 0' }}>
           {next.map((t) => (
             <div key={t.id} className="task" style={{ padding: '6px 4px' }}>
@@ -141,7 +86,7 @@ function TasksWidget({ config }: WidgetProps) {
   }
 
   return (
-    <Panel title="Tasks" action={<button className="panel-action" onClick={clearDone}>Clear done</button>}>
+    <Panel size={size} title="Tasks" action={<button className="panel-action" onClick={clearDone}>Clear done</button>}>
       <div className="task-list">
         {list.map((t) => (
           <div key={t.id} className={`task ${t.done ? 'done' : ''}`}>
@@ -185,5 +130,3 @@ function TasksWidget({ config }: WidgetProps) {
     </Panel>
   );
 }
-
-registerWidget('tasks', TasksWidget);

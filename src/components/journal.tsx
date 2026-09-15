@@ -3,7 +3,6 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Panel } from './Panel';
-import { registerWidget } from './registry';
 import { renderMarkdown } from '../lib/markdown';
 import { apiFetch } from '../lib/api';
 import { showToast } from '../lib/events';
@@ -387,7 +386,7 @@ function FilterBar(props: FilterBarProps) {
   );
 }
 
-function JournalWidget() {
+export function Journal() {
   const [entries, setEntries] = useState<JournalEntry[] | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [expandedSet, setExpandedSet] = useState<Set<number>>(() => new Set());
@@ -522,7 +521,7 @@ function JournalWidget() {
   }, [copyAck]);
 
   return (
-    <Panel title="Journal" className="panel-wide">
+    <Panel size="full" rows={5} title="Journal">
       <div className="journal-root">
         <Composer onCreate={create} />
         <FilterBar
@@ -573,7 +572,3 @@ function JournalWidget() {
     </Panel>
   );
 }
-
-JournalWidget.fixedSize = { rowSpan: 5, full: true };
-
-registerWidget('journal', JournalWidget);

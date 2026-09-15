@@ -1,4 +1,4 @@
-/* widgets/tasks.css — task list with checkbox / strike-through / tag pill.
+/* tasks.css — task list with checkbox / strike-through / tag pill.
    The form modal reuses the global modal kit (.modal-backdrop / .modal /
    .pm-row / .af-input / .modal-foot / .panel-action / .edit-save / .pm-delete);
    only the task-specific row/chip/button styles live here. */

@@ -1,13 +1,10 @@
-// feed — RSS + YouTube subscription stream via /api/feed.
-//
-//   - type: feed
-//     config: { endpoint: /api/feed, limit: 15 }  (or columns: true, perSource: 6)
+// feed — RSS + YouTube subscription stream via /api/feed. `columns` renders
+// one column per source (perSource caps each); otherwise a single list.
 
-import { Panel } from './Panel';
-import { registerWidget, useWidgetSize } from './registry';
+import { Panel, type PanelSize } from './Panel';
 import { mockHint } from './mockHint';
 import { useFetch } from '../hooks/useFetch';
-import type { FeedItem, WidgetProps } from '../types';
+import type { FeedItem } from '../types';
 import './feed.css';
 
 const FEED_MOCK: FeedItem[] = [
@@ -17,13 +14,19 @@ const FEED_MOCK: FeedItem[] = [
   { source: 'YouTube — ThePrimeTime', title: 'I tried Zig for a week', link: 'https://youtube.com', published: new Date(Date.now() - 8 * 3600_000).toISOString(), kind: 'youtube' },
 ];
 
-function FeedWidget({ config }: WidgetProps) {
-  const size = useWidgetSize();
-  const endpoint = (config?.endpoint as string) || '/api/feed';
-  const columns = !!config?.columns;
-  const perSource = (config?.perSource as number) ?? (columns ? 5 : 0);
-  const limit = (config?.limit as number) ?? (size === 'compact' ? 4 : 15);
-  const url = columns ? `${endpoint}?perSource=${perSource}` : `${endpoint}?limit=${limit}`;
+export function Feed({
+  size = 'large',
+  limit,
+  columns = false,
+  perSource,
+}: {
+  size?: PanelSize;
+  limit?: number;
+  columns?: boolean;
+  perSource?: number;
+}) {
+  const max = limit ?? (size === 'compact' ? 4 : 15);
+  const url = columns ? `/api/feed?perSource=${perSource ?? 5}` : `/api/feed?limit=${max}`;
   const { data, loading, error } = useFetch<FeedItem[]>(url, { ttl: 10 * 60_000, fallback: FEED_MOCK });
 
   const items = data ?? FEED_MOCK;
@@ -32,15 +35,15 @@ function FeedWidget({ config }: WidgetProps) {
 
   return (
     <Panel
+      size={columns ? 'full' : size}
       title="Feed"
       hint={mockHint({ error: showingMock ? error : null })}
       action={action}
-      className={columns ? 'panel-wide' : undefined}
     >
       {columns ? (
         <FeedColumns items={items} loading={loading} />
       ) : (
-        <FeedList items={items.slice(0, limit)} loading={loading} />
+        <FeedList items={items.slice(0, max)} loading={loading} />
       )}
     </Panel>
   );
@@ -115,5 +118,3 @@ function relativeTime(iso: string): string {
   if (sec < 604800) return `${Math.round(sec / 86400)}d`;
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
-
-registerWidget('feed', FeedWidget);

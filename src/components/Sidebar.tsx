@@ -1,17 +1,17 @@
 // Sidebar — brand, nav (hash routes), Quick Capture.
 
 import { focusTaskInput } from '../lib/events';
-import type { NavItem } from '../types';
+import type { PageDef } from '../pages';
 
 export interface SidebarProps {
   brand: string;
-  nav: NavItem[];
+  pages: PageDef[];
   activeId?: string;
   open: boolean;
   onClose?: () => void;
 }
 
-export function Sidebar({ brand, nav, activeId, open, onClose }: SidebarProps) {
+export function Sidebar({ brand, pages, activeId, open, onClose }: SidebarProps) {
   const onClick = (id: string) => {
     window.location.hash = id;
     onClose?.();
@@ -26,15 +26,14 @@ export function Sidebar({ brand, nav, activeId, open, onClose }: SidebarProps) {
           <div className="sb-brand-name">{brand}</div>
         </div>
         <nav className="sb-nav">
-          {(nav ?? []).map((n) => (
+          {pages.map((p) => (
             <button
-              key={n.id}
-              className={`sb-item ${n.id === activeId ? 'is-active' : ''}`}
-              onClick={() => onClick(n.id)}
+              key={p.id}
+              className={`sb-item ${p.id === activeId ? 'is-active' : ''}`}
+              onClick={() => onClick(p.id)}
             >
-              <img className="ico" src={n.icon} alt="" />
-              <span>{n.label}</span>
-              {n.badge && <span className="badge">{n.badge}</span>}
+              <img className="ico" src={p.icon} alt="" />
+              <span>{p.label}</span>
             </button>
           ))}
         </nav>

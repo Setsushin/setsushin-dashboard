@@ -61,7 +61,7 @@ console.log('  static assets');
         /<script type="module"[^>]*src="\/assets\//.test(root.body),
         'index.html has no /assets/*.js module script');
 }
-for (const p of ['/layout.yml', '/schedule.yml', '/training.yml', '/icons/home.svg']) {
+for (const p of ['/training.yml', '/icons/home.svg']) {
   const r = await fetchOK(p);
   check(`GET ${p}`, r.ok, r.error || (r.ok ? '' : `${r.status}`));
 }

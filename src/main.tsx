@@ -2,10 +2,9 @@ import { createRoot } from 'react-dom/client';
 import { installDemoMode } from './demo';
 import './styles/tokens.css';
 import './styles/styles.css';
-import './widgets';
 import { App } from './App';
 
-// Patch fetch for guest demo mode before any widget requests (no-op otherwise).
+// Patch fetch for guest demo mode before any component requests (no-op otherwise).
 installDemoMode();
 
 const root = document.getElementById('root');

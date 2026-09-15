@@ -1,19 +1,23 @@
 // markets — Yahoo Finance quotes via /api/markets.
-//
-//   - type: markets
-//     config: { endpoint: /api/markets, symbols: [{ symbol, name }] }
 
-import { Panel } from './Panel';
-import { registerWidget, useWidgetSize } from './registry';
+import { Panel, type PanelSize } from './Panel';
 import { mockHint } from './mockHint';
 import { useFetch } from '../hooks/useFetch';
-import type { MarketQuote, WidgetProps } from '../types';
+import type { MarketQuote } from '../types';
 import './markets.css';
 
 interface SymbolMeta {
   symbol: string;
   name?: string;
 }
+
+const SYMBOLS: SymbolMeta[] = [
+  { symbol: 'SPY', name: 'S&P 500' },
+  { symbol: 'BTC-USD', name: 'Bitcoin' },
+  { symbol: 'JPY=X', name: 'USD/JPY' },
+  { symbol: '^TNX', name: 'US 10Y' },
+  { symbol: '^N225', name: 'Nikkei 225' },
+];
 
 const MARKETS_MOCK: MarketQuote[] = [
   { symbol: 'SPY', price: 569.45, previousClose: 567.83, changePercent: 0.29, currency: 'USD' },
@@ -23,12 +27,9 @@ const MARKETS_MOCK: MarketQuote[] = [
   { symbol: '^N225', price: 38924.55, previousClose: 38712.1, changePercent: 0.55, currency: 'JPY' },
 ];
 
-function MarketsWidget({ config }: WidgetProps) {
-  const size = useWidgetSize();
-  const symbols = (config?.symbols as SymbolMeta[] | undefined) ?? [];
-  const endpoint = config?.endpoint as string | undefined;
+export function Markets({ size = 'large', symbols = SYMBOLS }: { size?: PanelSize; symbols?: SymbolMeta[] }) {
   const symList = symbols.map((s) => s.symbol).join(',');
-  const url = endpoint && symList ? `${endpoint}?symbols=${encodeURIComponent(symList)}` : null;
+  const url = symList ? `/api/markets?symbols=${encodeURIComponent(symList)}` : null;
   const { data, loading, error } = useFetch<MarketQuote[]>(url, { ttl: 5 * 60_000, fallback: MARKETS_MOCK });
 
   // Worker returns 200 even when upstream blocks — surface "all errored".
@@ -48,7 +49,7 @@ function MarketsWidget({ config }: WidgetProps) {
       .sort((a, b) => Math.abs(b.changePercent!) - Math.abs(a.changePercent!));
     const top = sorted[0];
     return (
-      <Panel title="Markets" hint={hint}>
+      <Panel size="compact" title="Markets" hint={hint}>
         <div className="markets-compact">
           {top ? (
             <>
@@ -70,7 +71,7 @@ function MarketsWidget({ config }: WidgetProps) {
   }
 
   return (
-    <Panel title="Markets" hint={hint}>
+    <Panel size={size} title="Markets" hint={hint}>
       <div className="markets">
         {rows.map((m) => {
           const change = m.changePercent ?? 0;
@@ -103,5 +104,3 @@ function formatPrice(p: number | null | undefined, currency: string | null | und
   const symbol = currency === 'USD' ? '$' : currency === 'JPY' ? '¥' : '';
   return `${symbol}${p.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
 }
-
-registerWidget('markets', MarketsWidget);

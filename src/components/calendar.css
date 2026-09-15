@@ -1,5 +1,4 @@
-/* widgets/agenda.css — agenda widget + calendar widget (calendar reuses
-   the agenda visual rows: time pill · color dot · title/meta). */
+/* calendar.css — agenda rows (time pill · color dot · title/meta) + source chips. */
 
 .agenda { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
 .agenda-item {

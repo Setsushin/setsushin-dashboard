@@ -1,4 +1,4 @@
-/* widgets/markets.css — full row list (large size) + compact (top mover only). */
+/* markets.css — full row list (large size) + compact (top mover only). */
 
 .markets { display: flex; flex-direction: column; gap: 2px; }
 .market-row {

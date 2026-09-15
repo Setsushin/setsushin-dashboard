@@ -1,8 +1,5 @@
-/* widgets/assets.css — Portfolio widget: 2-pane (list + sunburst), inline edit
-   form, currency switch in panel header (Segmented control), tooltip. */
-
-/* Span the entire grid row (widget renders Panel className="panel-wide"). */
-.panel.panel-wide { grid-column: 1 / -1; }
+/* assets.css — Portfolio: 2-pane (list + sunburst), inline edit form,
+   currency switch in panel header (Segmented control), tooltip. */
 
 .assets-split {
   display: grid;
@@ -259,7 +256,7 @@
 
 /* Snapshots chip + dropdown. Panel title clips overflow by default — undo
    that for this panel so the popover can escape the title row. */
-.panel-wide .panel-title { overflow: visible; }
+.panel-title:has(.snaps-menu) { overflow: visible; }
 .snaps-menu { position: relative; display: inline-flex; }
 .snaps-pop {
   position: absolute; top: calc(100% + 6px); left: 0; z-index: 20;

@@ -1,21 +1,15 @@
-// training — upper/lower split workout card. Plan text comes from a yaml file
-// (config.source, loaded like agenda's schedule.yml); weights + per-JST-day set
-// ticks live in D1 via /api/training — one JSON doc per key (`weights`,
-// `log:YYYY-MM-DD`). Both days render side by side; under 900px one column
-// with a day switch (CSS).
-//
-//   - type: training
-//     config: { source: training.yml }
+// training — upper/lower split workout card. Plan text comes from
+// public/training.yml; weights + per-JST-day set ticks live in D1 via
+// /api/training — one JSON doc per key (`weights`, `log:YYYY-MM-DD`). Both
+// days render side by side; under 900px one column with a day switch (CSS).
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import yaml from 'js-yaml';
 import { Panel } from './Panel';
-import { registerWidget } from './registry';
 import { mockHint } from './mockHint';
 import { apiFetch } from '../lib/api';
 import { showToast } from '../lib/events';
 import { renderMarkdown } from '../lib/markdown';
-import type { WidgetProps } from '../types';
 import './training.css';
 
 interface Exercise {
@@ -218,8 +212,7 @@ function History({ plan, docs, todayDate, activeDate, onPick }: { plan: Plan; do
   );
 }
 
-function TrainingWidget({ config }: WidgetProps) {
-  const src = config?.source as string | undefined;
+export function Training() {
   const [plan, setPlan] = useState<Plan | null>(null);
   const [planError, setPlanError] = useState<Error | null>(null);
   const [docs, setDocs] = useState<Docs>({});
@@ -228,12 +221,8 @@ function TrainingWidget({ config }: WidgetProps) {
   const [editDate, setEditDate] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!src) {
-      setPlanError(new Error('no source'));
-      return;
-    }
     let cancelled = false;
-    fetch(src)
+    fetch('training.yml')
       .then((r) => (r.ok ? r.text() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then((txt) => {
         if (!cancelled) setPlan(yaml.load(txt) as Plan);
@@ -244,7 +233,7 @@ function TrainingWidget({ config }: WidgetProps) {
     return () => {
       cancelled = true;
     };
-  }, [src]);
+  }, []);
 
   const reload = useCallback(() => {
     return fetch('/api/training')
@@ -317,8 +306,8 @@ function TrainingWidget({ config }: WidgetProps) {
 
   if (!plan) {
     return (
-      <Panel title="Training" className="panel-wide" hint={mockHint({ error: planError })}>
-        <div className="tr-empty">{planError ? `Could not load ${src ?? 'plan'}` : 'Loading…'}</div>
+      <Panel size="full" rows={6} title="Training" hint={mockHint({ error: planError })}>
+        <div className="tr-empty">{planError ? 'Could not load training.yml' : 'Loading…'}</div>
       </Panel>
     );
   }
@@ -330,7 +319,7 @@ function TrainingWidget({ config }: WidgetProps) {
   );
 
   return (
-    <Panel title="Training" className="panel-wide" action={action}>
+    <Panel size="full" rows={6} title="Training" action={action}>
       <History plan={plan} docs={docs} todayDate={todayDate} activeDate={editDate ?? todayDate} onPick={pickDate} />
       {editDate && (
         <div className="tr-editing">
@@ -418,8 +407,3 @@ function TrainingWidget({ config }: WidgetProps) {
     </Panel>
   );
 }
-
-// Full-width, 3× the standard large height — two day columns of ~9 rows each.
-TrainingWidget.fixedSize = { rowSpan: 6, full: true };
-
-registerWidget('training', TrainingWidget);

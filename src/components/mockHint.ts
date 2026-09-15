@@ -1,6 +1,6 @@
 // Derive a "(mock — reason)" hint from useFetch state + upstream sentinel
 // (the case where the Worker returns 200 but every entry has an `error` field —
-// see widgets/markets.tsx, widgets/calendar.tsx).
+// see markets.tsx, calendar.tsx).
 
 export interface MockHintInput {
   error?: Error | null;

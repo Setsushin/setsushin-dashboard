@@ -5,14 +5,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Panel } from './Panel';
-import { registerWidget } from './registry';
 import { mockHint } from './mockHint';
 import { useFetch } from '../hooks/useFetch';
 import { apiFetch } from '../lib/api';
 import { showToast } from '../lib/events';
 import { tint } from '../lib/color';
 import { fromMan, parseAmount, parseAsset, withLiveJpy, type AmountUnit } from './assets-utils';
-import type { Asset, AssetExposure, FxData, WidgetProps } from '../types';
+import type { Asset, AssetExposure, FxData } from '../types';
 import './assets.css';
 
 const LAYER_META: Record<string, { label: string; color: string }> = {
@@ -695,9 +694,9 @@ function SnapsMenu({
   );
 }
 
-function AssetsWidget({ config }: WidgetProps) {
+export function Assets() {
   const [assets, setAssets] = useState<Asset[] | null>(null);
-  const [ccy, setCcy] = useState<Ccy>((config?.default_currency as Ccy) || 'JPY');
+  const [ccy, setCcy] = useState<Ccy>('JPY');
   const [view, setView] = useState<View>('layer');
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -869,7 +868,7 @@ function AssetsWidget({ config }: WidgetProps) {
 
   if (assets === null || !fx?.USD) {
     return (
-      <Panel title={title} action={action} className="panel-wide">
+      <Panel size="full" rows={3} title={title} action={action}>
         <div className="muted" style={{ padding: 16 }}>
           Loading…
         </div>
@@ -880,7 +879,7 @@ function AssetsWidget({ config }: WidgetProps) {
   const groups = buildHierarchy(items, view);
 
   return (
-    <Panel title={title} hint={fxStaleHint} action={action} className="panel-wide">
+    <Panel size="full" rows={3} title={title} hint={fxStaleHint} action={action}>
       <div className="assets-split">
         <div className="assets-list">
           {LAYER_ORDER.map((layer) => {
@@ -991,8 +990,3 @@ function AssetsWidget({ config }: WidgetProps) {
     </Panel>
   );
 }
-
-// Pin the Portfolio's footprint: full-width + 1.5× the standard large height.
-AssetsWidget.fixedSize = { rowSpan: 3, full: true };
-
-registerWidget('assets', AssetsWidget);

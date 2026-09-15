@@ -1,17 +1,14 @@
-// App — root composition. Pulls the shell + grid + widgets + tweaks panel
-// together. main.tsx mounts it.
+// App — root composition. Shell (sidebar, topbar, page header) around the
+// page picked by the URL hash, plus the global task modal and tweaks panel.
 
 import { useCallback, useEffect, useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
 import { PageHeader } from './components/PageHeader';
-import { StatStrip } from './components/Stat';
-import { HeaderStrip } from './components/HeaderStrip';
-import { DashboardGrid } from './components/DashboardGrid';
 import { TweaksPanel, TweakSection, TweakRadio, TweakColor, TweakText } from './components/tweaks';
-import { TaskFormModal } from './widgets/TaskFormModal';
+import { TaskFormModal } from './components/TaskFormModal';
 import { ToastHost } from './components/Toast';
-import { useLayout } from './hooks/useLayout';
+import { PAGES } from './pages';
 import { useHashRoute } from './hooks/useHashRoute';
 import { useTweaks } from './hooks/useTweaks';
 import { onFocusTaskInput, onOpenTaskModal } from './lib/events';
@@ -62,8 +59,6 @@ export function App() {
   }, []);
   const displayName = t.userName?.trim() || nameFromEmail(me?.email) || 'You';
 
-  const { loading: layoutLoading, layout, error: layoutError } = useLayout();
-
   // Mobile-only sidebar drawer (CSS hides it >768px).
   const [navOpen, setNavOpen] = useState(false);
   // Single global task modal: null | 'add' | <task>.
@@ -103,8 +98,8 @@ export function App() {
   }, [t]);
 
   useEffect(() => {
-    if (layout?.brand) document.title = `${displayName || layout.brand} · Dashboard`;
-  }, [layout, displayName]);
+    document.title = `${displayName} · Dashboard`;
+  }, [displayName]);
 
   const today = new Date();
   const month = today.toLocaleDateString('en-US', { month: 'short' });
@@ -114,6 +109,7 @@ export function App() {
   const weekday = today.toLocaleDateString('en-US', { weekday: 'short' });
 
   const hash = useHashRoute();
+  const page = PAGES.find((p) => p.id === hash) ?? PAGES[0];
 
   useEffect(() => {
     setNavOpen(false);
@@ -128,22 +124,9 @@ export function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [navOpen]);
 
-  if (layoutLoading) return <div className="boot">Loading layout…</div>;
-  if (layoutError || !layout)
-    return <div className="boot boot-err">Failed to load layout.yml: {String(layoutError?.message)}</div>;
-
-  const pages = layout.pages || [];
-  const page = pages.find((p) => p.id === hash) || pages[0];
-
   return (
     <div className="app">
-      <Sidebar
-        brand={displayName}
-        nav={layout.nav}
-        activeId={page?.id}
-        open={navOpen}
-        onClose={() => setNavOpen(false)}
-      />
+      <Sidebar brand={displayName} pages={PAGES} activeId={page.id} open={navOpen} onClose={() => setNavOpen(false)} />
       <main className="main">
         <TopBar
           mode={t.mode}
@@ -154,11 +137,9 @@ export function App() {
           onMenuClick={() => setNavOpen(true)}
           me={me}
         />
-        <div className="content" data-screen-label={page?.id}>
-          <PageHeader name={displayName} dateStr={dateStr} weekday={weekday} title={page?.title} subtitle={page?.subtitle} />
-          <StatStrip stats={page?.stats} />
-          <HeaderStrip items={page?.header} />
-          <DashboardGrid items={page?.grid} />
+        <div className="content" data-screen-label={page.id}>
+          <PageHeader name={displayName} dateStr={dateStr} weekday={weekday} title={page.title} subtitle={page.subtitle} />
+          <page.Component />
         </div>
         <div className="footer">
           <span>Simplicity is the ultimate sophistication.</span>

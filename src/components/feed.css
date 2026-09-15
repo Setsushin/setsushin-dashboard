@@ -1,4 +1,4 @@
-/* widgets/feed.css — RSS + YouTube items.
+/* feed.css — RSS + YouTube items.
    Height/scroll handled by .panel-body; .feed just lays items out. */
 
 .feed { display: flex; flex-direction: column; gap: 2px; }

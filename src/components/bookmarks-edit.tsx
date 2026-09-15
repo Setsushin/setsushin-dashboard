@@ -1,5 +1,5 @@
-// bucket-mode infrastructure for the bookmarks widget: the useBookmarks hook
-// (fetch + optimistic create/remove) and the "+ Add bookmark" modal.
+// Bookmarks data + the "+ Add bookmark" modal: useBookmarks fetches one
+// bucket from /api/bookmarks and applies create/remove optimistically.
 
 import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '../lib/api';
@@ -22,19 +22,12 @@ export interface NewBookmark {
 export interface BookmarksApi {
   create: (form: NewBookmark) => Promise<void> | void;
   remove: (id: number) => Promise<void> | void;
-  editable: boolean;
 }
 
-// Static mode (no bucket) yields the inline items array unchanged with
-// editable=false. Bucket mode fetches + supports optimistic create/remove.
-export function useBookmarks(
-  bucket: string | undefined,
-  staticItems: Bookmark[] | undefined,
-): [Bookmark[] | null, BookmarksApi] {
-  const [items, setItems] = useState<Bookmark[] | null>(bucket ? null : staticItems || []);
+export function useBookmarks(bucket: string): [Bookmark[] | null, BookmarksApi] {
+  const [items, setItems] = useState<Bookmark[] | null>(null);
 
   const reload = useCallback(() => {
-    if (!bucket) return;
     fetch(`/api/bookmarks?bucket=${encodeURIComponent(bucket)}`)
       .then((r) => (r.ok ? (r.json() as Promise<Bookmark[]>) : []))
       .then(setItems)
@@ -42,15 +35,10 @@ export function useBookmarks(
   }, [bucket]);
 
   useEffect(() => {
-    if (!bucket) {
-      setItems(staticItems || []);
-      return;
-    }
     reload();
-  }, [bucket, reload, staticItems]);
+  }, [reload]);
 
   const create = async (form: NewBookmark) => {
-    if (!bucket) return;
     const sort_order = items?.length ?? 0;
     setItems((prev) => [...(prev || []), { ...form, id: -Date.now(), sort_order }]);
     try {
@@ -68,7 +56,6 @@ export function useBookmarks(
   };
 
   const remove = async (id: number) => {
-    if (!bucket) return;
     setItems((prev) => (prev || []).filter((it) => it.id !== id));
     try {
       await apiFetch(`/api/bookmarks/${id}`, { method: 'DELETE' });
@@ -79,7 +66,7 @@ export function useBookmarks(
     }
   };
 
-  return [items, { create, remove, editable: !!bucket }];
+  return [items, { create, remove }];
 }
 
 export function AddBookmarkModal({

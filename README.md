@@ -9,10 +9,11 @@ plus a few that are annoying to look up anywhere else.
 - **Finance** — portfolio breakdown (sunburst by layer / currency) with live FX
 - **Feed** — the full reading stream, one column per source
 - **Journal** — a quiet markdown writing space
+- **Training** — upper/lower split workout card with weights and per-day set ticks
 - **Profile** — numbers you always need but never remember (passport, glasses Rx, …)
 
-Layouts are config-driven (`layout.yml`) and editable in-place; per-user state
-(tasks, assets, bookmarks, journal, profile, layout tweaks) lives in Cloudflare D1.
+Pages are plain React components (`src/pages/`); per-user state (tasks,
+assets, bookmarks, journal, profile, training) lives in Cloudflare D1.
 
 ## Stack
 
@@ -36,5 +37,5 @@ npm run deploy     # build + ship to Cloudflare Pages
 Full local dev runs both `npm run dev` (UI, HMR) and `npm run dev:cf`
 (Functions + D1); the Vite server proxies `/api/*` to wrangler.
 
-Architecture, conventions, and how to add a widget live in
+Architecture, conventions, and how to add a page live in
 [CLAUDE.md](./CLAUDE.md).

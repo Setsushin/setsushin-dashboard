@@ -1,7 +1,5 @@
-/* widgets/profile.css — Profile reference items: category sections, plaintext
-   value rows with hover-reveal copy/edit/delete, inline add/edit form.
-   Full-width via Panel className="panel-wide" (.panel.panel-wide rule lives
-   in assets.css, loaded alongside this). */
+/* profile.css — Profile reference items: category sections, plaintext
+   value rows with hover-reveal copy/edit/delete, inline add/edit form. */
 
 .profile-body {
   display: flex; flex-direction: column; gap: 18px;

@@ -3,7 +3,6 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Panel } from './Panel';
-import { registerWidget } from './registry';
 import { PlusIcon } from './icons';
 import { apiFetch } from '../lib/api';
 import { showToast } from '../lib/events';
@@ -297,7 +296,7 @@ function ProfileRow({
   );
 }
 
-function ProfileWidget() {
+export function Profile() {
   const [items, setItems] = useState<ProfileItem[] | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [adding, setAdding] = useState(false);
@@ -440,7 +439,7 @@ function ProfileWidget() {
 
   if (items === null) {
     return (
-      <Panel title="Profile" action={action} className="panel-wide">
+      <Panel size="full" rows={3} title="Profile" action={action}>
         <div className="muted" style={{ padding: 16 }}>
           Loading…
         </div>
@@ -451,7 +450,7 @@ function ProfileWidget() {
   const groups = groupByCategory(list);
 
   return (
-    <Panel title="Profile" action={action} className="panel-wide">
+    <Panel size="full" rows={3} title="Profile" action={action}>
       <div className="profile-body">
         {adding && (
           <ProfileForm initial={null} categories={categories} onSave={create} onCancel={() => setAdding(false)} />
@@ -498,7 +497,3 @@ function ProfileWidget() {
     </Panel>
   );
 }
-
-ProfileWidget.fixedSize = { rowSpan: 3, full: true };
-
-registerWidget('profile', ProfileWidget);

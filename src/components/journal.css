@@ -1,4 +1,4 @@
-/* widgets/journal.css — Journal widget: composer + filter bar + timeline. */
+/* journal.css — Journal widget: composer + filter bar + timeline. */
 
 .journal-root {
   display: flex; flex-direction: column;

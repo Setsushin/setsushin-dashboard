@@ -2,7 +2,7 @@
    styles.css — shell + grid + modal kit + responsive.
 
    Tokens / theme variants live in tokens.css (loaded first).
-   Per-widget styles live next to their JSX in widgets/<name>.css.
+   Per-component styles live next to their TSX in components/<name>.css.
    ============================================================ */
 
 /* ── reset ──────────────────────────────────────────────────── */
@@ -437,89 +437,20 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Stat strip ─────────────────────────────────────────────── */
-.stats {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: var(--gap);
-  margin-bottom: var(--gap);
-}
-/* Editorial stat tile — label set in mono small caps so the role reads
-   immediately as metadata; value in display serif so the numbers carry the
-   visual weight without leaning on a colored backplate. The icon lives at
-   the *top right* now (a bookmark, not a logo) so the eye lands on the
-   number first. */
-.stat {
-  background: var(--bg-card);
-  border-radius: var(--r-lg);
-  padding: var(--pad-card);
-  border: 1px solid var(--border-soft);
-  box-shadow: var(--shadow-card);
-  display: flex; flex-direction: column; gap: 10px;
-  min-width: 0;
-  position: relative;
-}
-.stat-head {
-  display: flex; align-items: center;
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--fg-muted);
-}
-.stat-icon {
-  width: 22px; height: 22px;
-  margin-right: 8px;
-  display: grid; place-items: center;
-  flex-shrink: 0;
-  opacity: 0.55;
-}
-.stat-icon img { width: 14px; height: 14px; }
-.stat-icon.accent { opacity: 1; }
-.stat-icon.accent img { filter: invert(48%) sepia(35%) saturate(700%) hue-rotate(330deg); }
-.stat-value {
-  font-family: var(--font-display);
-  font-size: 36px;
-  font-weight: 500;
-  font-style: italic;
-  letter-spacing: -0.01em;
-  line-height: 1;
-  color: var(--fg);
-  font-variant-numeric: tabular-nums;
-}
-.stat-sub {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--fg-faded);
-}
-.stat-bar {
-  height: 4px;
-  background: var(--bg-card-soft);
-  border-radius: var(--r-pill);
-  overflow: hidden;
-  margin-top: 2px;
-}
-.stat-bar-fill {
-  height: 100%;
-  background: var(--fg);
-  border-radius: var(--r-pill);
-}
-.stat-bar-fill.accent { background: var(--accent); }
-
-/* ── Grid: 3 equal columns, fixed row height ────────────────────────
-   Item positions are explicit — every grid child carries
-   `grid-column: <col> / span <w>` and `grid-row: <row> / span <h>`
-   set inline by Panel (see lib/grid.ts placeItems). */
+/* ── Grid: 3 equal columns, fixed row height, dense auto-flow ──────
+   Panels declare their footprint via data-size (compact 1×1, large 1×2,
+   full = every column) plus an optional inline row span; the browser
+   places them in source order and backfills holes. */
 .grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-auto-rows: var(--row-h);
+  grid-auto-flow: row dense;
   gap: var(--gap);
 }
+.grid > .panel { grid-row: span 2; }
+.grid > .panel[data-size="compact"] { grid-row: span 1; }
+.grid > .panel[data-size="full"] { grid-column: 1 / -1; }
 
 /* Panel card. min-height: 0 + overflow: hidden are critical so the cell
    bounds the panel; without them inner content can push the row taller
@@ -576,28 +507,7 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
   flex-shrink: 0;
 }
 .panel-action:hover { background: var(--bg-hover); color: var(--fg); }
-.panel-select {
-  margin-left: auto;
-  font-size: 12.5px; color: var(--fg-muted);
-  background: var(--bg-card-soft);
-  border: none; padding: 5px 10px;
-  border-radius: var(--r-pill);
-  display: flex; align-items: center; gap: 4px;
-  cursor: pointer; font-family: inherit;
-  font-weight: 500;
-}
-.panel-foot {
-  margin-top: auto; padding-top: 12px;
-  border-top: 1px dashed var(--border);
-  display: flex; align-items: center; gap: 6px;
-  font-size: 12.5px; color: var(--fg-muted);
-  cursor: pointer;
-  font-weight: 500;
-}
-.panel-foot:hover { color: var(--fg); }
-.panel-foot .arr { width: 12px; height: 12px; opacity: 0.6; }
-
-/* ── Header strip (page.header[] above grid) ─────────────────── */
+/* ── Header strip (bookmarks row above the grid) ─────────────── */
 .header-strip {
   display: flex; flex-wrap: wrap; gap: 10px;
   padding: 0 0 calc(var(--gap) - 4px);
@@ -619,15 +529,6 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
   color: var(--fg-faded);
   font-size: 12.5px;
 }
-
-/* ── Boot screens (layout.yml load gate) ────────────────────── */
-.boot {
-  display: flex; align-items: center; justify-content: center;
-  min-height: 100vh; padding: 24px;
-  font: 14px/1.5 var(--font-sans);
-  color: var(--fg-muted); background: var(--bg-app);
-}
-.boot-err { color: var(--danger); white-space: pre-wrap; }
 
 /* ── Modal + form kit (TaskFormModal, AddBookmarkModal) ──────── */
 .modal-backdrop {
@@ -669,26 +570,13 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
 .edit-save:not(:disabled):hover { background: var(--accent-hover) !important; }
 
 /* ── Responsive ─────────────────────────────────────────────────
-   Below 1100px: drop to 2 cols, clamp every cell to span 1 col max so
-   layouts authored for 3-col don't blow horizontally. Row spans still
-   apply, so vertically-tall widgets stay tall. */
-@media (max-width: 1280px) {
-  .stats { grid-template-columns: repeat(5, 1fr); }
-}
+   Below 1100px: two columns. Full panels keep spanning every column;
+   row spans still apply, so tall panels stay tall. */
 @media (max-width: 1100px) {
   .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .stats { grid-template-columns: repeat(3, 1fr); }
-  .grid > .panel { grid-column: auto !important; }
-  /* Full-width hero widgets (assets/profile/journal — fixedSize.full → w=3)
-     must keep spanning every column, not collapse to one. The blanket
-     auto-reset above clobbers their inline span; re-assert it. They're w=3
-     with no same-row neighbours, so a full span never overlaps. */
-  .grid > .panel[data-size="fixed"] { grid-column: 1 / -1 !important; }
 }
 /* ── Mobile (≤768px): single column, sidebar becomes off-canvas drawer,
-   topbar wraps. The grid-column/row reset is critical — placeItems sets inline positions
-   on every panel, and without auto !important they'd keep their desktop
-   col/row coords and create implicit grid columns wider than viewport. */
+   topbar wraps. The grid-row reset must beat the inline `rows` span. */
 @media (max-width: 768px) {
   .app { grid-template-columns: 1fr; }
 
@@ -745,13 +633,11 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
     text-align: left;
   }
 
-  .stats { grid-template-columns: repeat(2, 1fr); }
-
   /* Auto rows, not --row-h: the grid-row reset below collapses every panel
-     to a single row, and a fixed 200px row turns tall widgets (journal,
+     to a single row, and a fixed 200px row turns tall panels (journal,
      assets) into tiny inner-scroll wells. Let content size the row. */
   .grid { grid-template-columns: 1fr; grid-auto-rows: auto; }
-  .grid > .panel { grid-column: auto !important; grid-row: auto !important; }
+  .grid > .panel { grid-row: auto !important; }
 
   /* Header actions (e.g. Portfolio's currency Segmented) wrap under the
      title instead of clipping against it. */

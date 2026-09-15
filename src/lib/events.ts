@@ -1,5 +1,5 @@
 // Typed window CustomEvent bus that decouples task mutations from the widgets
-// and StatStrip that observe them, plus the global task-modal triggers.
+// that observe them, plus the global task-modal triggers.
 
 import type { Task } from '../types';
 

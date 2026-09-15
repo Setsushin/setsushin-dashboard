@@ -234,9 +234,7 @@ body[data-mode="dark"][data-tone="lavender"] {
 
 /* Dark-mode icon flip (monochrome SVGs). Widget-specific dark
    overrides live with their widget styles. */
-body[data-mode="dark"] .stat-icon img,
 body[data-mode="dark"] .icon-btn img,
-body[data-mode="dark"] .panel-foot .arr,
 body[data-mode="dark"] .search-ico {
   filter: invert(1) brightness(0.92);
 }

@@ -1,14 +1,12 @@
 // calendar — live Google Calendar (or any ICS) feed via /api/calendar.
-//
-//   - type: calendar
-//     config: { endpoint: /api/calendar, source: primary, limit: 8 }
 
 import { useEffect, useState } from 'react';
-import { Panel } from './Panel';
-import { registerWidget, useWidgetSize } from './registry';
+import { Panel, type PanelSize } from './Panel';
 import { useFetch } from '../hooks/useFetch';
-import type { CalEvent, CalendarSource, WidgetProps } from '../types';
-import './agenda.css';
+import type { CalEvent, CalendarSource } from '../types';
+import './calendar.css';
+
+const ENDPOINT = '/api/calendar';
 
 function nowOffsetISO(hoursFromNow: number): string {
   return new Date(Date.now() + hoursFromNow * 3600_000).toISOString();
@@ -21,33 +19,26 @@ const CALENDAR_MOCK: CalEvent[] = [
   { title: 'Gym', start: nowOffsetISO(9.0), location: 'Anytime', allDay: false, end: null },
 ];
 
-// Pick a default source set. Precedence: localStorage → config.sources →
-// config.source → ['primary']. Reconciled against /api/calendar/sources.
-function initialSelected(config: WidgetProps['config']): string[] {
+// Last selection sticks per browser; reconciled against /api/calendar/sources.
+function initialSelected(): string[] {
   try {
     const stored = JSON.parse(localStorage.getItem('calendar-sources') || 'null') as unknown;
     if (Array.isArray(stored) && stored.length > 0) return stored as string[];
   } catch {
     /* ignore */
   }
-  const sources = config?.sources as string[] | undefined;
-  if (Array.isArray(sources) && sources.length > 0) return sources;
-  const source = config?.source as string | undefined;
-  if (source) return [source];
   return ['primary'];
 }
 
-function CalendarWidget({ config }: WidgetProps) {
-  const size = useWidgetSize();
-  const endpoint = (config?.endpoint as string) || '/api/calendar';
-  const limit = (config?.limit as number) ?? (size === 'compact' ? 3 : 8);
+export function Calendar({ size = 'large', limit }: { size?: PanelSize; limit?: number }) {
+  const max = limit ?? (size === 'compact' ? 3 : 8);
 
-  const { data: available } = useFetch<CalendarSource[]>(`${endpoint}/sources`, {
+  const { data: available } = useFetch<CalendarSource[]>(`${ENDPOINT}/sources`, {
     ttl: 60 * 60_000,
     fallback: [],
   });
 
-  const [selected, setSelected] = useState<string[]>(() => initialSelected(config));
+  const [selected, setSelected] = useState<string[]>(initialSelected);
 
   // Reconcile against the server's catalog once it loads. Drop keys no longer
   // bound; if nothing valid remains, fall back to the first available source.
@@ -81,7 +72,7 @@ function CalendarWidget({ config }: WidgetProps) {
     });
   };
 
-  const url = `${endpoint}?sources=${encodeURIComponent(selected.join(','))}&limit=${limit}`;
+  const url = `${ENDPOINT}?sources=${encodeURIComponent(selected.join(','))}&limit=${max}`;
   const { data, loading, error } = useFetch<CalEvent[] | { error: string }>(url, {
     ttl: 10 * 60_000,
     fallback: CALENDAR_MOCK,
@@ -96,7 +87,7 @@ function CalendarWidget({ config }: WidgetProps) {
   const action = <span className="muted" style={{ fontSize: 11 }}>{events.length} upcoming</span>;
 
   return (
-    <Panel title="Calendar" hint={showingMock ? `(mock — ${errMsg || 'unreachable'})` : null} action={action}>
+    <Panel size={size} title="Calendar" hint={showingMock ? `(mock — ${errMsg || 'unreachable'})` : null} action={action}>
       {showChips && (
         <div className="cal-sources">
           {available.map((s) => (
@@ -143,5 +134,3 @@ function formatEventTime(e: CalEvent): string {
   const day = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   return `${day} ${time}`;
 }
-
-registerWidget('calendar', CalendarWidget);

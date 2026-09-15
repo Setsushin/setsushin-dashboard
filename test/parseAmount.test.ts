@@ -3,7 +3,7 @@
 
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import { fromMan, liveMan, parseAmount, parseAsset, withLiveJpy } from '../src/widgets/assets-utils';
+import { fromMan, liveMan, parseAmount, parseAsset, withLiveJpy } from '../src/components/assets-utils';
 
 const RATE = 0.0064; // 1 JPY = 0.0064 USD → 1 USD = 156.25 JPY
 

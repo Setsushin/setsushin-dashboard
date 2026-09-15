@@ -1,4 +1,4 @@
-// widgets/assets-utils.ts — pure helpers for the Portfolio widget.
+// assets-utils.ts — pure helpers for the Portfolio component.
 
 import type { AssetExposure } from '../types';
 
