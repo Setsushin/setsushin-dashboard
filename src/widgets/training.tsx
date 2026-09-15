@@ -7,7 +7,7 @@
 //   - type: training
 //     config: { source: training.yml }
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import yaml from 'js-yaml';
 import { Panel } from './Panel';
 import { registerWidget } from './registry';
@@ -54,6 +54,11 @@ const JSON_HEADERS = { 'content-type': 'application/json' };
 
 // ponytail: JST (+9h) hardcoded — single-user dashboard, user lives in JP.
 const todayKey = () => 'log:' + new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 10);
+
+const DAY_MS = 86400_000;
+const isoDay = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+const monthDays = (y: number, m: number) =>
+  Array.from({ length: new Date(Date.UTC(y, m, 0)).getUTCDate() }, (_, i) => isoDay(Date.UTC(y, m - 1, i + 1)));
 
 const tickCount = (it: Item) => (it.type === 'superset' ? it.rounds : it.type === 'cardio' ? 1 : it.sets);
 
@@ -116,6 +121,95 @@ function TickRow({ n, arr, label, onToggle }: { n: number; arr?: boolean[]; labe
           {label(i)}
         </button>
       ))}
+    </div>
+  );
+}
+
+type HistMode = '14d' | 'month' | 'year';
+
+// One cell per JST day, filled when that day's log has ≥1 tick. Fill opacity
+// scales with done/total against the current plan. Everything is derived
+// client-side from the docs GET already fetched — no extra endpoint.
+function History({ plan, docs, todayDate }: { plan: Plan; docs: Docs; todayDate: string }) {
+  const [mode, setMode] = useState<HistMode>('14d');
+  const [ym, setYm] = useState(todayDate.slice(0, 7));
+  const dayKeys = Object.keys(plan.days);
+  const [y, m] = ym.split('-').map(Number);
+  const loggedYears = Object.keys(docs)
+    .filter((k) => k.startsWith('log:') && (docs[k] as LogDoc | undefined)?.day)
+    .map((k) => k.slice(4, 8));
+  const years = [...new Set([todayDate.slice(0, 4), ym.slice(0, 4), ...loggedYears])].sort().reverse();
+
+  const rows: { label?: string; days: string[] }[] =
+    mode === '14d'
+      ? [{ days: Array.from({ length: 14 }, (_, i) => isoDay(Date.parse(todayDate) - (13 - i) * DAY_MS)) }]
+      : mode === 'month'
+        ? [{ days: monthDays(y, m) }]
+        : Array.from({ length: 12 }, (_, i) => ({ label: String(i + 1), days: monthDays(y, i + 1) }));
+
+  const cell = (d: string) => {
+    const doc = docs['log:' + d] as LogDoc | undefined;
+    const day = doc?.day ? plan.days[doc.day] : undefined;
+    const done = Object.values(doc?.ticks ?? {}).reduce((s, a) => s + a.filter(Boolean).length, 0);
+    const total = day ? day.items.reduce((s, it) => s + tickCount(it), 0) : 0;
+    const trained = done > 0 && !!doc?.day;
+    return (
+      <span
+        key={d}
+        className="tr-hcell"
+        data-day={trained ? dayKeys.indexOf(doc!.day) : undefined}
+        data-today={d === todayDate || undefined}
+        title={trained ? `${d} · ${day?.name ?? doc!.day} · ${done}/${total}` : d}
+        style={trained ? ({ '--fill': 0.5 + 0.5 * (total ? Math.min(done / total, 1) : 1) } as CSSProperties) : undefined}
+      >
+        {mode !== 'year' && Number(d.slice(8))}
+      </span>
+    );
+  };
+
+  return (
+    <div className="tr-hist">
+      <div className="tr-hist-head">
+        <span className="tr-hist-title">History</span>
+        <select className="tr-hist-sel" value={mode} onChange={(e) => setMode(e.target.value as HistMode)}>
+          <option value="14d">Last 14 days</option>
+          <option value="month">Month</option>
+          <option value="year">Year</option>
+        </select>
+        {mode === 'month' && (
+          <input
+            className="tr-hist-sel"
+            type="month"
+            value={ym}
+            max={todayDate.slice(0, 7)}
+            onChange={(e) => e.target.value && setYm(e.target.value)}
+          />
+        )}
+        {mode === 'year' && (
+          <select className="tr-hist-sel" value={String(y)} onChange={(e) => setYm(`${e.target.value}-${ym.slice(5)}`)}>
+            {years.map((yr) => (
+              <option key={yr} value={yr}>
+                {yr}
+              </option>
+            ))}
+          </select>
+        )}
+        <span className="tr-hist-legend">
+          {dayKeys.map((k, i) => (
+            <span key={k}>
+              <i className="tr-hcell" data-day={i} /> {plan.days[k].name}
+            </span>
+          ))}
+        </span>
+      </div>
+      <div className="tr-hist-grid" data-mode={mode}>
+        {rows.map((r, i) => (
+          <div key={i} className="tr-hrow" style={{ '--n': r.days.length } as CSSProperties}>
+            {r.label && <span className="tr-hrow-label">{r.label}</span>}
+            {r.days.map(cell)}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -224,6 +318,7 @@ function TrainingWidget({ config }: WidgetProps) {
 
   return (
     <Panel title="Training" className="panel-wide" action={action}>
+      <History plan={plan} docs={docs} todayDate={today.slice(4)} />
       <div className="tr-switch" role="group" aria-label="Day">
         {dayKeys.map((k) => (
           <button key={k} type="button" aria-pressed={shown === k} onClick={() => setActive(k)}>
