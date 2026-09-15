@@ -130,7 +130,7 @@ type HistMode = '14d' | 'month' | 'year';
 // One cell per JST day, filled when that day's log has ≥1 tick. Fill opacity
 // scales with done/total against the current plan. Everything is derived
 // client-side from the docs GET already fetched — no extra endpoint.
-function History({ plan, docs, todayDate }: { plan: Plan; docs: Docs; todayDate: string }) {
+function History({ plan, docs, todayDate, activeDate, onPick }: { plan: Plan; docs: Docs; todayDate: string; activeDate: string; onPick: (d: string) => void }) {
   const [mode, setMode] = useState<HistMode>('14d');
   const [ym, setYm] = useState(todayDate.slice(0, 7));
   const dayKeys = Object.keys(plan.days);
@@ -154,16 +154,20 @@ function History({ plan, docs, todayDate }: { plan: Plan; docs: Docs; todayDate:
     const total = day ? day.items.reduce((s, it) => s + tickCount(it), 0) : 0;
     const trained = done > 0 && !!doc?.day;
     return (
-      <span
+      <button
         key={d}
+        type="button"
         className="tr-hcell"
         data-day={trained ? dayKeys.indexOf(doc!.day) : undefined}
         data-today={d === todayDate || undefined}
+        data-active={d === activeDate || undefined}
+        disabled={d > todayDate}
         title={trained ? `${d} · ${day?.name ?? doc!.day} · ${done}/${total}` : d}
         style={trained ? ({ '--fill': 0.5 + 0.5 * (total ? Math.min(done / total, 1) : 1) } as CSSProperties) : undefined}
+        onClick={() => onPick(d)}
       >
         {mode !== 'year' && Number(d.slice(8))}
-      </span>
+      </button>
     );
   };
 
@@ -221,6 +225,7 @@ function TrainingWidget({ config }: WidgetProps) {
   const [docs, setDocs] = useState<Docs>({});
   const [editing, setEditing] = useState(false);
   const [active, setActive] = useState<string | null>(null);
+  const [editDate, setEditDate] = useState<string | null>(null);
 
   useEffect(() => {
     if (!src) {
@@ -270,8 +275,11 @@ function TrainingWidget({ config }: WidgetProps) {
   };
 
   const today = todayKey();
+  const todayDate = today.slice(4);
+  // Backfill: a picked History cell redirects ticks/Clear to that day's log.
+  const logKey = editDate ? 'log:' + editDate : today;
   const weights = (docs.weights ?? {}) as Weights;
-  const log = docs[today] as LogDoc | undefined;
+  const log = docs[logKey] as LogDoc | undefined;
   const ticks = log?.ticks ?? {};
   const dayKeys = plan ? Object.keys(plan.days) : [];
 
@@ -292,15 +300,20 @@ function TrainingWidget({ config }: WidgetProps) {
   const toggleTick = (day: string, id: string, n: number, i: number) => {
     const arr = Array.from({ length: n }, (_, j) => ticks[id]?.[j] ?? false);
     arr[i] = !arr[i];
-    save(today, { day, ticks: { ...ticks, [id]: arr } });
+    save(logKey, { day, ticks: { ...ticks, [id]: arr } });
   };
   const clearDay = (day: string) => {
     if (!log || !plan) return;
     const ids = new Set(plan.days[day].items.map((it) => it.id));
     const rest = Object.fromEntries(Object.entries(ticks).filter(([id]) => !ids.has(id)));
-    save(today, { day: log.day, ticks: rest });
+    save(logKey, { day: log.day, ticks: rest });
   };
   const setWeight = (id: string, v: number | null) => save('weights', { ...weights, [id]: v });
+  const pickDate = (d: string) => {
+    setEditDate(d === todayDate ? null : d);
+    const day = (docs['log:' + d] as LogDoc | undefined)?.day;
+    if (day) setActive(day);
+  };
 
   if (!plan) {
     return (
@@ -318,7 +331,15 @@ function TrainingWidget({ config }: WidgetProps) {
 
   return (
     <Panel title="Training" className="panel-wide" action={action}>
-      <History plan={plan} docs={docs} todayDate={today.slice(4)} />
+      <History plan={plan} docs={docs} todayDate={todayDate} activeDate={editDate ?? todayDate} onPick={pickDate} />
+      {editDate && (
+        <div className="tr-editing">
+          Editing {editDate}
+          <button type="button" className="panel-action" onClick={() => setEditDate(null)}>
+            Back to today
+          </button>
+        </div>
+      )}
       <div className="tr-switch" role="group" aria-label="Day">
         {dayKeys.map((k) => (
           <button key={k} type="button" aria-pressed={shown === k} onClick={() => setActive(k)}>
