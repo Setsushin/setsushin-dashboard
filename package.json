@@ -4,20 +4,20 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:cf": "wrangler pages dev",
+    "dev:cf": "npx wrangler pages dev",
     "build": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.functions.json --noEmit && vite build",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.functions.json --noEmit",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
     "smoke": "node scripts/smoke.mjs",
-    "deploy": "npm run build && wrangler pages deploy",
-    "login": "wrangler login",
-    "db:create": "wrangler d1 create setsushin-dash",
-    "db:migrate:local": "wrangler d1 migrations apply setsushin-dash --local",
-    "db:migrate:remote": "wrangler d1 migrations apply setsushin-dash --remote",
-    "db:shell:local": "wrangler d1 execute setsushin-dash --local --command",
-    "db:shell:remote": "wrangler d1 execute setsushin-dash --remote --command"
+    "deploy": "npm run build && npx wrangler pages deploy",
+    "login": "npx wrangler login",
+    "db:create": "npx wrangler d1 create setsushin-dash",
+    "db:migrate:local": "npx wrangler d1 migrations apply setsushin-dash --local",
+    "db:migrate:remote": "npx wrangler d1 migrations apply setsushin-dash --remote",
+    "db:shell:local": "npx wrangler d1 execute setsushin-dash --local --command",
+    "db:shell:remote": "npx wrangler d1 execute setsushin-dash --remote --command"
   },
   "dependencies": {
     "dompurify": "^3.2.4",
