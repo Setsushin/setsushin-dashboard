@@ -61,7 +61,6 @@ export function installDemoMode(): void {
       { id: 1, bucket: 'home', name: 'Gmail', url: 'https://mail.google.com', mark: 'G', color: '#c0584a', sort_order: 0 },
       { id: 2, bucket: 'home', name: 'GitHub', url: 'https://github.com', mark: 'GH', color: '#6e7681', sort_order: 1 },
       { id: 3, bucket: 'home', name: 'Cal', url: 'https://calendar.google.com', mark: 'C', color: '#7da27c', sort_order: 2 },
-      { id: 4, bucket: 'home_grid', name: 'News', url: 'https://news.ycombinator.com', mark: 'Y', color: '#d4a574', sort_order: 0 },
       { id: 5, bucket: 'finance', name: 'IBKR', url: 'https://www.interactivebrokers.com', mark: 'IB', color: '#9caf88', sort_order: 0 },
       { id: 6, bucket: 'finance', name: 'TradingView', url: 'https://www.tradingview.com', mark: 'TV', color: '#c97c5d', sort_order: 1 },
       { id: 7, bucket: 'feed', name: 'Lobsters', url: 'https://lobste.rs', mark: 'L', color: '#a8967b', sort_order: 0 },

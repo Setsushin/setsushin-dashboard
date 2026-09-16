@@ -46,16 +46,3 @@
 .feed-dot { opacity: 0.5; flex-shrink: 0; }
 .feed-meta > span:last-child { flex-shrink: 0; }
 
-/* Columns mode: one source per column, source name as section header.
-   auto-fit wraps to fewer columns on narrow screens; minmax keeps each
-   column readable. Inside a column the kind chip is dropped — the
-   header already names the source. */
-.feed.feed-cols {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: 16px;
-  align-items: start;
-}
-.feed-col { display: flex; flex-direction: column; min-width: 0; }
-.feed-cols .feed-item { padding: 8px 4px; gap: 8px; }
-.feed-cols .feed-kind { display: none; }

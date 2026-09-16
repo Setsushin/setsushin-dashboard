@@ -58,7 +58,7 @@ src/
 │   ├── index.ts              # PAGES registry: id, label, icon, title, subtitle, Component
 │   └── home.tsx · finance.tsx · feed.tsx · journal.tsx · training.tsx · profile.tsx
 ├── components/
-│   ├── Panel.tsx             # card shell; size (compact|large|full) + rows → grid footprint
+│   ├── Panel.tsx             # card shell; size (large|wide|full) + rows → grid footprint
 │   ├── Sidebar · TopBar · UserMenu · PageHeader · Toast · tweaks   # shell
 │   ├── <name>.tsx + <name>.css   # one per feature: tasks, calendar, markets,
 │   │                             #   bookmarks, feed, assets, journal, profile, training
@@ -108,7 +108,7 @@ A new feature component is `src/components/<name>.tsx` + co-located
    that and passes `allErrored: true`.
 3. **Grid placement is CSS, not code.** `.grid` is 3 columns × `--row-h` rows
    with `grid-auto-flow: row dense`. `Panel` writes `data-size`
-   (`compact` 1×1, `large` 1×2, `full` = every column) and an optional inline
+   (`large` 1×2, `wide` 2×2, `full` = every column) and an optional inline
    `grid-row: span N` from `rows`. Source order in the page component is the
    placement order. Mobile (≤768px) resets rows to `auto`.
 4. **D1 binding name is `env.setsushin_dash`** (underscore). The `Env` interface
@@ -159,9 +159,9 @@ list + currency toggle (JPY/USD/CNY, JPY default). FX from `/api/fx`
 `scripts/seed-assets.mjs` parses `### L<N>` sections from
 `~/setsushin-llm-pa/profile/assets.md` and POSTs to `/api/assets`.
 
-Bookmarks are keyed by `bucket`; the header strip and the in-grid panel on
-the same page use different buckets (`home` vs `home_grid`) so they hold
-different sets.
+Bookmarks are keyed by `bucket`; each page's header strip uses its page id
+(`home`, `finance`, `feed`). D1 still holds `home_grid` / `feed_grid` rows
+from the old in-grid panels; nothing renders them.
 
 ## Read-only data fetching
 

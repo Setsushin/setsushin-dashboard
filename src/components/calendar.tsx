@@ -1,12 +1,13 @@
 // calendar — live Google Calendar (or any ICS) feed via /api/calendar.
 
 import { useEffect, useState } from 'react';
-import { Panel, type PanelSize } from './Panel';
+import { Panel } from './Panel';
 import { useFetch } from '../hooks/useFetch';
 import type { CalEvent, CalendarSource } from '../types';
 import './calendar.css';
 
 const ENDPOINT = '/api/calendar';
+const LIMIT = 8;
 
 function nowOffsetISO(hoursFromNow: number): string {
   return new Date(Date.now() + hoursFromNow * 3600_000).toISOString();
@@ -30,9 +31,7 @@ function initialSelected(): string[] {
   return ['primary'];
 }
 
-export function Calendar({ size = 'large', limit }: { size?: PanelSize; limit?: number }) {
-  const max = limit ?? (size === 'compact' ? 3 : 8);
-
+export function Calendar() {
   const { data: available } = useFetch<CalendarSource[]>(`${ENDPOINT}/sources`, {
     ttl: 60 * 60_000,
     fallback: [],
@@ -72,7 +71,7 @@ export function Calendar({ size = 'large', limit }: { size?: PanelSize; limit?: 
     });
   };
 
-  const url = `${ENDPOINT}?sources=${encodeURIComponent(selected.join(','))}&limit=${max}`;
+  const url = `${ENDPOINT}?sources=${encodeURIComponent(selected.join(','))}&limit=${LIMIT}`;
   const { data, loading, error } = useFetch<CalEvent[] | { error: string }>(url, {
     ttl: 10 * 60_000,
     fallback: CALENDAR_MOCK,
@@ -87,7 +86,7 @@ export function Calendar({ size = 'large', limit }: { size?: PanelSize; limit?: 
   const action = <span className="label-mono">{events.length} upcoming</span>;
 
   return (
-    <Panel size={size} title="Calendar" hint={showingMock ? `(mock — ${errMsg || 'unreachable'})` : null} action={action}>
+    <Panel title="Calendar" hint={showingMock ? `(mock — ${errMsg || 'unreachable'})` : null} action={action}>
       {showChips && (
         <div className="cal-sources">
           {available.map((s) => (

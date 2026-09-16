@@ -1,5 +1,4 @@
-// feed — RSS + YouTube subscription stream via /api/feed. `columns` renders
-// one column per source (perSource caps each); otherwise a single list.
+// feed — RSS + YouTube subscription stream via /api/feed.
 
 import { Panel, type PanelSize } from './Panel';
 import { mockHint } from './mockHint';
@@ -14,37 +13,18 @@ const FEED_MOCK: FeedItem[] = [
   { source: 'YouTube — ThePrimeTime', title: 'I tried Zig for a week', link: 'https://youtube.com', published: new Date(Date.now() - 8 * 3600_000).toISOString(), kind: 'youtube' },
 ];
 
-export function Feed({
-  size = 'large',
-  limit,
-  columns = false,
-  perSource,
-}: {
-  size?: PanelSize;
-  limit?: number;
-  columns?: boolean;
-  perSource?: number;
-}) {
-  const max = limit ?? (size === 'compact' ? 4 : 15);
-  const url = columns ? `/api/feed?perSource=${perSource ?? 5}` : `/api/feed?limit=${max}`;
-  const { data, loading, error } = useFetch<FeedItem[]>(url, { ttl: 10 * 60_000, fallback: FEED_MOCK });
+const LIMIT = 15;
+
+export function Feed({ size = 'large' }: { size?: PanelSize }) {
+  const { data, loading, error } = useFetch<FeedItem[]>(`/api/feed?limit=${LIMIT}`, { ttl: 10 * 60_000, fallback: FEED_MOCK });
 
   const items = data ?? FEED_MOCK;
   const showingMock = error || !data;
   const action = <span className="label-mono">{items.length} items</span>;
 
   return (
-    <Panel
-      size={columns ? 'full' : size}
-      title="Feed"
-      hint={mockHint({ error: showingMock ? error : null })}
-      action={action}
-    >
-      {columns ? (
-        <FeedColumns items={items} loading={loading} />
-      ) : (
-        <FeedList items={items.slice(0, max)} loading={loading} />
-      )}
+    <Panel size={size} title="Feed" hint={mockHint({ error: showingMock ? error : null })} action={action}>
+      <FeedList items={items.slice(0, LIMIT)} loading={loading} />
     </Panel>
   );
 }
@@ -53,53 +33,22 @@ function FeedList({ items, loading }: { items: FeedItem[]; loading: boolean }) {
   return (
     <div className="feed">
       {items.map((item, i) => (
-        <FeedRow key={i} item={item} showSource />
+        <FeedRow key={i} item={item} />
       ))}
       {loading && items.length === 0 && <div className="empty">Loading…</div>}
     </div>
   );
 }
 
-function FeedColumns({ items, loading }: { items: FeedItem[]; loading: boolean }) {
-  // Preserve SOURCES declaration order from the API response by grouping on
-  // first-appearance, not by alphabetical key.
-  const groups: Array<{ source: string; items: FeedItem[] }> = [];
-  const idx = new Map<string, number>();
-  for (const it of items) {
-    if (!idx.has(it.source)) {
-      idx.set(it.source, groups.length);
-      groups.push({ source: it.source, items: [] });
-    }
-    groups[idx.get(it.source)!].items.push(it);
-  }
-  return (
-    <div className="feed feed-cols">
-      {groups.map((g) => (
-        <div key={g.source} className="feed-col">
-          <div className="section-head">{g.source}</div>
-          {g.items.map((it, i) => (
-            <FeedRow key={i} item={it} />
-          ))}
-        </div>
-      ))}
-      {loading && groups.length === 0 && <div className="empty">Loading…</div>}
-    </div>
-  );
-}
-
-function FeedRow({ item, showSource }: { item: FeedItem; showSource?: boolean }) {
+function FeedRow({ item }: { item: FeedItem }) {
   return (
     <a className="feed-item" href={item.link} target="_blank" rel="noopener noreferrer">
       <div className={`feed-kind feed-${item.kind || 'rss'}`}>{item.kind === 'youtube' ? '▶' : '◆'}</div>
       <div className="feed-body">
         <div className="feed-title">{item.title}</div>
         <div className="feed-meta">
-          {showSource && (
-            <>
-              <span>{item.source}</span>
-              <span className="feed-dot">·</span>
-            </>
-          )}
+          <span>{item.source}</span>
+          <span className="feed-dot">·</span>
           <span>{relativeTime(item.published)}</span>
         </div>
       </div>

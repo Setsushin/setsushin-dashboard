@@ -1,6 +1,4 @@
-/* bookmarks.css — two renderings:
-   - row:     chip strip above a page's grid (favicon + name)
-   - compact: favicon-only chips inside a compact panel */
+/* bookmarks.css — chip strip above a page's grid (favicon + name). */
 
 .bookmark-favicon {
   width: 30px; height: 30px;
@@ -11,12 +9,6 @@
   color: var(--accent-fg);
 }
 
-/* ── Compact (favicon-only chips) ───────────────────────────── */
-.bookmark-strip { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px 0; }
-.bookmark-chip { display: block; position: relative; transition: transform 120ms ease; }
-.bookmark-chip:hover { transform: translateY(-1px); }
-
-/* ── Row (strip above the grid) ─────────────────────────────── */
 .bookmarks-row {
   display: flex; flex-wrap: wrap; gap: 8px;
   flex: 1; min-width: 0;
@@ -42,11 +34,8 @@
 }
 .bookmark-row-name { white-space: nowrap; }
 
-/* × delete badge — must sit ENTIRELY INSIDE its chip's bounding box.
-   The compact strip lives in a .panel which is overflow:hidden (a hard
-   invariant — see styles.css comment), so any negative-offset overlay
-   gets clipped. Approach: small dark-bubble badge overlapping the chip's
-   top-right corner from inside, fade-in on hover. */
+/* × delete badge — a small dark bubble overlapping the chip's top-right
+   corner from inside its box, fade-in on hover. */
 .bookmark-row-del {
   position: absolute;
   top: 1px; right: 1px;
@@ -62,8 +51,7 @@
               transform var(--dur-q) var(--ease-out-expo),
               background var(--dur-q) var(--ease-out-expo);
 }
-.bookmark-row-chip:hover .bookmark-row-del,
-.bookmark-chip:hover .bookmark-row-del {
+.bookmark-row-chip:hover .bookmark-row-del {
   opacity: 1; transform: scale(1);
 }
 .bookmark-row-del:hover { background: var(--danger); }
@@ -85,13 +73,6 @@
 .bookmark-row-add:hover {
   background: var(--accent-soft); color: var(--accent); border-color: var(--accent);
 }
-/* Compact-strip + Add: square 30×30 matching the favicon footprint. */
-.bookmark-add-square {
-  align-self: auto;
-  width: 30px; height: 30px;
-  border-radius: var(--r-sm);
-}
-
 /* Swatch row for AddBookmarkModal — small Apple-style colored dots,
    selected one gets a ring of the page bg color (so it stands out
    against any swatch). */

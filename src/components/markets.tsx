@@ -1,6 +1,6 @@
 // markets — Yahoo Finance quotes via /api/markets.
 
-import { Panel, type PanelSize } from './Panel';
+import { Panel } from './Panel';
 import { mockHint } from './mockHint';
 import { useFetch } from '../hooks/useFetch';
 import type { MarketQuote } from '../types';
@@ -27,7 +27,7 @@ const MARKETS_MOCK: MarketQuote[] = [
   { symbol: '^N225', price: 38924.55, previousClose: 38712.1, changePercent: 0.55, currency: 'JPY' },
 ];
 
-export function Markets({ size = 'large', symbols = SYMBOLS }: { size?: PanelSize; symbols?: SymbolMeta[] }) {
+export function Markets({ symbols = SYMBOLS }: { symbols?: SymbolMeta[] }) {
   const symList = symbols.map((s) => s.symbol).join(',');
   const url = symList ? `/api/markets?symbols=${encodeURIComponent(symList)}` : null;
   const { data, loading, error } = useFetch<MarketQuote[]>(url, { ttl: 5 * 60_000, fallback: MARKETS_MOCK });
@@ -43,35 +43,8 @@ export function Markets({ size = 'large', symbols = SYMBOLS }: { size?: PanelSiz
 
   const hint = mockHint({ error, allErrored, reason: 'upstream blocked' });
 
-  if (size === 'compact') {
-    const sorted = [...rows]
-      .filter((r) => r.changePercent != null)
-      .sort((a, b) => Math.abs(b.changePercent!) - Math.abs(a.changePercent!));
-    const top = sorted[0];
-    return (
-      <Panel size="compact" title="Markets" hint={hint}>
-        <div className="markets-compact">
-          {top ? (
-            <>
-              <div className="mc-top">
-                <span className="mc-name">{top.name}</span>
-                <span className={`market-change ${top.changePercent! >= 0 ? 'up' : 'down'}`}>
-                  {top.changePercent! >= 0 ? '+' : ''}
-                  {top.changePercent!.toFixed(2)}%
-                </span>
-              </div>
-              <div className="mc-meta">{rows.length} symbols tracked · top mover today</div>
-            </>
-          ) : (
-            <div className="muted">Loading…</div>
-          )}
-        </div>
-      </Panel>
-    );
-  }
-
   return (
-    <Panel size={size} title="Markets" hint={hint}>
+    <Panel title="Markets" hint={hint}>
       <div className="markets">
         {rows.map((m) => {
           const change = m.changePercent ?? 0;

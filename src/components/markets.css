@@ -1,4 +1,4 @@
-/* markets.css — full row list (large size) + compact (top mover only). */
+/* markets.css — quote rows. */
 
 .markets { display: flex; flex-direction: column; gap: 2px; }
 .market-row {
@@ -39,11 +39,3 @@
 .market-change.up   { color: var(--num-up); }
 .market-change.down { color: var(--num-down); }
 
-/* Compact (top mover only) */
-.markets-compact { display: flex; flex-direction: column; gap: 6px; }
-.mc-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-.mc-name {
-  font-size: 14px; font-weight: 500; color: var(--fg);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
-}
-.mc-meta { font-size: 11px; color: var(--fg-faded); }

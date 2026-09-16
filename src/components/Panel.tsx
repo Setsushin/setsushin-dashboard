@@ -1,11 +1,11 @@
 // Panel — shared card shell. `size` sets the grid footprint (see .grid in
-// styles.css): compact 1×1, large 1×2, full = every column. `rows` overrides
+// styles.css): large 1×2, wide 2×2, full = every column. `rows` overrides
 // the row span for tall full-width panels. Children scroll inside
 // `.panel-body` so content never pushes the row taller than --row-h.
 
 import type { ReactNode } from 'react';
 
-export type PanelSize = 'compact' | 'large' | 'full';
+export type PanelSize = 'large' | 'wide' | 'full';
 
 export interface PanelProps {
   title?: ReactNode;
