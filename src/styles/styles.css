@@ -10,8 +10,8 @@
 html, body {
   margin: 0; padding: 0;
   font-family: var(--font-sans);
-  font-weight: var(--weight-light);
-  line-height: 1.45;
+  font-weight: var(--weight-regular);
+  line-height: 1.5;
   color: var(--fg);
   background: var(--bg-app);
   -webkit-font-smoothing: antialiased;
@@ -37,7 +37,7 @@ a { color: inherit; text-decoration: none; }
 }
 *::-webkit-scrollbar-thumb:hover { background: var(--fg-faded); }
 
-/* Global keyboard focus ring — peach hairline, offset so it never
+/* Global keyboard focus ring — accent outline, offset so it never
    touches the element's own border. Mouse focus stays invisible. */
 :focus { outline: none; }
 :focus-visible {
@@ -59,16 +59,12 @@ a { color: inherit; text-decoration: none; }
   }
 }
 
-/* Label-mono utility — the editorial-grammar marker. Use anywhere a
-   piece of text is metadata: timestamps, IDs, ticker symbols, stat
-   labels, source chips, kbd hints. Small caps treatment via uppercase
-   transform + positive tracking. */
+/* Label-mono utility — machine metadata: timestamps, IDs, ticker
+   symbols, counters, kbd hints. */
 .label-mono {
   font-family: var(--font-mono);
-  font-size: 10.5px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
   color: var(--fg-muted);
 }
 .muted { color: var(--fg-faded); }
@@ -88,14 +84,15 @@ a { color: inherit; text-decoration: none; }
   background: var(--bg-sidebar);
   color: var(--fg-sidebar);
   display: flex; flex-direction: column;
-  padding: 18px 14px;
+  padding: 14px 12px;
+  border-right: 1px solid var(--border-soft);
   position: sticky; top: 0; height: 100vh;
   transition: transform 240ms cubic-bezier(.4, 0, .2, 1);
 }
 .sidebar-backdrop {
   display: none;
   position: fixed; inset: 0;
-  background: rgba(20, 14, 8, 0.42);
+  background: rgba(24, 20, 16, 0.42);
   z-index: 99;
   opacity: 0;
   pointer-events: none;
@@ -103,42 +100,32 @@ a { color: inherit; text-decoration: none; }
 }
 .sb-brand {
   display: flex; align-items: center; gap: 10px;
-  padding: 8px 10px 14px;
-  border-bottom: 1px solid rgba(241, 230, 212, 0.08);
-  margin-bottom: 14px;
+  padding: 4px 8px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--fg-sidebar) 8%, transparent);
+  margin-bottom: 12px;
 }
-/* Brand mark — flat publisher's mark. A walnut tile with a serif glyph.
-   No gradient; the gradient version was inherited from a generic-SaaS
-   template and conflicted with the No-Decorative-Gradient rule. The
-   mark is set in the display serif at modest weight (500) so it reads
-   as a bookplate, not a logo. */
+/* Brand mark — inverted tile, so it reads on either sidebar variant. */
 .sb-brand-mark {
-  width: 30px; height: 30px;
-  border-radius: var(--r-md);
-  background: var(--bg-sidebar-active);
+  width: 26px; height: 26px;
+  border-radius: var(--r-sm);
+  background: var(--fg-sidebar);
   display: grid; place-items: center;
-  color: var(--fg-sidebar);
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-style: italic;
-  font-size: 17px;
+  color: var(--bg-sidebar);
+  font-weight: 600;
+  font-size: 13px;
   line-height: 1;
-  letter-spacing: 0;
-  /* Optical centering — italic serifs sit a hair too high without nudge. */
-  padding-top: 1px;
 }
 .sb-brand-name {
-  font-size: 16px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   flex: 1;
 }
 
 .sb-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
 .sb-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 9px 12px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px;
   border-radius: var(--r-md);
   color: var(--fg-sidebar-muted);
   font-size: 13.5px; font-weight: 400;
@@ -147,14 +134,14 @@ a { color: inherit; text-decoration: none; }
   border: none; background: transparent; text-align: left;
   width: 100%;
 }
-.sb-item:hover { color: var(--fg-sidebar); background: rgba(241, 230, 212, 0.05); }
+.sb-item:hover { color: var(--fg-sidebar); background: color-mix(in srgb, var(--fg-sidebar) 6%, transparent); }
 .sb-item.is-active {
   background: var(--bg-sidebar-active);
   color: var(--fg-sidebar);
   font-weight: 500;
 }
 .sb-item .ico {
-  width: 18px; height: 18px;
+  width: 16px; height: 16px;
   filter: invert(1) brightness(0.95);
   opacity: 0.75;
 }
@@ -162,70 +149,42 @@ a { color: inherit; text-decoration: none; }
 /* Light sidebar: SVGs are already dark-on-light → undo the dark-mode flip. */
 body[data-sidebar="light"] .sb-item .ico,
 body[data-sidebar="light"] .sb-quick-capture .ico { filter: none; opacity: 0.55; }
-body[data-sidebar="light"] .sb-item.is-active .ico { opacity: 0.85; }
+body[data-sidebar="light"] .sb-item.is-active .ico { opacity: 1; }
+body[data-sidebar="light"] .sb-item.is-active { box-shadow: var(--shadow-card); }
 .sb-item .badge {
   margin-left: auto;
   font-size: 11px; font-weight: 500;
   padding: 1px 7px; border-radius: var(--r-pill);
-  background: rgba(241, 230, 212, 0.1);
+  background: color-mix(in srgb, var(--fg-sidebar) 10%, transparent);
   color: var(--fg-sidebar-muted);
 }
 
-/* Quick-capture pad — sidebar's task-add affordance.  Label set in mono
-   small caps to read as metadata (matches the label-mono grammar pass);
-   the kbd hint already rides the same family. */
+/* Quick-capture pad — sidebar's task-add affordance. */
 .sb-quick-capture {
   display: flex; align-items: center; gap: 10px;
-  padding: 10px 12px;
+  padding: 7px 10px;
   border-radius: var(--r-md);
-  background: rgba(241, 230, 212, 0.06);
-  border: 1px solid rgba(241, 230, 212, 0.08);
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  background: color-mix(in srgb, var(--fg-sidebar) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fg-sidebar) 10%, transparent);
+  font-size: 13px;
   color: var(--fg-sidebar-muted);
-  margin-top: 14px;
+  margin-top: 12px;
   cursor: pointer;
   transition: background var(--dur-q) var(--ease-out-expo);
 }
-.sb-quick-capture:hover { background: rgba(241, 230, 212, 0.1); }
+.sb-quick-capture:hover { background: color-mix(in srgb, var(--fg-sidebar) 9%, transparent); }
 .sb-quick-capture .kbd {
   margin-left: auto;
   font-family: var(--font-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.04em;
-  padding: 2px 6px;
-  background: rgba(241, 230, 212, 0.08);
+  font-size: 11px;
+  padding: 1px 6px;
+  background: color-mix(in srgb, var(--fg-sidebar) 8%, transparent);
   border-radius: var(--r-xs);
-}
-
-/* Sidebar light variant — non-token-level overrides
-   (token redefinitions live in tokens.css). */
-body[data-sidebar="light"] .sidebar { border-right: 1px solid var(--border-soft); }
-body[data-sidebar="light"] .sb-item .ico { filter: none; }
-body[data-sidebar="light"] .sb-item.is-active { color: var(--accent); }
-body[data-sidebar="light"] .sb-item.is-active .ico {
-  filter: invert(48%) sepia(35%) saturate(700%) hue-rotate(330deg); opacity: 1;
-}
-body[data-sidebar="light"] .sb-brand { border-bottom-color: var(--border-soft); }
-body[data-sidebar="light"] .sb-quick-capture {
-  background: var(--bg-app);
-  border-color: var(--border);
-  color: var(--fg-muted);
-}
-body[data-sidebar="light"] .sb-quick-capture .kbd {
-  background: var(--bg-card-soft);
-  color: var(--fg-muted);
 }
 
 /* ── Main area ──────────────────────────────────────────────── */
 .main {
   background: var(--bg-content);
-  border-top-left-radius: var(--r-xl);
-  border-bottom-left-radius: var(--r-xl);
-  margin: 12px 12px 12px 0;
   display: flex; flex-direction: column;
   min-width: 0;
   overflow: hidden;
@@ -234,7 +193,7 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
 /* Top bar */
 .topbar {
   display: flex; align-items: center; gap: 12px;
-  padding: 18px 28px;
+  padding: 10px 24px;
   border-bottom: 1px solid var(--border-soft);
 }
 .search {
@@ -244,9 +203,9 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
 }
 .search input {
   width: 100%;
-  padding: 9px 12px 9px 38px;
+  padding: 7px 12px 7px 34px;
   border: 1px solid var(--border);
-  border-radius: var(--r-pill);
+  border-radius: var(--r-sm);
   background: var(--bg-card);
   font: inherit; font-size: 13px;
   color: var(--fg);
@@ -256,22 +215,22 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
 .search input:focus { border-color: var(--accent); }
 .search input::placeholder { color: var(--fg-faded); }
 .search-ico {
-  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
-  width: 15px; height: 15px; opacity: 0.45;
+  position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+  width: 14px; height: 14px; opacity: 0.45;
 }
 .search-kbd {
   position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--fg-faded);
   background: var(--bg-card-soft);
-  padding: 2px 7px;
+  padding: 1px 6px;
   border-radius: var(--r-xs);
 }
 
 .icon-btn {
-  width: 38px; height: 38px;
-  border-radius: var(--r-pill);
+  width: 32px; height: 32px;
+  border-radius: var(--r-sm);
   background: var(--bg-card);
   border: 1px solid var(--border);
   /* color drives stroke="currentColor" on inline-SVG icons (sun/moon/pencil
@@ -297,19 +256,15 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
 }
 .icon-btn.is-active svg { stroke: var(--accent); opacity: 1; }
 
-/* Avatar — flat tonal disc, serif initial. Reads as a bookplate, not a
-   social-media circle. The hairline border + soft shadow match the
-   topbar icon-btn family rather than fighting it with a colored fill. */
+/* Avatar — flat tonal disc with the initial. */
 .avatar-btn {
-  width: 38px; height: 38px; border-radius: 50%;
+  width: 32px; height: 32px; border-radius: 50%;
   background: var(--bg-card-soft);
   display: grid; place-items: center;
   position: relative; overflow: hidden; padding: 0;
   color: var(--fg);
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-style: italic;
-  font-size: 17px;
+  font-weight: 600;
+  font-size: 13px;
   line-height: 1;
   cursor: pointer;
   border: 1px solid var(--border);
@@ -365,80 +320,47 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
 }
 .user-pop-logout:hover { background: var(--accent-soft); color: var(--accent); }
 
-/* Content scroll area — slightly more side breath than top, like a
-   book page: ample fore-edge margins, tighter head/foot. The serif
-   page-head benefits from this asymmetry. */
 .content {
   flex: 1; overflow-y: auto;
-  padding: 26px 36px 20px;
+  padding: 24px 28px 20px;
 }
 
-/* ── Page header ─────────────────────────────────────────────
-   Editorial title slug: a serif italic display H1 on the left, a mono
-   date-stamp on the right, separated by a walnut hairline. Subtitle (if
-   any) sits below the H1 in quiet ink-muted mono small caps. The serif
-   is the system's most distinctive typographic move; do not fold it
-   back into sans without a brief revision. */
+/* ── Page header: H1 + subtitle left, mono date stamp right ─── */
 .page-head {
   display: flex;
-  align-items: baseline;
+  align-items: flex-end;
   gap: 24px;
-  margin-bottom: 22px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
 }
 .page-head-title {
   flex: 1; min-width: 0;
 }
 .page-head h1 {
-  font-family: var(--font-display);
-  font-size: 38px;
-  font-weight: 500;
-  font-style: italic;
-  letter-spacing: -0.005em;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   margin: 0;
-  line-height: 1.05;
+  line-height: 1.2;
   color: var(--fg);
-  /* Optical: serif italics tend to crowd descenders; nudge for breath. */
-  padding-top: 2px;
 }
 .page-head-sub {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 13px;
   color: var(--fg-muted);
-  margin-top: 8px;
+  margin-top: 4px;
 }
 .page-head-date {
   margin-left: auto;
   text-align: right;
   flex-shrink: 0;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  /* Pull the date strip down a hair so it baselines with the body of
-     the H1 italic, not its cap line. */
-  padding-top: 6px;
-}
-.page-head-date-w {
+  align-items: baseline;
+  gap: 8px;
   font-family: var(--font-mono);
-  font-size: 10.5px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--fg-faded);
-}
-.page-head-date-d {
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--fg);
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
+.page-head-date-w { color: var(--fg-faded); }
+.page-head-date-d { color: var(--fg-muted); }
 
 /* ── Grid: 3 equal columns, fixed row height, dense auto-flow ──────
    Panels declare their footprint via data-size (large 1×2, wide 2×2,
@@ -462,8 +384,7 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
   background: var(--bg-card);
   border-radius: var(--r-lg);
   padding: var(--pad-card);
-  border: 1px solid var(--border-soft);
-  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
   display: flex; flex-direction: column;
   min-width: 0; min-height: 0;
   overflow: hidden;
@@ -473,17 +394,13 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
   flex: 1; min-height: 0;
   overflow-y: auto;
 }
-/* Hairline beneath every panel-head — typographic seam, like a chapter
-   underline in a book. The Borders-Do-the-Work rule. */
 .panel-head {
   display: flex; align-items: center; gap: 10px;
-  margin-bottom: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border-soft);
+  margin-bottom: 10px;
   min-width: 0;
 }
 .panel-title {
-  font-size: 15px; font-weight: 600;
+  font-size: 14px; font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--fg);
   flex: 1 1 auto; min-width: 0;
@@ -534,15 +451,15 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
 /* ── Modal + form kit (TaskFormModal, AddBookmarkModal) ──────── */
 .modal-backdrop {
   position: fixed; inset: 0;
-  background: rgba(40, 30, 20, 0.4);
+  background: rgba(24, 20, 16, 0.4);
   display: grid; place-items: center;
   z-index: 100;
-  backdrop-filter: blur(2px);
 }
 .modal {
   background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: var(--r-lg);
-  padding: 22px;
+  padding: 20px;
   width: min(480px, calc(100vw - 24px));
   box-shadow: var(--shadow-pop);
   display: flex; flex-direction: column; gap: 14px;
@@ -582,16 +499,14 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
 .field::placeholder { color: var(--fg-faded); }
 
 /* Chip — small tag / category / source marker: task tags, journal tags,
-   calendar sources, exposure, portfolio stamps. Mono small caps in a
-   soft pill; is-active / data-ack = accent wash. */
+   calendar sources, exposure, portfolio stamps. is-active / data-ack =
+   accent wash. */
 .chip {
   display: inline-flex; align-items: center; justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 10px; font-weight: 500;
-  letter-spacing: 0.08em; text-transform: uppercase;
+  font-size: 11px; font-weight: 500;
   line-height: 1;
-  padding: 3px 8px;
-  border-radius: var(--r-pill);
+  padding: 3px 6px;
+  border-radius: var(--r-xs);
   border: 1px solid transparent;
   background: var(--bg-card-soft);
   color: var(--fg-muted);
@@ -609,11 +524,9 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
 :where(button).chip:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* Section head — in-panel group label (feed source column, profile
-   category). The .label-mono voice plus a hairline seam. */
+   category). */
 .section-head {
-  font-family: var(--font-mono);
-  font-size: 10.5px; font-weight: 600;
-  letter-spacing: 0.08em; text-transform: uppercase;
+  font-size: 12px; font-weight: 600;
   color: var(--fg-muted);
   padding: 0 4px 6px; margin-bottom: 4px;
   border-bottom: 1px solid var(--border);
@@ -623,12 +536,12 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
 .seg {
   display: inline-flex; align-items: center;
   background: var(--bg-card-soft);
-  padding: 2px; border-radius: var(--r-pill);
+  padding: 2px; border-radius: var(--r-sm);
 }
 .seg-btn {
   padding: 4px 10px;
   background: transparent; border: none; cursor: pointer;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-xs);
   color: var(--fg-muted);
   font: inherit; font-size: 11.5px; font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -687,10 +600,6 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
   }
   body:has(.sidebar[data-open="true"]) { overflow: hidden; }
 
-  .main {
-    margin: 0;
-    border-radius: 0;
-  }
   .topbar {
     padding: 12px 14px;
     flex-wrap: wrap;
@@ -709,19 +618,11 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
   .page-head {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: 6px;
     margin-bottom: 16px;
-    padding-bottom: 12px;
   }
-  .page-head h1 { font-size: 30px; }
-  .page-head-date {
-    margin-left: 0;
-    padding-top: 0;
-    flex-direction: row;
-    align-items: baseline;
-    gap: 10px;
-    text-align: left;
-  }
+  .page-head h1 { font-size: 22px; }
+  .page-head-date { margin-left: 0; text-align: left; }
 
   /* Auto rows, not --row-h: the grid-row reset below collapses every panel
      to a single row, and a fixed 200px row turns tall panels (journal,

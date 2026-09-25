@@ -34,8 +34,8 @@
 }
 .tr-day-name {
   margin: 0; line-height: 1.1; color: var(--fg);
-  font-family: var(--font-display); font-style: italic; font-weight: 500;
-  font-size: 24px; letter-spacing: -0.005em;
+  font-weight: 600;
+  font-size: 20px; letter-spacing: -0.015em;
 }
 .tr-day-sub { margin: 4px 0 0; font-size: 12px; color: var(--fg-muted); }
 .tr-day-meta {

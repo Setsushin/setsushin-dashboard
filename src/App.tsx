@@ -15,7 +15,6 @@ import { onFocusTaskInput, onOpenTaskModal } from './lib/events';
 import type { Me, Task } from './types';
 
 interface Tweaks {
-  tone: string;
   accent: string;
   radius: string;
   density: string;
@@ -25,8 +24,7 @@ interface Tweaks {
 }
 
 const TWEAK_DEFAULTS: Tweaks = /*EDITMODE-BEGIN*/ {
-  tone: 'warm',
-  accent: '#d97757',
+  accent: '#1f4e79',
   radius: 'round',
   density: 'regular',
   sidebar: 'light',
@@ -87,12 +85,11 @@ export function App() {
   }, [taskModal]);
 
   useEffect(() => {
-    document.body.dataset.tone = t.tone;
     document.body.dataset.density = t.density;
     document.body.dataset.sidebar = t.sidebar;
     document.body.dataset.radius = t.radius;
     document.body.dataset.mode = t.mode;
-    document.documentElement.style.setProperty('--accent', t.accent);
+    document.documentElement.style.setProperty('--accent-base', t.accent);
   }, [t]);
 
   useEffect(() => {
@@ -163,25 +160,6 @@ export function App() {
             { value: 'dark', label: 'Dark' },
           ]}
           onChange={(v) => setTweak('mode', v)}
-        />
-        <TweakRadio
-          label="Tone"
-          value={t.tone}
-          options={[
-            { value: 'warm', label: 'Warm' },
-            { value: 'sage', label: 'Sage' },
-            { value: 'cool', label: 'Cool' },
-            { value: 'lavender', label: 'Lilac' },
-          ]}
-          onChange={(v) => {
-            const accentByTone: Record<string, string> = {
-              warm: '#d97757',
-              sage: '#6f8e5a',
-              cool: '#5b6cff',
-              lavender: '#9a72c4',
-            };
-            setTweak({ tone: v, accent: accentByTone[v] });
-          }}
         />
         <TweakColor label="Accent color" value={t.accent} onChange={(v) => setTweak('accent', v)} />
         <TweakRadio

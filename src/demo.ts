@@ -226,7 +226,7 @@ function banner(NS: string): void {
     el.id = 'demo-banner';
     el.style.cssText =
       'position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;align-items:center;gap:10px;' +
-      'padding:7px 12px;border-radius:999px;background:rgba(30,28,26,.88);color:#f3ede2;' +
+      'padding:7px 12px;border-radius:999px;background:rgba(31,27,23,.9);color:#ece8e3;' +
       'font:500 12px/1 system-ui,-apple-system,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.25);backdrop-filter:blur(6px);';
     const txt = document.createElement('span');
     txt.textContent = 'Demo · data lives only in this browser';
@@ -234,7 +234,7 @@ function banner(NS: string): void {
     btn.textContent = 'Reset';
     btn.style.cssText =
       'border:none;cursor:pointer;border-radius:999px;padding:4px 10px;' +
-      'background:#c97c5d;color:#fff;font:600 12px system-ui,sans-serif;';
+      'background:var(--accent);color:var(--accent-fg);font:600 12px system-ui,sans-serif;';
     btn.onclick = () => {
       Object.keys(localStorage)
         .filter((k) => k.startsWith(NS))

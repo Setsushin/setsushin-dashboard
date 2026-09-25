@@ -115,19 +115,19 @@ A new feature component is `src/components/<name>.tsx` + co-located
 4. **D1 binding name is `env.setsushin_dash`** (underscore). The `Env` interface
    lives in `functions/_lib/types.ts`; handlers are typed `PagesFunction<Env>`
    (and `PagesFunction<Env, 'id'>` for dynamic routes).
-5. **Tone + mode are body data attrs.** `App.tsx` writes `data-tone`,
-   `data-density`, `data-sidebar`, `data-radius`, `data-mode` on `<body>`, and
-   `tokens.css` swaps CSS variables off those selectors. `--accent` is set inline;
-   `--accent-soft` is a `color-mix` of accent over `--bg-card`, declared on
-   `body` so it follows tone and dark mode.
+5. **Mode + tweaks are body data attrs.** `App.tsx` writes `data-density`,
+   `data-sidebar`, `data-radius`, `data-mode` on `<body>`, and `tokens.css`
+   swaps CSS variables off those selectors. The Tweaks accent is set inline as
+   `--accent-base`; `--accent` / `--accent-hover` / `--accent-soft` derive from
+   it on `body`, so dark mode can lift `--accent` to a readable tint.
 6. **Shared style kits live in `styles.css`; component CSS only adds modifiers.**
    `.field` (inputs), `.chip` (+ `is-outline` / `is-active`), `.section-head`,
    `.label-mono`, `.seg`/`.seg-btn` (+ `seg-fill`), `.fold`/`.fold-body`, `.panel-action` with
    `.btn-primary` / `.btn-danger`, `.empty`, `.muted`. No hex colors or font
    stacks outside `tokens.css` — the two exceptions are the assets chart
-   palette and bookmark swatches, which are data, not chrome. Display type is
-   the serif italic (`--font-display`, weight 500): page H1, journal titles,
-   training day names, the avatar and brand mark.
+   palette and bookmark swatches, which are data, not chrome. Type is IBM Plex
+   Sans for everything; `--font-mono` (IBM Plex Mono) is only for numbers,
+   timestamps, tickers and code. Panels get their depth from a 1px border, not a shadow.
 7. **Request bodies in Functions are untrusted at the boundary** — validate +
    coerce with zod (`functions/_lib/schemas.ts` through `parse.ts`, errors via
    `http.ts`). Component props are plain typed TypeScript.
