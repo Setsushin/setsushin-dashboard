@@ -54,6 +54,10 @@ const DAY_MS = 86400_000;
 const isoDay = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 
 const tickCount = (it: Item) => (it.type === 'superset' ? it.rounds : it.type === 'cardio' ? 1 : it.sets);
+// Clamped to the current plan: logs from before a set-count cut keep their
+// extra ticks in D1, but they don't count.
+const doneOf = (day: Day, ticks: Ticks) =>
+  day.items.reduce((s, it) => s + (ticks[it.id] ?? []).slice(0, tickCount(it)).filter(Boolean).length, 0);
 
 function Load({ ex, kg, editing, onSet }: { ex: Exercise; kg: number | null; editing: boolean; onSet: (v: number | null) => void }) {
   if (ex.load) {
@@ -125,11 +129,11 @@ function History({ plan, docs, todayDate, activeDate, onPick }: { plan: Plan; do
   const dayKeys = Object.keys(plan.days);
   const session = (date: string) => {
     const doc = docs['log:' + date] as LogDoc | undefined;
-    if (!doc?.day) return null;
+    if (!doc?.day || !Object.values(doc.ticks ?? {}).some((a) => a.includes(true))) return null;
     const day = plan.days[doc.day];
-    const done = Object.values(doc.ticks ?? {}).reduce((s, a) => s + a.filter(Boolean).length, 0);
+    const done = day ? doneOf(day, doc.ticks) : 0;
     const total = day ? day.items.reduce((s, it) => s + tickCount(it), 0) : 0;
-    return done > 0 ? { key: doc.day, name: day?.name ?? doc.day, done, total } : null;
+    return { key: doc.day, name: day?.name ?? doc.day, done, total };
   };
   const data: Activity[] = Array.from({ length: 365 }, (_, i) => {
     const date = isoDay(Date.parse(todayDate) - (364 - i) * DAY_MS);
@@ -256,7 +260,7 @@ export function Training() {
   const shown = active ?? defaultDay;
 
   const toggleTick = (day: string, id: string, n: number, i: number) => {
-    const arr = Array.from({ length: n }, (_, j) => ticks[id]?.[j] ?? false);
+    const arr = Array.from({ length: Math.max(n, ticks[id]?.length ?? 0) }, (_, j) => ticks[id]?.[j] ?? false);
     arr[i] = !arr[i];
     save(logKey, { day, ticks: { ...ticks, [id]: arr } });
   };
@@ -309,7 +313,7 @@ export function Training() {
         {dayKeys.map((k) => {
           const day = plan.days[k];
           const total = day.items.reduce((s, it) => s + tickCount(it), 0);
-          const done = day.items.reduce((s, it) => s + (ticks[it.id] ?? []).slice(0, tickCount(it)).filter(Boolean).length, 0);
+          const done = doneOf(day, ticks);
           return (
             <section key={k} className="tr-day" data-active={shown === k}>
               <header className="tr-day-head">
