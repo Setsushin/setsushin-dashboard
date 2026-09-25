@@ -2,7 +2,9 @@
 // renders as markdown (marked + DOMPurify, see lib/markdown).
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Panel } from './Panel';
+import { Heatmap } from './Heatmap';
 import { renderMarkdown } from '../lib/markdown';
 import { apiFetch } from '../lib/api';
 import { showToast } from '../lib/events';
@@ -18,6 +20,8 @@ function fmtEntryDate(unixSec: number): string {
   const time = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
   return `${date} · ${time}`;
 }
+
+const localDay = (ms: number) => new Date(ms).toLocaleDateString('sv-SE');
 
 function parseTagsInput(s: string): string[] {
   return (s || '')
@@ -38,102 +42,20 @@ interface EntryDraft {
   tags: string[];
 }
 
-function Composer({ onCreate }: { onCreate: (draft: EntryDraft) => Promise<void> }) {
-  const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
-  const [tagsInput, setTagsInput] = useState('');
-  const [busy, setBusy] = useState(false);
-  const taRef = useRef<HTMLTextAreaElement>(null);
-  const img = useJournalImages(taRef, body, setBody);
-
-  const submit = async () => {
-    const text = body.trim();
-    if (!text || busy) return;
-    setBusy(true);
-    try {
-      await onCreate({ title: title.trim() || null, body: text, tags: parseTagsInput(tagsInput) });
-      setTitle('');
-      setBody('');
-      setTagsInput('');
-      taRef.current?.focus();
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const onKey = (e: React.KeyboardEvent) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-      e.preventDefault();
-      void submit();
-    }
-  };
-
-  return (
-    <div className="journal-composer">
-      <input
-        className="field journal-composer-title"
-        type="text"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        onKeyDown={onKey}
-        placeholder="Topic（可选）"
-      />
-      <textarea
-        ref={taRef}
-        className={`journal-composer-body field${img.dragOver ? ' is-dragover' : ''}`}
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        onKeyDown={onKey}
-        onPaste={img.onPaste}
-        onDrop={img.onDrop}
-        onDragOver={img.onDragOver}
-        onDragLeave={img.onDragLeave}
-        placeholder="写点什么…  支持 markdown：**粗体** · `code` · - list · [link](url) · 粘贴/拖图片"
-        rows={3}
-      />
-      <div className="journal-composer-foot">
-        <input
-          className="field journal-composer-tags"
-          type="text"
-          value={tagsInput}
-          onChange={(e) => setTagsInput(e.target.value)}
-          onKeyDown={onKey}
-          placeholder="tags (逗号分隔)"
-        />
-        <button className="journal-img-btn" onClick={img.openPicker} title="插入图片" type="button">
-          {IMG_ICON}
-        </button>
-        <input
-          ref={img.fileInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          hidden
-          onChange={img.onFileChange}
-        />
-        <span className="muted journal-hint">{img.uploading ? '上传中…' : '⌘↵ to save'}</span>
-        <button className="panel-action btn-primary" onClick={submit} disabled={!body.trim() || busy}>
-          Save
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function EntryEditor({
   entry,
   onSave,
   onCancel,
   onDelete,
 }: {
-  entry: JournalEntry;
+  entry?: JournalEntry;
   onSave: (draft: EntryDraft) => Promise<void> | void;
   onCancel: () => void;
-  onDelete: () => void;
+  onDelete?: () => void;
 }) {
-  const [title, setTitle] = useState(entry.title || '');
-  const [body, setBody] = useState(entry.body);
-  const [tagsInput, setTagsInput] = useState((entry.tags || []).join(', '));
+  const [title, setTitle] = useState(entry?.title || '');
+  const [body, setBody] = useState(entry?.body ?? '');
+  const [tagsInput, setTagsInput] = useState((entry?.tags || []).join(', '));
   const [busy, setBusy] = useState(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const img = useJournalImages(taRef, body, setBody);
@@ -161,164 +83,197 @@ function EntryEditor({
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault();
       void submit();
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      onCancel();
     }
   };
 
-  const rows = Math.max(4, body.split('\n').length + 1);
+  // On window, not the inputs: Esc must work after focus leaves them.
+  useEffect(() => {
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      onCancel();
+    };
+    window.addEventListener('keydown', onEsc);
+    return () => window.removeEventListener('keydown', onEsc);
+  }, [onCancel]);
 
   return (
-    <div className="journal-entry journal-entry-editing">
-      <div className="journal-entry-rail">
-        <div className="journal-entry-meta">{fmtEntryDate(entry.created_at)}</div>
-      </div>
-      <div className="journal-entry-main">
-        <input
-          className="field journal-entry-title-edit"
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onKeyDown={onKey}
-          placeholder="Topic（可选）"
-        />
-        <textarea
-          ref={taRef}
-          className={`field journal-entry-body-edit${img.dragOver ? ' is-dragover' : ''}`}
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          onKeyDown={onKey}
-          onPaste={img.onPaste}
-          onDrop={img.onDrop}
-          onDragOver={img.onDragOver}
-          onDragLeave={img.onDragLeave}
-          rows={rows}
-        />
-        <input
-          className="field journal-entry-tags-edit"
-          type="text"
-          value={tagsInput}
-          onChange={(e) => setTagsInput(e.target.value)}
-          onKeyDown={onKey}
-          placeholder="tags"
-        />
-        <div className="journal-entry-actions">
+    <div className="journal-editor">
+      <div className="journal-entry-meta">{entry ? fmtEntryDate(entry.created_at) : 'New post'}</div>
+      <input
+        className="field journal-entry-title-edit"
+        type="text"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        onKeyDown={onKey}
+        placeholder="Topic（可选）"
+      />
+      <textarea
+        ref={taRef}
+        className={`field journal-entry-body-edit${img.dragOver ? ' is-dragover' : ''}`}
+        value={body}
+        onChange={(e) => setBody(e.target.value)}
+        onKeyDown={onKey}
+        onPaste={img.onPaste}
+        onDrop={img.onDrop}
+        onDragOver={img.onDragOver}
+        onDragLeave={img.onDragLeave}
+        placeholder="写点什么…  支持 markdown：**粗体** · `code` · - list · [link](url) · 粘贴/拖图片"
+      />
+      <input
+        className="field journal-entry-tags-edit"
+        type="text"
+        value={tagsInput}
+        onChange={(e) => setTagsInput(e.target.value)}
+        onKeyDown={onKey}
+        placeholder="tags (逗号分隔)"
+      />
+      <div className="journal-entry-actions">
+        {onDelete && (
           <button className="panel-action btn-danger" onClick={onDelete} disabled={busy}>
             Delete
           </button>
-          <button className="journal-img-btn" onClick={img.openPicker} title="插入图片" type="button">
-            {IMG_ICON}
-          </button>
-          <input
-            ref={img.fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            hidden
-            onChange={img.onFileChange}
-          />
-          <span style={{ flex: 1 }} />
-          <span className="muted journal-hint">{img.uploading ? '上传中…' : '⌘↵ save · Esc cancel'}</span>
-          <button className="panel-action" onClick={onCancel}>
-            Cancel
-          </button>
-          <button className="panel-action btn-primary" onClick={submit} disabled={!body.trim() || busy}>
-            Save
-          </button>
-        </div>
+        )}
+        <button className="journal-img-btn" onClick={img.openPicker} title="插入图片" type="button">
+          {IMG_ICON}
+        </button>
+        <input
+          ref={img.fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          onChange={img.onFileChange}
+        />
+        <span style={{ flex: 1 }} />
+        <span className="muted journal-hint">{img.uploading ? '上传中…' : '⌘↵ save · Esc cancel'}</span>
+        <button className="panel-action" onClick={onCancel}>
+          Cancel
+        </button>
+        <button className="panel-action btn-primary" onClick={submit} disabled={!body.trim() || busy}>
+          Save
+        </button>
       </div>
+    </div>
+  );
+}
+
+function EntryTags({ tags, onTagClick }: { tags: string[]; onTagClick: (t: string) => void }) {
+  if (!tags?.length) return null;
+  return (
+    <div className="journal-entry-tags">
+      {tags.map((t) => (
+        <span
+          key={t}
+          className="chip journal-tag-chip"
+          onClick={(e) => {
+            e.stopPropagation();
+            onTagClick(t);
+          }}
+          title={`Filter by "${t}"`}
+        >
+          {t}
+        </span>
+      ))}
     </div>
   );
 }
 
 function EntryView({
   entry,
-  expanded,
-  onToggleExpand,
-  onEdit,
+  onOpen,
   onTagClick,
 }: {
   entry: JournalEntry;
-  expanded: boolean;
-  onToggleExpand: () => void;
-  onEdit: () => void;
+  onOpen: () => void;
   onTagClick: (t: string) => void;
 }) {
   const bodyRef = useRef<HTMLDivElement>(null);
   const [overflowing, setOverflowing] = useState(false);
   useLayoutEffect(() => {
-    if (expanded) return;
     const el = bodyRef.current;
     if (!el) return;
     setOverflowing(el.scrollHeight > el.clientHeight + 2);
-  }, [entry.body, entry.title, expanded]);
-
-  const showToggle = expanded || overflowing;
-
-  const handleBodyClick = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest?.('a')) return;
-    onEdit();
-  };
+  }, [entry.body, entry.title]);
 
   const html = useMemo(() => renderMarkdown(entry.body), [entry.body]);
 
   return (
-    <div className="journal-entry">
-      <div className="journal-entry-rail">
-        <div className="journal-entry-meta" onClick={onEdit}>
-          {fmtEntryDate(entry.created_at)}
-        </div>
-        {entry.tags?.length > 0 && (
-          <div className="journal-entry-tags">
-            {entry.tags.map((t) => (
-              <span
-                key={t}
-                className="chip journal-tag-chip"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onTagClick(t);
-                }}
-                title={`Filter by "${t}"`}
-              >
-                {t}
-              </span>
-            ))}
-          </div>
+    <div
+      className="journal-entry is-openable"
+      tabIndex={0}
+      onClick={(e) => {
+        if (!(e.target as HTMLElement).closest('a')) onOpen();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' && e.target === e.currentTarget) onOpen();
+      }}
+    >
+      <div className="journal-entry-meta">{fmtEntryDate(entry.created_at)}</div>
+      {entry.title && <div className="journal-entry-title">{entry.title}</div>}
+      <div
+        ref={bodyRef}
+        className={`journal-entry-body markdown is-clamped${overflowing ? ' is-overflowing' : ''}`}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+      <EntryTags tags={entry.tags} onTagClick={onTagClick} />
+    </div>
+  );
+}
+
+function Reader({
+  entry,
+  editing,
+  onEdit,
+  onClose,
+  onSave,
+  onCancelEdit,
+  onDelete,
+  onTagClick,
+}: {
+  entry: JournalEntry;
+  editing: boolean;
+  onEdit: () => void;
+  onClose: () => void;
+  onSave: (draft: EntryDraft) => void;
+  onCancelEdit: () => void;
+  onDelete: () => void;
+  onTagClick: (t: string) => void;
+}) {
+  // Esc closes — unless the editor already took it (→ back to reading).
+  useEffect(() => {
+    if (editing) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !e.defaultPrevented) onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [editing, onClose]);
+
+  const html = useMemo(() => renderMarkdown(entry.body), [entry.body]);
+
+  return (
+    <div className="modal-backdrop" onClick={editing ? undefined : onClose}>
+      <article className="modal journal-reader" onClick={(e) => e.stopPropagation()}>
+        {editing ? (
+          <EntryEditor entry={entry} onSave={onSave} onCancel={onCancelEdit} onDelete={onDelete} />
+        ) : (
+          <>
+            <div className="journal-entry-head">
+              <div className="journal-entry-meta">{fmtEntryDate(entry.created_at)}</div>
+              <button type="button" className="panel-action" onClick={onEdit}>
+                Edit
+              </button>
+              <button type="button" className="panel-action" onClick={onClose} aria-label="Close">
+                ✕
+              </button>
+            </div>
+            {entry.title && <h2 className="journal-entry-title">{entry.title}</h2>}
+            <div className="journal-entry-body markdown" dangerouslySetInnerHTML={{ __html: html }} />
+            <EntryTags tags={entry.tags} onTagClick={onTagClick} />
+          </>
         )}
-      </div>
-      <div className="journal-entry-main">
-        {entry.title && (
-          <div className="journal-entry-title" onClick={onEdit}>
-            {entry.title}
-          </div>
-        )}
-        <div
-          ref={bodyRef}
-          className={[
-            'journal-entry-body',
-            'markdown',
-            expanded ? '' : 'is-clamped',
-            !expanded && overflowing ? 'is-overflowing' : '',
-          ]
-            .filter(Boolean)
-            .join(' ')}
-          onClick={handleBodyClick}
-          dangerouslySetInnerHTML={{ __html: html }}
-        />
-        {showToggle && (
-          <button
-            type="button"
-            className="journal-entry-toggle"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleExpand();
-            }}
-          >
-            {expanded ? '收起 ↑' : '展开 ↓'}
-          </button>
-        )}
-      </div>
+      </article>
     </div>
   );
 }
@@ -334,17 +289,15 @@ interface FilterBarProps {
   toDate: string;
   setToDate: (v: string) => void;
   onClear: () => void;
-  onCopy: () => void;
   hasFilters: boolean;
   count: number;
-  copyAck: boolean;
 }
 
 function FilterBar(props: FilterBarProps) {
   const {
     q, setQ, allTags, activeTags, toggleTag,
     fromDate, setFromDate, toDate, setToDate,
-    onClear, onCopy, hasFilters, count, copyAck,
+    onClear, hasFilters, count,
   } = props;
   return (
     <div className="journal-filter">
@@ -365,9 +318,6 @@ function FilterBar(props: FilterBarProps) {
             Clear
           </button>
         )}
-        <button className="panel-action" onClick={onCopy} disabled={count === 0}>
-          {copyAck ? '✓ Copied' : 'Copy'}
-        </button>
       </div>
       {allTags.length > 0 && (
         <div className="journal-filter-tags">
@@ -388,21 +338,17 @@ function FilterBar(props: FilterBarProps) {
 
 export function Journal() {
   const [entries, setEntries] = useState<JournalEntry[] | null>(null);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [expandedSet, setExpandedSet] = useState<Set<number>>(() => new Set());
+  const [openId, setOpenId] = useState<number | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const open = (id: number | null) => {
+    setOpenId(id);
+    setEditing(false);
+  };
   const [q, setQ] = useState('');
   const [activeTags, setActiveTags] = useState<Set<string>>(() => new Set());
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
-  const [copyAck, setCopyAck] = useState(false);
-
-  const toggleExpanded = (id: number) =>
-    setExpandedSet((prev) => {
-      const s = new Set(prev);
-      if (s.has(id)) s.delete(id);
-      else s.add(id);
-      return s;
-    });
 
   const reload = useCallback(() => {
     return fetch('/api/journal')
@@ -414,7 +360,7 @@ export function Journal() {
     void reload();
   }, [reload]);
 
-  const create = async ({ title, body, tags }: EntryDraft) => {
+  const create = async ({ title, body, tags }: EntryDraft): Promise<boolean> => {
     try {
       const r = await apiFetch('/api/journal', {
         method: 'POST',
@@ -423,15 +369,17 @@ export function Journal() {
       });
       const created = (await r.json()) as JournalEntry;
       setEntries((prev) => [created, ...(prev || [])]);
+      return true;
     } catch (err) {
       showToast(`Save failed: ${(err as Error).message}`, 'error');
+      return false;
     }
   };
 
   const update = async (id: number, patch: EntryDraft) => {
     const now = Math.floor(Date.now() / 1000);
     setEntries((prev) => (prev || []).map((e) => (e.id === id ? { ...e, ...patch, updated_at: now } : e)));
-    setEditingId(null);
+    setEditing(false);
     try {
       await apiFetch(`/api/journal/${id}`, {
         method: 'PATCH',
@@ -447,7 +395,7 @@ export function Journal() {
   const remove = async (id: number) => {
     if (!window.confirm('Delete this entry?')) return;
     setEntries((prev) => (prev || []).filter((e) => e.id !== id));
-    setEditingId(null);
+    open(null);
     try {
       await apiFetch(`/api/journal/${id}`, { method: 'DELETE' });
     } catch (err) {
@@ -482,6 +430,23 @@ export function Journal() {
     });
   }, [entries, q, fromDate, toDate, activeTags]);
 
+  const byDay = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const e of list) {
+      const d = localDay(e.created_at * 1000);
+      m.set(d, (m.get(d) ?? 0) + 1);
+    }
+    return m;
+  }, [entries]);
+  const pickedDay = fromDate && fromDate === toDate ? fromDate : undefined;
+  const pickDay = (d: string) => {
+    const next = d === pickedDay ? '' : d;
+    setFromDate(next);
+    setToDate(next);
+  };
+
+  const opened = list.find((e) => e.id === openId);
+
   const hasFilters = !!(q || activeTags.size || fromDate || toDate);
   const onClear = () => {
     setQ('');
@@ -497,33 +462,33 @@ export function Journal() {
       return s;
     });
 
-  const onCopy = async () => {
-    if (filtered.length === 0) return;
-    const md = filtered
-      .map((e) => {
-        const heading = `## ${fmtEntryDate(e.created_at)}${e.title ? ` — ${e.title}` : ''}`;
-        const tagLine = e.tags && e.tags.length ? `\n*tags: ${e.tags.join(', ')}*` : '';
-        return `${heading}${tagLine}\n\n${e.body}`;
-      })
-      .join('\n\n---\n\n');
-    try {
-      await navigator.clipboard.writeText(md);
-      setCopyAck(true);
-    } catch (err) {
-      showToast('Copy failed: ' + (err as Error).message, 'error');
-    }
-  };
-
-  useEffect(() => {
-    if (!copyAck) return;
-    const t = setTimeout(() => setCopyAck(false), 1400);
-    return () => clearTimeout(t);
-  }, [copyAck]);
-
   return (
-    <Panel size="full" rows={5} title="Journal">
+    <Panel
+      size="full"
+      rows={5}
+      title="Journal"
+      action={
+        <button type="button" className="panel-action btn-primary" onClick={() => setCreating(true)}>
+          + New post
+        </button>
+      }
+    >
       <div className="journal-root">
-        <Composer onCreate={create} />
+        <details className="fold journal-hist">
+          <summary>History</summary>
+          <div className="fold-body">
+            <Heatmap
+              today={localDay(Date.now())}
+              active={pickedDay}
+              noun="entries"
+              onPick={pickDay}
+              day={(d) => {
+                const n = byDay.get(d);
+                return n ? { count: n, title: `${d} · ${n} 条`, attrs: { 'data-n': Math.min(n, 4) } } : null;
+              }}
+            />
+          </div>
+        </details>
         <FilterBar
           q={q}
           setQ={setQ}
@@ -535,40 +500,57 @@ export function Journal() {
           toDate={toDate}
           setToDate={setToDate}
           onClear={onClear}
-          onCopy={onCopy}
           hasFilters={hasFilters}
           count={filtered.length}
-          copyAck={copyAck}
         />
         <div className="journal-list">
           {entries === null && <div className="empty">Loading…</div>}
           {entries !== null && filtered.length === 0 && (
             <div className="empty">
-              {list.length === 0 ? '还没有条目 — 在上面写一条试试。' : '没有条目匹配当前筛选。'}
+              {list.length === 0 ? '还没有条目 — 点 New post 写一条。' : '没有条目匹配当前筛选。'}
             </div>
           )}
-          {filtered.map((e) =>
-            editingId === e.id ? (
-              <EntryEditor
-                key={e.id}
-                entry={e}
-                onSave={(patch) => update(e.id, patch)}
-                onCancel={() => setEditingId(null)}
-                onDelete={() => remove(e.id)}
-              />
-            ) : (
-              <EntryView
-                key={e.id}
-                entry={e}
-                expanded={expandedSet.has(e.id)}
-                onToggleExpand={() => toggleExpanded(e.id)}
-                onEdit={() => setEditingId(e.id)}
-                onTagClick={(t) => toggleTag(t)}
-              />
-            ),
-          )}
+          {filtered.map((e) => (
+            <EntryView
+              key={e.id}
+              entry={e}
+              onOpen={() => open(e.id)}
+              onTagClick={(t) => toggleTag(t)}
+            />
+          ))}
         </div>
       </div>
+      {opened &&
+        createPortal(
+          <Reader
+            entry={opened}
+            editing={editing}
+            onEdit={() => setEditing(true)}
+            onClose={() => open(null)}
+            onSave={(patch) => update(opened.id, patch)}
+            onCancelEdit={() => setEditing(false)}
+            onDelete={() => remove(opened.id)}
+            onTagClick={(t) => {
+              open(null);
+              toggleTag(t);
+            }}
+          />,
+          document.body,
+        )}
+      {creating &&
+        createPortal(
+          <div className="modal-backdrop">
+            <article className="modal journal-reader">
+              <EntryEditor
+                onSave={async (d) => {
+                  if (await create(d)) setCreating(false);
+                }}
+                onCancel={() => setCreating(false)}
+              />
+            </article>
+          </div>,
+          document.body,
+        )}
     </Panel>
   );
 }

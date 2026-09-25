@@ -1,4 +1,4 @@
-/* journal.css — Journal widget: composer + filter bar + timeline. */
+/* journal.css — Journal widget: history heatmap + filter bar + tiles + reader/editor modal. */
 
 .journal-root {
   display: flex; flex-direction: column;
@@ -6,33 +6,9 @@
   flex: 1; min-height: 0;
 }
 
-/* ── Composer ──────────────────────────────────────────────── */
-.journal-composer {
-  display: flex; flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  border: 1px solid var(--border-soft);
-  border-radius: var(--r-md);
-  background: var(--bg-card-soft);
-}
-.journal-composer-title {
-  width: 100%;
-  font-size: 14px;
-  font-weight: 500;
-}
-.journal-composer-body {
-  width: 100%;
-  font-family: inherit; font-size: 13.5px;
-  line-height: 1.55;
-  resize: vertical;
-  min-height: 64px;
-}
-.journal-composer-foot {
-  display: flex; align-items: center; gap: 10px;
-}
-
-/* Quiet icon button matching panel-action's restraint; sits in composer foot
-   and entry-editor actions to open the file picker. */
+/* ── Editor chrome ─────────────────────────────────────────── */
+/* Quiet icon button matching panel-action's restraint; opens the file
+   picker from the editor actions. */
 .journal-img-btn {
   display: inline-flex; align-items: center; justify-content: center;
   width: 26px; height: 26px;
@@ -52,15 +28,10 @@
   background: var(--bg-card-soft);
 }
 
-/* Accent dashed outline while an image is dragged over either editor. */
-.journal-composer-body.is-dragover,
+/* Accent dashed outline while an image is dragged over the editor. */
 .journal-entry-body-edit.is-dragover {
   outline: 2px dashed var(--accent);
   outline-offset: -2px;
-}
-.journal-composer-tags {
-  flex: 1; min-width: 0;
-  font-size: 12.5px;
 }
 .journal-hint {
   font-size: 11px;
@@ -68,6 +39,13 @@
   letter-spacing: 0.02em;
   white-space: nowrap;
 }
+
+/* ── History heatmap (shared Heatmap in a .fold); data-n = entries that day, capped at 4 ── */
+.journal-hist [data-n="1"] { --c: color-mix(in srgb, var(--accent) 35%, var(--bg-card-soft)); }
+.journal-hist [data-n="2"] { --c: color-mix(in srgb, var(--accent) 55%, var(--bg-card-soft)); }
+.journal-hist [data-n="3"] { --c: color-mix(in srgb, var(--accent) 75%, var(--bg-card-soft)); }
+.journal-hist [data-n="4"] { --c: var(--accent); }
+.journal-hist [data-n] { fill: var(--c); background: var(--c); }
 
 /* ── Filter bar ────────────────────────────────────────────── */
 .journal-filter {
@@ -100,29 +78,24 @@
 .journal-tag-chip { cursor: pointer; user-select: none; }
 .journal-tag-chip:not(.is-active):hover { color: var(--fg); }
 
-/* ── Timeline list ─────────────────────────────────────────── */
+/* ── Tile grid ─────────────────────────────────────────────── */
+/* 3 tiles per row, stretched to the row's height so tags sit on one
+   baseline. Click opens the Reader. */
 .journal-list {
-  display: flex; flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-content: start;
   gap: 10px;
   flex: 1; min-height: 0;
   overflow-y: auto;
   padding-right: 4px; /* breathing room next to the scrollbar */
 }
-.journal-empty {
-  padding: 20px;
-  text-align: center;
-  font-size: 13px;
-}
+.journal-list > .empty { grid-column: 1 / -1; }
 
-/* Notebook 2-column entry: left rail holds metadata (date + tags), right
-   column holds the read content (title + body + toggle).  Reads like a
-   journal page where the date is in the gutter, body in the column.  On
-   mobile the two collapse to single-column with the rail above the main. */
 .journal-entry {
-  display: grid;
-  grid-template-columns: 108px minmax(0, 1fr);
-  column-gap: 22px;
-  align-items: start;
+  display: flex; flex-direction: column;
+  gap: 6px;
+  min-width: 0;
   padding: 12px 14px;
   border: 1px solid var(--border-soft);
   border-radius: var(--r-md);
@@ -131,32 +104,10 @@
               background var(--dur-q) var(--ease-out-expo);
 }
 .journal-entry:hover { border-color: var(--border); }
-.journal-entry-editing {
-  border-color: var(--accent);
-  background: var(--bg-card-soft);
-}
-.journal-entry-rail {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-top: 4px;
-  /* Sticky-feel right alignment so the date hugs the column gutter, like
-     a margin note. Small entries don't pull the rail tall. */
-  align-items: flex-end;
-  text-align: right;
-}
-.journal-entry-rail .journal-entry-tags {
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-  margin-top: 0;
-}
-.journal-entry-main {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
+.journal-entry.is-openable { cursor: pointer; }
+.journal-entry-head { display: flex; align-items: center; gap: 8px; }
+.journal-entry-head .panel-action { padding: 2px 8px; }
+.journal-entry-head .panel-action + .panel-action { margin-left: 0; }
 .journal-entry-meta {
   font-family: var(--font-mono);
   font-size: 10.5px;
@@ -165,21 +116,19 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--fg-faded);
-  cursor: pointer;
 }
 /* Journal entry title — serif italic, the second display surface in the
    system after the page H1. Same family, lighter scale; sets these
-   timeline cards apart from grid-widget panel titles which stay sans. */
+   tiles apart from grid-widget panel titles which stay sans. */
 .journal-entry-title {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 19px;
   font-weight: 500;
   font-style: italic;
   letter-spacing: -0.005em;
   line-height: 1.2;
   color: var(--fg);
   margin: 0;
-  cursor: pointer;
   word-break: break-word;
 }
 .journal-entry-body {
@@ -187,11 +136,10 @@
   line-height: 1.6;
   color: var(--fg);
   word-break: break-word;
-  cursor: pointer;
 }
 /* Markdown elements rendered into .journal-entry-body via dangerouslySetInnerHTML.
    Tight vertical rhythm — first/last child margins collapse so the body
-   sits flush against title (above) and toggle/tags (below). */
+   sits flush against title (above) and tags (below). */
 .journal-entry-body > :first-child { margin-top: 0; }
 .journal-entry-body > :last-child { margin-bottom: 0; }
 .journal-entry-body h1,
@@ -268,9 +216,9 @@
 }
 .journal-entry-body th { background: var(--bg-card-soft); font-weight: 600; }
 /* Soft cap at ~6 lines. Fade gradient over the bottom 2.4em hides the cut
-   edge; toggle below is rendered only when scrollHeight actually overflows
-   (measured in EntryView). pointer-events: none on the gradient lets the
-   click below it still hit the body (→ enter edit mode). */
+   edge; it's drawn only when scrollHeight actually overflows (measured in
+   EntryView). pointer-events: none on the gradient keeps
+   links under it clickable. */
 .journal-entry-body.is-clamped {
   max-height: 9.6em;
   overflow: hidden;
@@ -283,23 +231,26 @@
   background: linear-gradient(to bottom, transparent, var(--bg-card));
   pointer-events: none;
 }
-.journal-entry-toggle {
-  align-self: flex-start;
-  background: transparent; border: none;
-  font: inherit; font-size: 11.5px;
-  color: var(--fg-faded);
-  cursor: pointer;
-  padding: 2px 0 0;
-  letter-spacing: 0.02em;
-  transition: color 120ms ease;
-}
-.journal-entry-toggle:hover { color: var(--accent); }
 .journal-entry-tags {
   display: flex; flex-wrap: wrap; gap: 4px;
-  margin-top: 2px;
+  margin-top: auto; /* pin to the tile bottom */
+  padding-top: 2px;
 }
 
-/* ── Inline editor ─────────────────────────────────────────── */
+/* ── Reader (full-text modal on the .modal kit; also hosts the editor) ── */
+.journal-reader {
+  width: min(880px, calc(100vw - 32px));
+  height: calc(100dvh - 32px);
+  overflow-y: auto;
+  padding: 24px 36px 28px;
+  gap: 12px;
+}
+.journal-reader .journal-entry-title { font-size: 30px; }
+.journal-reader .journal-entry-body { font-size: 15px; line-height: 1.75; }
+.journal-editor { display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; }
+.journal-editor .journal-entry-body-edit { flex: 1; resize: none; font-size: 15px; line-height: 1.75; }
+
+/* ── Editor fields ─────────────────────────────────────────── */
 .journal-entry-title-edit {
   width: 100%;
   font-size: 14px;
@@ -321,29 +272,14 @@
   margin-top: 4px;
 }
 
-/* ── Mobile ────────────────────────────────────────────────── */
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .journal-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 768px) {
   .journal-filter-row { gap: 6px; }
   .journal-filter-q { flex: 1 1 100%; }
   .journal-filter-count { margin-left: 0; }
-
-  /* Collapse the notebook 2-col into a single column. Rail items stay
-     in their natural order (date, then tags) above the main content. */
-  .journal-entry {
-    grid-template-columns: 1fr;
-    column-gap: 0;
-    row-gap: 8px;
-  }
-  .journal-entry-rail {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    text-align: left;
-    padding-top: 0;
-    gap: 10px;
-  }
-  .journal-entry-rail .journal-entry-tags {
-    flex-direction: row;
-    align-items: center;
-  }
+  .journal-list { grid-template-columns: 1fr; }
+  .journal-reader { width: 100vw; height: 100dvh; border-radius: 0; padding: 18px; }
 }
