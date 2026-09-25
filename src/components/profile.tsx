@@ -439,7 +439,7 @@ export function Profile() {
 
   if (items === null) {
     return (
-      <Panel size="full" rows={3} title="Profile" action={action}>
+      <Panel size="full" rows={3} action={action}>
         <div className="empty">
           Loading…
         </div>
@@ -450,7 +450,7 @@ export function Profile() {
   const groups = groupByCategory(list);
 
   return (
-    <Panel size="full" rows={3} title="Profile" action={action}>
+    <Panel size="full" rows={3} action={action}>
       <div className="profile-body">
         {adding && (
           <ProfileForm initial={null} categories={categories} onSave={create} onCancel={() => setAdding(false)} />

@@ -838,7 +838,6 @@ export function Assets() {
 
   const title = (
     <span className="assets-title">
-      <span>Portfolio</span>
       <button
         className="chip assets-md-chip"
         onClick={onCopyMd}

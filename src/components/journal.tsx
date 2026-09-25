@@ -466,7 +466,6 @@ export function Journal() {
     <Panel
       size="full"
       rows={5}
-      title="Journal"
       action={
         <button type="button" className="panel-action btn-primary" onClick={() => setCreating(true)}>
           + New post

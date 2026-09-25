@@ -248,7 +248,7 @@ export function Training() {
 
   if (!plan) {
     return (
-      <Panel size="full" rows={6} title="Training" hint={mockHint({ error: planError })}>
+      <Panel size="full" rows={6} hint={mockHint({ error: planError })}>
         <div className="tr-empty">{planError ? 'Could not load training.yml' : 'Loading…'}</div>
       </Panel>
     );
@@ -261,7 +261,7 @@ export function Training() {
   );
 
   return (
-    <Panel size="full" rows={6} title="Training" action={action}>
+    <Panel size="full" rows={6} action={action}>
       <History plan={plan} docs={docs} todayDate={todayDate} activeDate={editDate ?? todayDate} onPick={pickDate} />
       {editDate && (
         <div className="tr-editing">
