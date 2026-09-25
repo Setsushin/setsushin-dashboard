@@ -155,6 +155,6 @@ export const rowToJournal = (r: JournalRow) => ({ ...r, tags: parseTags(r.tags) 
 
 // training_state KV: one JSON doc per key.
 export const trainingPut = z.object({
-  key: z.string().regex(/^(weights|log:\d{4}-\d{2}-\d{2})$/),
+  key: z.string().regex(/^(weights|volume|log:\d{4}-\d{2}-\d{2})$/),
   data: z.record(z.string(), z.unknown()),
 });

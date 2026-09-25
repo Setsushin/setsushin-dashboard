@@ -1,7 +1,7 @@
 // functions/api/training.ts — per-user KV behind the training widget.
 //
 // GET /api/training → { weights: {...}, "log:2026-09-16": {...}, ... }
-// PUT /api/training → body: { key, data }   key ∈ weights | log:YYYY-MM-DD
+// PUT /api/training → body: { key, data }   key ∈ weights | volume | log:YYYY-MM-DD
 
 import { getUserEmail, json } from '../_lib/auth';
 import { parseJson } from '../_lib/parse';

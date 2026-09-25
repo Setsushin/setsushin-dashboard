@@ -142,7 +142,7 @@ A new feature component is `src/components/<name>.tsx` + co-located
 | `/api/bookmarks` | `bookmarks_local`  | yes | GET (by bucket) · POST · `bookmarks/[id]` PATCH/DELETE |
 | `/api/journal`   | `journal_entries`  | yes | GET list · POST · `journal/[id]` PATCH/DELETE |
 | `/api/profile`   | `profile_items`    | yes | GET list · POST · `profile/[id]` PATCH/DELETE |
-| `/api/training`  | `training_state`   | yes | GET fold `{key: doc}` · PUT one key (`weights` / `log:YYYY-MM-DD`) |
+| `/api/training`  | `training_state`   | yes | GET fold `{key: doc}` · PUT one key (`weights` / `volume` / `log:YYYY-MM-DD`) |
 
 User identity comes from `getUserEmail(request, env)` in
 `functions/_lib/auth.ts`: prod reads the `Cf-Access-Authenticated-User-Email`

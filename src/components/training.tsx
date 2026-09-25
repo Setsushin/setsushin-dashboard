@@ -1,7 +1,8 @@
 // training — upper/lower split workout card. Plan text comes from
-// public/training.yml; weights + per-JST-day set ticks live in D1 via
-// /api/training — one JSON doc per key (`weights`, `log:YYYY-MM-DD`). One
-// day shows at a time behind a day switch (CSS hides the rest).
+// public/training.yml; overrides + per-JST-day set ticks live in D1 via
+// /api/training — one JSON doc per key (`weights`, `volume` for reps/sets,
+// `log:YYYY-MM-DD`). One day shows at a time behind a day switch (CSS hides
+// the rest).
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import yaml from 'js-yaml';
@@ -16,7 +17,7 @@ import './training.css';
 interface Exercise {
   id: string;
   name: string;
-  scheme: string;
+  reps: string;
   load?: string;
   kg?: number | null;
   unit?: string;
@@ -24,7 +25,7 @@ interface Exercise {
   prog?: string;
 }
 type Item =
-  | (Exercise & { type: 'single'; sets: number })
+  | (Exercise & { type: 'single'; sets: number; rest?: string })
   | { type: 'superset'; id: string; label: string; rounds: number; rest: string; exercises: Exercise[] }
   | { type: 'cardio'; id: string; name: string; scheme: string; cue?: string };
 interface Day {
@@ -39,6 +40,8 @@ interface Plan {
 }
 
 type Weights = Record<string, number | null>;
+// Keyed by exercise id (reps) and item id (sets — rounds for a superset).
+type Volume = Record<string, { reps?: string; sets?: number }>;
 type Ticks = Record<string, boolean[]>;
 interface LogDoc {
   day: string;
@@ -51,56 +54,97 @@ const JSON_HEADERS = { 'content-type': 'application/json' };
 // ponytail: JST (+9h) hardcoded — single-user dashboard, user lives in JP.
 const todayKey = () => 'log:' + new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 10);
 
-const tickCount = (it: Item) => (it.type === 'superset' ? it.rounds : it.type === 'cardio' ? 1 : it.sets);
+const setsOf = (it: Item, volume: Volume) =>
+  it.type === 'cardio' ? 1 : volume[it.id]?.sets ?? (it.type === 'superset' ? it.rounds : it.sets);
 // Clamped to the current plan: logs from before a set-count cut keep their
 // extra ticks in D1, but they don't count.
-const doneOf = (day: Day, ticks: Ticks) =>
-  day.items.reduce((s, it) => s + (ticks[it.id] ?? []).slice(0, tickCount(it)).filter(Boolean).length, 0);
+const doneOf = (day: Day, ticks: Ticks, volume: Volume) =>
+  day.items.reduce((s, it) => s + (ticks[it.id] ?? []).slice(0, setsOf(it, volume)).filter(Boolean).length, 0);
 
-function Load({ ex, kg, editing, onSet }: { ex: Exercise; kg: number | null; editing: boolean; onSet: (v: number | null) => void }) {
-  if (ex.load) {
-    return (
-      <>
-        <span className="tr-kg tr-kg-text">{ex.load}</span>
-        <span className="tr-scheme">{ex.scheme}</span>
-      </>
-    );
-  }
+// Commits on blur / Enter. `parse` returns undefined to reject the input,
+// which snaps it back; the key remounts it when the saved value changes.
+function EditIn<T>({ value, label, className, numeric, parse, onCommit }: {
+  value: string;
+  label: string;
+  className: string;
+  numeric?: boolean;
+  parse: (raw: string) => T | undefined;
+  onCommit: (v: T) => void;
+}) {
   return (
-    <>
-      {editing ? (
-        <input
-          key={String(kg)}
-          className="tr-kgin"
-          type="number"
-          inputMode="decimal"
-          step="0.5"
-          defaultValue={kg ?? ''}
-          aria-label={`${ex.name} weight`}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') e.currentTarget.blur();
-          }}
-          onBlur={(e) => {
-            const v = e.target.value === '' ? null : Number(e.target.value);
-            if (v !== kg && !Number.isNaN(v ?? 0)) onSet(v);
-          }}
-        />
-      ) : (
-        <span className="tr-kg">{kg ?? '—'}</span>
-      )}
-      <span className="tr-unit">{ex.unit || 'kg'}</span>
-      <span className="tr-scheme">× {ex.scheme}</span>
-    </>
+    <input
+      key={value}
+      className={className}
+      inputMode={numeric ? 'decimal' : undefined}
+      defaultValue={value}
+      aria-label={label}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') e.currentTarget.blur();
+      }}
+      onBlur={(e) => {
+        const raw = e.target.value.trim();
+        if (raw === value) return;
+        const v = parse(raw);
+        if (v === undefined) e.target.value = value;
+        else onCommit(v);
+      }}
+    />
   );
 }
 
-function ExerciseBlock({ ex, weights, editing, onSet }: { ex: Exercise; weights: Weights; editing: boolean; onSet: (id: string, v: number | null) => void }) {
+// '' clears an override back to the plan default (null / undefined).
+const parseKg = (raw: string) => (raw === '' ? null : Number.isFinite(Number(raw)) ? Number(raw) : undefined);
+const parseSets = (raw: string) => (raw === '' ? null : /^\d+$/.test(raw) && +raw >= 1 && +raw <= 20 ? +raw : undefined);
+const parseReps = (raw: string) => raw || null;
+
+interface EditProps {
+  weights: Weights;
+  volume: Volume;
+  editing: boolean;
+  onWeight: (id: string, v: number | null) => void;
+  onVolume: (id: string, patch: { reps?: string; sets?: number }) => void;
+}
+
+// `sets` is passed for single items only; superset exercises show reps alone.
+function ExerciseBlock({ ex, sets, rest, weights, volume, editing, onWeight, onVolume }: EditProps & { ex: Exercise; sets?: number; rest?: string }) {
   const kg = weights[ex.id] ?? ex.kg ?? null;
+  const reps = volume[ex.id]?.reps ?? ex.reps;
   return (
     <div className="tr-ex">
       <h4 className="tr-name">{ex.name}</h4>
       <div className="tr-load">
-        <Load ex={ex} kg={kg} editing={editing} onSet={(v) => onSet(ex.id, v)} />
+        {ex.load ? (
+          <span className="tr-kg tr-kg-text">{ex.load}</span>
+        ) : (
+          <>
+            {editing ? (
+              <EditIn className="tr-kgin" numeric value={kg == null ? '' : String(kg)} label={`${ex.name} weight`} parse={parseKg} onCommit={(v) => onWeight(ex.id, v)} />
+            ) : (
+              <span className="tr-kg">{kg ?? '—'}</span>
+            )}
+            <span className="tr-unit">{ex.unit || 'kg'}</span>
+          </>
+        )}
+        <span className="tr-scheme">
+          {!ex.load && '× '}
+          {editing ? (
+            <EditIn className="tr-in tr-in-reps" value={reps} label={`${ex.name} reps`} parse={parseReps} onCommit={(v) => onVolume(ex.id, { reps: v ?? undefined })} />
+          ) : (
+            reps
+          )}
+          {sets !== undefined && (
+            <>
+              {' × '}
+              {editing ? (
+                <EditIn className="tr-in tr-in-sets" numeric value={String(sets)} label={`${ex.name} sets`} parse={parseSets} onCommit={(v) => onVolume(ex.id, { sets: v ?? undefined })} />
+              ) : (
+                sets
+              )}
+              组
+            </>
+          )}
+          {rest && ` · ${rest}`}
+        </span>
       </div>
       {ex.cue && <p className="tr-cue">{ex.cue}</p>}
       {ex.prog && <p className="tr-prog">{ex.prog}</p>}
@@ -123,14 +167,14 @@ function TickRow({ n, arr, label, onToggle }: { n: number; arr?: boolean[]; labe
 // Last N JST days, colored by day type. A day counts once its log has ≥1
 // tick; done/total is in the cell title. Derived client-side from the docs
 // GET already fetched.
-function History({ plan, docs, todayDate, activeDate, onPick }: { plan: Plan; docs: Docs; todayDate: string; activeDate: string; onPick: (d: string) => void }) {
+function History({ plan, docs, volume, todayDate, activeDate, onPick }: { plan: Plan; docs: Docs; volume: Volume; todayDate: string; activeDate: string; onPick: (d: string) => void }) {
   const dayKeys = Object.keys(plan.days);
   const session = (date: string): HeatDay | null => {
     const doc = docs['log:' + date] as LogDoc | undefined;
     if (!doc?.day || !Object.values(doc.ticks ?? {}).some((a) => a.includes(true))) return null;
     const day = plan.days[doc.day];
-    const done = day ? doneOf(day, doc.ticks) : 0;
-    const total = day ? day.items.reduce((s, it) => s + tickCount(it), 0) : 0;
+    const done = day ? doneOf(day, doc.ticks, volume) : 0;
+    const total = day ? day.items.reduce((s, it) => s + setsOf(it, volume), 0) : 0;
     return { count: 1, title: `${date} · ${day?.name ?? doc.day} · ${done}/${total}`, attrs: { 'data-day': dayKeys.indexOf(doc.day) } };
   };
 
@@ -209,6 +253,7 @@ export function Training() {
   // Backfill: a picked History cell redirects ticks/Clear to that day's log.
   const logKey = editDate ? 'log:' + editDate : today;
   const weights = (docs.weights ?? {}) as Weights;
+  const volume = (docs.volume ?? {}) as Volume;
   const log = docs[logKey] as LogDoc | undefined;
   const ticks = log?.ticks ?? {};
   const dayKeys = plan ? Object.keys(plan.days) : [];
@@ -234,6 +279,8 @@ export function Training() {
     save(logKey, { day, ticks: { ...ticks, [id]: arr } });
   };
   const setWeight = (id: string, v: number | null) => save('weights', { ...weights, [id]: v });
+  const setVolume = (id: string, patch: { reps?: string; sets?: number }) => save('volume', { ...volume, [id]: { ...volume[id], ...patch } });
+  const edit: EditProps = { weights, volume, editing, onWeight: setWeight, onVolume: setVolume };
   const pickDate = (d: string) => {
     setEditDate(d === todayDate ? null : d);
     const day = (docs['log:' + d] as LogDoc | undefined)?.day;
@@ -250,13 +297,13 @@ export function Training() {
 
   const action = (
     <button type="button" className="panel-action" aria-pressed={editing} onClick={() => setEditing((v) => !v)}>
-      {editing ? 'Done' : 'Edit weights'}
+      {editing ? 'Done' : 'Edit'}
     </button>
   );
 
   return (
     <Panel size="full" rows={6} action={action}>
-      <History plan={plan} docs={docs} todayDate={todayDate} activeDate={editDate ?? todayDate} onPick={pickDate} />
+      <History plan={plan} docs={docs} volume={volume} todayDate={todayDate} activeDate={editDate ?? todayDate} onPick={pickDate} />
       {editDate && (
         <div className="tr-editing">
           Editing {editDate}
@@ -275,8 +322,8 @@ export function Training() {
       <div className="tr-days">
         {dayKeys.map((k) => {
           const day = plan.days[k];
-          const total = day.items.reduce((s, it) => s + tickCount(it), 0);
-          const done = doneOf(day, ticks);
+          const total = day.items.reduce((s, it) => s + setsOf(it, volume), 0);
+          const done = doneOf(day, ticks, volume);
           return (
             <section key={k} className="tr-day" data-active={shown === k}>
               <header className="tr-day-head">
@@ -289,41 +336,51 @@ export function Training() {
                 </div>
               </header>
               <ol className="tr-list">
-                {day.items.map((it, n) => (
-                  <li key={it.id} className="tr-row">
-                    <span className="tr-num">{n + 1}</span>
-                    <div className="tr-body">
-                      {it.type === 'superset' ? (
-                        <>
-                          <div className="tr-group-label">
-                            <b>{it.label}</b>
-                            <span>{it.rest}</span>
-                          </div>
-                          <div className="tr-pair">
-                            {it.exercises.map((ex) => (
-                              <ExerciseBlock key={ex.id} ex={ex} weights={weights} editing={editing} onSet={setWeight} />
-                            ))}
-                          </div>
-                          <TickRow n={it.rounds} arr={ticks[it.id]} label={(i) => `R${i + 1}`} onToggle={(i) => toggleTick(k, it.id, it.rounds, i)} />
-                        </>
-                      ) : it.type === 'cardio' ? (
-                        <>
-                          <h4 className="tr-name">{it.name}</h4>
-                          <div className="tr-load">
-                            <span className="tr-kg tr-kg-text">{it.scheme}</span>
-                          </div>
-                          {it.cue && <p className="tr-cue">{it.cue}</p>}
-                          <TickRow n={1} arr={ticks[it.id]} label={() => 'Done'} onToggle={(i) => toggleTick(k, it.id, 1, i)} />
-                        </>
-                      ) : (
-                        <>
-                          <ExerciseBlock ex={it} weights={weights} editing={editing} onSet={setWeight} />
-                          <TickRow n={it.sets} arr={ticks[it.id]} label={(i) => String(i + 1)} onToggle={(i) => toggleTick(k, it.id, it.sets, i)} />
-                        </>
-                      )}
-                    </div>
-                  </li>
-                ))}
+                {day.items.map((it, n) => {
+                  const sets = setsOf(it, volume);
+                  return (
+                    <li key={it.id} className="tr-row">
+                      <span className="tr-num">{n + 1}</span>
+                      <div className="tr-body">
+                        {it.type === 'superset' ? (
+                          <>
+                            <div className="tr-group-label">
+                              <b>{it.label}</b>
+                              <span>
+                                {editing ? (
+                                  <EditIn className="tr-in tr-in-sets" numeric value={String(sets)} label={`${it.label} rounds`} parse={parseSets} onCommit={(v) => setVolume(it.id, { sets: v ?? undefined })} />
+                                ) : (
+                                  sets
+                                )}
+                                轮 · {it.rest}
+                              </span>
+                            </div>
+                            <div className="tr-pair">
+                              {it.exercises.map((ex) => (
+                                <ExerciseBlock key={ex.id} ex={ex} {...edit} />
+                              ))}
+                            </div>
+                            <TickRow n={sets} arr={ticks[it.id]} label={(i) => `R${i + 1}`} onToggle={(i) => toggleTick(k, it.id, sets, i)} />
+                          </>
+                        ) : it.type === 'cardio' ? (
+                          <>
+                            <h4 className="tr-name">{it.name}</h4>
+                            <div className="tr-load">
+                              <span className="tr-kg tr-kg-text">{it.scheme}</span>
+                            </div>
+                            {it.cue && <p className="tr-cue">{it.cue}</p>}
+                            <TickRow n={1} arr={ticks[it.id]} label={() => 'Done'} onToggle={(i) => toggleTick(k, it.id, 1, i)} />
+                          </>
+                        ) : (
+                          <>
+                            <ExerciseBlock ex={it} sets={sets} rest={it.rest} {...edit} />
+                            <TickRow n={sets} arr={ticks[it.id]} label={(i) => String(i + 1)} onToggle={(i) => toggleTick(k, it.id, sets, i)} />
+                          </>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
               </ol>
             </section>
           );

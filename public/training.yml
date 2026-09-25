@@ -1,15 +1,15 @@
 # Training plan — upper/lower split. Rendered by widgets/training.tsx.
-# Edit freely: text is shown as-is. Weights here are starting defaults;
-# the widget's "Edit weights" overrides live in D1 and win when set.
+# Edit freely: text is shown as-is. Weights, reps, sets and rounds here are
+# starting defaults; the widget's "Edit" overrides live in D1 and win when set.
 #
 # Day: name, sub, items, extra (true = outside the upper/lower rotation;
 # the default-day pick skips it).
 #
-# Item shapes:
-#   single   — id, name, (load text | kg + unit), scheme, sets, cue, prog
-#   superset — id, label, rounds, rest, exercises[]  (each: id, name, (load | kg + unit), scheme, cue)
+# Item shapes (shown as "reps × sets组 · rest" / "rounds轮 · rest"):
+#   single   — id, name, (load text | kg + unit), reps, sets, rest?, cue, prog
+#   superset — id, label, rounds, rest, exercises[]  (each: id, name, (load | kg + unit), reps, cue)
 #   cardio   — id, name, scheme, cue
-# Every id must be unique across all days (ticks + weights are keyed by it).
+# Every id must be unique across all days (ticks + overrides are keyed by it).
 
 days:
   upper:
@@ -20,66 +20,67 @@ days:
         id: u_scap
         name: 肩胛引体
         load: 徒手
-        scheme: 8–10 × 1组
+        reps: 8–10
         sets: 1
         cue: '手臂锁直不弯肘，只做肩胛下沉，顶点停一秒，放回完全悬垂。'
       - type: single
         id: u_pull
         name: 死悬引体
         load: 徒手
-        scheme: 5 × 2组 · 组间90秒
+        reps: 5
+        rest: 组间90秒
         sets: 2
         cue: '锁肘悬垂起，下巴过杠，放回锁肘悬垂。少任何一段不算。'
       - type: single
         id: u_incline
         name: 器械上斜推（或上斜哑铃卧推）
         kg: null
-        scheme: 8–10 × 3组
+        reps: 8–10
         sets: 3
         cue: '上胸优先，先做。30度，不要45度以上。器械约45–50kg起，哑铃约18–20kg/侧起，第一次以8–10次做得完为准。'
       - type: single
         id: u_press
         name: 胸推
         kg: 70
-        scheme: 8–10 × 3组
+        reps: 8–10
         sets: 3
         cue: '同一台机器调平。跟在上斜推后面重量会掉一档，按新数字记录。'
       - type: single
         id: u_lat
         name: 高位下拉
         kg: 65
-        scheme: 8–10 × 3组
+        reps: 8–10
         sets: 3
         cue: '组间60–75秒。机器被占就先做划船。'
       - type: single
         id: u_row
         name: 坐姿划船
         kg: 70
-        scheme: 8–10 × 3组
+        reps: 8–10
         sets: 3
         cue: '组间60–75秒。'
       - type: superset
         id: u_ssC
         label: 超级组（两副哑铃，同一位置）
         rounds: 4
-        rest: 3–4轮 · 轮间60秒
+        rest: 轮间60秒
         exercises:
           - id: u_lateral
             name: 侧平举
             kg: 5
             unit: kg/侧
-            scheme: 12–15
+            reps: 12–15
           - id: u_rear
             name: 后束飞鸟
             kg: 8
             unit: kg/侧
-            scheme: 12–15
+            reps: 12–15
             cue: '标准俯身、肘微屈，靠肩后侧收缩，不甩。'
       - type: single
         id: u_crunch
         name: 反向山羊挺身卷腹（45°）
         load: 徒手
-        scheme: 12–15 × 3组
+        reps: 12–15
         sets: 3
         cue: '卷脊柱不折髋：上背先离开，一节节弯；大腿根发酸就是髋在干活。'
         prog: '做满15次 → 抱片加重，从5kg起'
@@ -97,21 +98,22 @@ days:
         id: l_scap
         name: 肩胛引体
         load: 徒手
-        scheme: 8–10 × 1组
+        reps: 8–10
         sets: 1
         cue: '手臂锁直不弯肘，只做肩胛下沉，顶点停一秒，放回完全悬垂。'
       - type: single
         id: l_pull
         name: 死悬引体
         load: 徒手
-        scheme: 5 × 2组 · 组间90秒
+        reps: 5
+        rest: 组间90秒
         sets: 2
         cue: '锁肘悬垂起，下巴过杠，放回锁肘悬垂。'
       - type: single
         id: l_rdl
         name: 罗马尼亚硬拉
         kg: 80
-        scheme: 8–10 × 4组
+        reps: 8–10
         sets: 4
         cue: '先做递增组 40×5、60×3。如果之前80是常规硬拉，RDL从60–70起。'
         prog: '超过90kg → 用助力带'
@@ -119,14 +121,14 @@ days:
         id: l_legpress
         name: 腿举
         kg: 140
-        scheme: 8–10 × 3组
+        reps: 8–10
         sets: 3
         cue: '底部骨盆不离靠背、下背不拱起，大腿贴近躯干前就停。'
       - type: single
         id: l_curl
         name: 坐姿腿弯举
         kg: null
-        scheme: 10–12 × 3组
+        reps: 10–12
         sets: 3
         cue: '垫子在脚踝后面（不是小腿前面）。膝对准转轴，屁股贴住座椅，勾到底停一下，两秒放回。第一次找到10–12次能完成的重量。'
       - type: single
@@ -134,7 +136,7 @@ days:
         name: 后弓步
         kg: 18
         unit: kg 高脚杯
-        scheme: 10/侧 × 2组
+        reps: 10/侧
         sets: 2
         cue: '哑铃抱胸前，两脚各走各的轨道（不站一条线），下放两秒，后脚脚尖先着地。'
         prog: '还是晃 → 换史密斯机分腿蹲'
@@ -142,7 +144,7 @@ days:
         id: l_hlr
         name: 悬垂屈膝举腿
         load: 徒手
-        scheme: 10–15 × 3组
+        reps: 10–15
         sets: 3
         cue: '顶点要有骨盆后倾，不是腿抬到水平就完。'
         prog: '做满15次 → 换直腿版，再往后夹哑铃'
@@ -161,53 +163,54 @@ days:
         id: f_scap
         name: 肩胛引体
         load: 徒手
-        scheme: 8–10 × 1组
+        reps: 8–10
         sets: 1
         cue: '手臂锁直不弯肘，只做肩胛下沉，顶点停一秒，放回完全悬垂。'
       - type: single
         id: f_pull
         name: 死悬引体
         load: 徒手
-        scheme: 5 × 2组 · 组间90秒
+        reps: 5
+        rest: 组间90秒
         sets: 2
         cue: '锁肘悬垂起，下巴过杠，放回锁肘悬垂。'
       - type: superset
         id: f_ssA
         label: 超级组A（推 + 腿）
         rounds: 3
-        rest: 3轮 · 轮间60秒
+        rest: 轮间60秒
         exercises:
           - id: f_pushup
             name: 脚垫高俯卧撑
             load: 徒手
-            scheme: 8–15
+            reps: 8–15
             cue: '脚放椅子或床沿，身体一条直线，胸口快贴地再推起。做满15次 → 下放放慢到3秒。'
           - id: f_split
             name: 保加利亚分腿蹲
             load: 徒手
-            scheme: 10–12/侧
+            reps: 10–12/侧
             cue: '后脚背搭椅面，前脚离椅子一大步，下放两秒，前脚全脚掌发力。做满12次 → 背包装书加重。'
       - type: superset
         id: f_ssB
         label: 超级组B（肩 + 后链）
         rounds: 3
-        rest: 3轮 · 轮间60秒
+        rest: 轮间60秒
         exercises:
           - id: f_pike
             name: 屈体俯卧撑（派克）
             load: 徒手
-            scheme: 8–12
+            reps: 8–12
             cue: '臀部抬高成倒V，头往两手前方落，肘不外翻。'
           - id: f_bridge
             name: 单腿臀桥
             load: 徒手
-            scheme: 12–15/侧
+            reps: 12–15/侧
             cue: '肩背靠床沿或沙发，顶点夹臀停一秒，骨盆不歪。'
       - type: single
         id: f_hlr
         name: 悬垂屈膝举腿
         load: 徒手
-        scheme: 10–15 × 3组
+        reps: 10–15
         sets: 3
         cue: '顶点要有骨盆后倾，不是腿抬到水平就完。'
       - type: cardio

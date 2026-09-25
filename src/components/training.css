@@ -74,6 +74,13 @@
   text-align: right;
 }
 .tr-kgin:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.tr-in {
+  font: inherit; width: 6ch; padding: 1px 4px; margin: 0 2px;
+  border: 1px solid var(--accent); border-radius: var(--r-xs);
+  color: var(--accent); background: var(--accent-soft);
+  text-align: center;
+}
+.tr-in-sets { width: 3.5ch; }
 
 /* Superset */
 .tr-group-label {
