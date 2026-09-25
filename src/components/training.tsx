@@ -233,12 +233,6 @@ export function Training() {
     arr[i] = !arr[i];
     save(logKey, { day, ticks: { ...ticks, [id]: arr } });
   };
-  const clearDay = (day: string) => {
-    if (!log || !plan) return;
-    const ids = new Set(plan.days[day].items.map((it) => it.id));
-    const rest = Object.fromEntries(Object.entries(ticks).filter(([id]) => !ids.has(id)));
-    save(logKey, { day: log.day, ticks: rest });
-  };
   const setWeight = (id: string, v: number | null) => save('weights', { ...weights, [id]: v });
   const pickDate = (d: string) => {
     setEditDate(d === todayDate ? null : d);
@@ -291,12 +285,7 @@ export function Training() {
                   {day.sub && <p className="tr-day-sub">{day.sub}</p>}
                 </div>
                 <div className="tr-day-meta">
-                  <span>
-                    {done} / {total}
-                  </span>
-                  <button type="button" className="panel-action" onClick={() => clearDay(k)}>
-                    Clear
-                  </button>
+                  {done} / {total}
                 </div>
               </header>
               <ol className="tr-list">
