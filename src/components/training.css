@@ -1,12 +1,13 @@
-/* training.css — upper/lower split card. Two day columns on desktop;
-   under 900px one column with a day switch. Tokens only, single accent —
+/* training.css — upper/lower split card. One day at a time behind a
+   day switch. Tokens only, single accent —
    days are told apart by their header, not by hue. */
 
 .tr-empty { color: var(--fg-muted); font-size: 13px; }
 .tr-edit[aria-pressed="true"] { color: var(--accent); }
 
-/* Day switch (.seg.seg-fill) — hidden on desktop, both columns visible. */
-.tr-switch { display: none; margin-bottom: 12px; }
+/* Day switch (.seg.seg-fill); only the active .tr-day is shown. */
+.tr-switch { margin-bottom: 12px; }
+.tr-day[data-active="false"] { display: none; }
 
 /* ── History (react-activity-calendar heatmap inside .tr-fold) ── */
 .tr-hist.tr-fold { margin: 0 0 var(--gap); }
@@ -122,9 +123,3 @@
 .tr-md table { border-collapse: collapse; width: 100%; text-align: center; margin: 8px 0 10px; }
 .tr-md th, .tr-md td { padding: 6px 4px; border: 1px solid var(--border-soft); }
 .tr-md th { background: var(--bg-card-soft); font-weight: 600; }
-
-@media (max-width: 900px) {
-  .tr-switch { display: grid; }
-  .tr-days { grid-template-columns: 1fr; }
-  .tr-day[data-active="false"] { display: none; }
-}

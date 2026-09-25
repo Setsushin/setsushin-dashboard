@@ -1,7 +1,7 @@
 // training — upper/lower split workout card. Plan text comes from
 // public/training.yml; weights + per-JST-day set ticks live in D1 via
-// /api/training — one JSON doc per key (`weights`, `log:YYYY-MM-DD`). Both
-// days render side by side; under 900px one column with a day switch (CSS).
+// /api/training — one JSON doc per key (`weights`, `log:YYYY-MM-DD`). One
+// day shows at a time behind a day switch (CSS hides the rest).
 
 import { cloneElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import yaml from 'js-yaml';
@@ -245,7 +245,7 @@ export function Training() {
   const ticks = log?.ticks ?? {};
   const dayKeys = plan ? Object.keys(plan.days) : [];
 
-  // Mobile default day: today's session if one is logged, else the day after
+  // Default day: today's session if one is logged, else the day after
   // the most recent log (missed session → next in sequence), else the first.
   const logKeys = Object.keys(docs)
     .filter((k) => k.startsWith('log:'))
