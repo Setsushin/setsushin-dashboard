@@ -3,8 +3,9 @@
 // /api/training — one JSON doc per key (`weights`, `log:YYYY-MM-DD`). Both
 // days render side by side; under 900px one column with a day switch (CSS).
 
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { cloneElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import yaml from 'js-yaml';
+import { ActivityCalendar, type Activity } from 'react-activity-calendar';
 import { Panel } from './Panel';
 import { mockHint } from './mockHint';
 import { apiFetch } from '../lib/api';
@@ -51,8 +52,6 @@ const todayKey = () => 'log:' + new Date(Date.now() + 9 * 3600_000).toISOString(
 
 const DAY_MS = 86400_000;
 const isoDay = (ms: number) => new Date(ms).toISOString().slice(0, 10);
-const monthDays = (y: number, m: number) =>
-  Array.from({ length: new Date(Date.UTC(y, m, 0)).getUTCDate() }, (_, i) => isoDay(Date.UTC(y, m - 1, i + 1)));
 
 const tickCount = (it: Item) => (it.type === 'superset' ? it.rounds : it.type === 'cardio' ? 1 : it.sets);
 
@@ -119,96 +118,66 @@ function TickRow({ n, arr, label, onToggle }: { n: number; arr?: boolean[]; labe
   );
 }
 
-type HistMode = '14d' | 'month' | 'year';
-
-// One cell per JST day, filled when that day's log has ≥1 tick. Fill opacity
-// scales with done/total against the current plan. Everything is derived
-// client-side from the docs GET already fetched — no extra endpoint.
+// Last 365 JST days as a heatmap. A day counts once its log has ≥1 tick;
+// done/total is in the cell title. Derived client-side from the docs GET
+// already fetched — no extra endpoint.
 function History({ plan, docs, todayDate, activeDate, onPick }: { plan: Plan; docs: Docs; todayDate: string; activeDate: string; onPick: (d: string) => void }) {
-  const [mode, setMode] = useState<HistMode>('14d');
-  const [ym, setYm] = useState(todayDate.slice(0, 7));
   const dayKeys = Object.keys(plan.days);
-  const [y, m] = ym.split('-').map(Number);
-  const loggedYears = Object.keys(docs)
-    .filter((k) => k.startsWith('log:') && (docs[k] as LogDoc | undefined)?.day)
-    .map((k) => k.slice(4, 8));
-  const years = [...new Set([todayDate.slice(0, 4), ym.slice(0, 4), ...loggedYears])].sort().reverse();
-
-  const rows: { label?: string; days: string[] }[] =
-    mode === '14d'
-      ? [{ days: Array.from({ length: 14 }, (_, i) => isoDay(Date.parse(todayDate) - (13 - i) * DAY_MS)) }]
-      : mode === 'month'
-        ? [{ days: monthDays(y, m) }]
-        : Array.from({ length: 12 }, (_, i) => ({ label: String(i + 1), days: monthDays(y, i + 1) }));
-
-  const cell = (d: string) => {
-    const doc = docs['log:' + d] as LogDoc | undefined;
-    const day = doc?.day ? plan.days[doc.day] : undefined;
-    const done = Object.values(doc?.ticks ?? {}).reduce((s, a) => s + a.filter(Boolean).length, 0);
+  const session = (date: string) => {
+    const doc = docs['log:' + date] as LogDoc | undefined;
+    if (!doc?.day) return null;
+    const day = plan.days[doc.day];
+    const done = Object.values(doc.ticks ?? {}).reduce((s, a) => s + a.filter(Boolean).length, 0);
     const total = day ? day.items.reduce((s, it) => s + tickCount(it), 0) : 0;
-    const trained = done > 0 && !!doc?.day;
-    return (
-      <button
-        key={d}
-        type="button"
-        className="tr-hcell"
-        data-day={trained ? dayKeys.indexOf(doc!.day) : undefined}
-        data-today={d === todayDate || undefined}
-        data-active={d === activeDate || undefined}
-        disabled={d > todayDate}
-        title={trained ? `${d} · ${day?.name ?? doc!.day} · ${done}/${total}` : d}
-        style={trained ? ({ '--fill': 0.5 + 0.5 * (total ? Math.min(done / total, 1) : 1) } as CSSProperties) : undefined}
-        onClick={() => onPick(d)}
-      >
-        {mode !== 'year' && Number(d.slice(8))}
-      </button>
-    );
+    return done > 0 ? { key: doc.day, name: day?.name ?? doc.day, done, total } : null;
   };
+  const data: Activity[] = Array.from({ length: 365 }, (_, i) => {
+    const date = isoDay(Date.parse(todayDate) - (364 - i) * DAY_MS);
+    const s = session(date);
+    return { date, count: s ? 1 : 0, level: s ? 1 : 0 };
+  });
 
   return (
-    <div className="tr-hist">
-      <div className="tr-hist-head">
-        <span className="label-mono">History</span>
-        <select className="tr-hist-sel" value={mode} onChange={(e) => setMode(e.target.value as HistMode)}>
-          <option value="14d">Last 14 days</option>
-          <option value="month">Month</option>
-          <option value="year">Year</option>
-        </select>
-        {mode === 'month' && (
-          <input
-            className="tr-hist-sel"
-            type="month"
-            value={ym}
-            max={todayDate.slice(0, 7)}
-            onChange={(e) => e.target.value && setYm(e.target.value)}
-          />
-        )}
-        {mode === 'year' && (
-          <select className="tr-hist-sel" value={String(y)} onChange={(e) => setYm(`${e.target.value}-${ym.slice(5)}`)}>
-            {years.map((yr) => (
-              <option key={yr} value={yr}>
-                {yr}
-              </option>
-            ))}
-          </select>
-        )}
+    <details className="tr-fold tr-hist">
+      <summary>
+        History
         <span className="tr-hist-legend">
           {dayKeys.map((k, i) => (
             <span key={k}>
-              <i className="tr-hcell" data-day={i} /> {plan.days[k].name}
+              <i className="tr-swatch" data-day={i} /> {plan.days[k].name}
             </span>
           ))}
         </span>
+      </summary>
+      <div className="tr-fold-body">
+        <ActivityCalendar
+          className="tr-heat"
+          data={data}
+          maxLevel={1}
+          weekStart={1}
+          blockSize={12}
+          blockMargin={3}
+          fontSize={11}
+          showColorLegend={false}
+          showWeekdayLabels={['mon', 'wed', 'fri']}
+          labels={{ totalCount: '{{count}} sessions in the last year' }}
+          renderBlock={(block, a) => {
+            const s = session(a.date);
+            return cloneElement(
+              block,
+              {
+                'data-day': s ? dayKeys.indexOf(s.key) : undefined,
+                'data-today': a.date === todayDate || undefined,
+                'data-active': a.date === activeDate || undefined,
+                style: undefined,
+                onClick: () => onPick(a.date),
+              } as Partial<typeof block.props>,
+              <title>{s ? `${a.date} · ${s.name} · ${s.done}/${s.total}` : a.date}</title>,
+            );
+          }}
+        />
       </div>
-      <div className="tr-hist-grid" data-mode={mode}>
-        {rows.map((r, i) => (
-          <div key={i} className="tr-hrow" style={{ '--n': r.days.length } as CSSProperties}>
-            {r.label && <span className="tr-hrow-label">{r.label}</span>}
-            {r.days.map(cell)}
-          </div>
-        ))}
-      </div>
-    </div>
+    </details>
   );
 }
 
@@ -399,9 +368,9 @@ export function Training() {
         })}
       </div>
       {rulesHtml && (
-        <details className="tr-rules">
+        <details className="tr-fold">
           <summary>Rules &amp; schedule</summary>
-          <div className="tr-md" dangerouslySetInnerHTML={{ __html: rulesHtml }} />
+          <div className="tr-fold-body tr-md" dangerouslySetInnerHTML={{ __html: rulesHtml }} />
         </details>
       )}
     </Panel>
