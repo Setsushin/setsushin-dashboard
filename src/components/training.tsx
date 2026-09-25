@@ -30,6 +30,7 @@ type Item =
 interface Day {
   name: string;
   sub?: string;
+  extra?: boolean;
   items: Item[];
 }
 interface Plan {
@@ -245,18 +246,19 @@ export function Training() {
   const ticks = log?.ticks ?? {};
   const dayKeys = plan ? Object.keys(plan.days) : [];
 
-  // Default day: today's session if one is logged, else the day after
-  // the most recent log (missed session → next in sequence), else the first.
-  const logKeys = Object.keys(docs)
+  // Default day: today's session if one is logged, else the rotation day after
+  // the latest rotation log (missed session → next in sequence; `extra` days
+  // don't advance it), else the first.
+  const cycle = dayKeys.filter((k) => !plan?.days[k]?.extra);
+  const lastCycleDay = Object.keys(docs)
     .filter((k) => k.startsWith('log:'))
-    .sort();
-  const lastKey = logKeys[logKeys.length - 1];
-  const lastDay = lastKey ? (docs[lastKey] as LogDoc | undefined)?.day : undefined;
-  const defaultDay = !lastDay
-    ? dayKeys[0]
-    : lastKey === today
-      ? lastDay
-      : dayKeys[(dayKeys.indexOf(lastDay) + 1) % dayKeys.length];
+    .sort()
+    .map((k) => (docs[k] as LogDoc | undefined)?.day)
+    .filter((d): d is string => !!d && cycle.includes(d))
+    .pop();
+  const defaultDay =
+    (docs[today] as LogDoc | undefined)?.day ??
+    (lastCycleDay ? cycle[(cycle.indexOf(lastCycleDay) + 1) % cycle.length] : dayKeys[0]);
   const shown = active ?? defaultDay;
 
   const toggleTick = (day: string, id: string, n: number, i: number) => {

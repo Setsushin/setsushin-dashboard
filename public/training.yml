@@ -2,11 +2,14 @@
 # Edit freely: text is shown as-is. Weights here are starting defaults;
 # the widget's "Edit weights" overrides live in D1 and win when set.
 #
+# Day: name, sub, items, extra (true = outside the upper/lower rotation;
+# the default-day pick skips it).
+#
 # Item shapes:
 #   single   — id, name, (load text | kg + unit), scheme, sets, cue, prog
-#   superset — id, label, rounds, rest, exercises[]  (each: id, name, kg, unit, scheme, cue)
+#   superset — id, label, rounds, rest, exercises[]  (each: id, name, (load | kg + unit), scheme, cue)
 #   cardio   — id, name, scheme, cue
-# Every id must be unique across both days (ticks + weights are keyed by it).
+# Every id must be unique across all days (ticks + weights are keyed by it).
 
 days:
   upper:
@@ -149,12 +152,78 @@ days:
         scheme: 30分钟
         cue: '全程不扶把手。心率<130加1%坡，上限12%。'
 
+  free:
+    name: 徒手自由训练
+    sub: 没有健身房时 · 力量约30分钟 + 有氧30分钟 · 只需单杠
+    extra: true
+    items:
+      - type: single
+        id: f_scap
+        name: 肩胛引体
+        load: 徒手
+        scheme: 8–10 × 1组
+        sets: 1
+        cue: '手臂锁直不弯肘，只做肩胛下沉，顶点停一秒，放回完全悬垂。'
+      - type: single
+        id: f_pull
+        name: 死悬引体
+        load: 徒手
+        scheme: 5 × 2组 · 组间90秒
+        sets: 2
+        cue: '锁肘悬垂起，下巴过杠，放回锁肘悬垂。'
+      - type: superset
+        id: f_ssA
+        label: 超级组A（推 + 腿）
+        rounds: 3
+        rest: 3轮 · 轮间60秒
+        exercises:
+          - id: f_pushup
+            name: 脚垫高俯卧撑
+            load: 徒手
+            scheme: 8–15
+            cue: '脚放椅子或床沿，身体一条直线，胸口快贴地再推起。做满15次 → 下放放慢到3秒。'
+          - id: f_split
+            name: 保加利亚分腿蹲
+            load: 徒手
+            scheme: 10–12/侧
+            cue: '后脚背搭椅面，前脚离椅子一大步，下放两秒，前脚全脚掌发力。做满12次 → 背包装书加重。'
+      - type: superset
+        id: f_ssB
+        label: 超级组B（肩 + 后链）
+        rounds: 3
+        rest: 3轮 · 轮间60秒
+        exercises:
+          - id: f_pike
+            name: 屈体俯卧撑（派克）
+            load: 徒手
+            scheme: 8–12
+            cue: '臀部抬高成倒V，头往两手前方落，肘不外翻。'
+          - id: f_bridge
+            name: 单腿臀桥
+            load: 徒手
+            scheme: 12–15/侧
+            cue: '肩背靠床沿或沙发，顶点夹臀停一秒，骨盆不歪。'
+      - type: single
+        id: f_hlr
+        name: 悬垂屈膝举腿
+        load: 徒手
+        scheme: 10–15 × 3组
+        sets: 3
+        cue: '顶点要有骨盆后倾，不是腿抬到水平就完。'
+      - type: cardio
+        id: f_cardio
+        name: 快走或爬楼梯
+        scheme: 30分钟
+        cue: '能说话但唱不了歌的强度。'
+
 rules: |
   ### 周排（默认值，漏课做序列里的下一个）
 
   | 一 | 二 | 三 | 四 | 五 | 六 | 日 |
   |---|---|---|---|---|---|---|
   | **上** | **下** | 休 | **上** | 休 | **下** | 休 |
+
+  没有健身房（出差、节假日回家）→ 做徒手自由训练顶上当天的课，不占序列：回健身房后接着做序列里的下一个。
 
   ### 进阶
 

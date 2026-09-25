@@ -108,6 +108,12 @@
      palette doesn't lose its quiet voice. */
   --num-up:   #6b8a52;
   --num-down: #b15546;
+
+  /* Training day types (History heatmap). Categorical, not status; the three
+     are CVD-distinguishable as a set, so retune them together. */
+  --train-day-0: #eb6834;
+  --train-day-1: #2a78d6;
+  --train-day-2: #1baf7a;
 }
 
 /* Derived on body (not :root) so it sees the tone/mode overrides declared
@@ -218,6 +224,9 @@ body[data-mode="dark"] {
                   0 6px 18px rgba(0, 0, 0, 0.25);
   --bg-sidebar: #14100b;
   --bg-sidebar-active: #2a221a;
+  --train-day-0: #d95926;
+  --train-day-1: #3987e5;
+  --train-day-2: #199e70;
 }
 body[data-mode="dark"][data-tone="cool"] {
   --bg-app: #131620; --bg-content: #1a1d28; --bg-card: #222633; --bg-card-soft: #2a2f3d;
