@@ -123,10 +123,19 @@ function TickRow({ n, arr, label, onToggle }: { n: number; arr?: boolean[]; labe
   );
 }
 
+const BLOCK_GAP = 3;
+
 // Last 365 JST days as a heatmap. A day counts once its log has ≥1 tick;
 // done/total is in the cell title. Derived client-side from the docs GET
 // already fetched — no extra endpoint.
 function History({ plan, docs, todayDate, activeDate, onPick }: { plan: Plan; docs: Docs; todayDate: string; activeDate: string; onPick: (d: string) => void }) {
+  const [width, setWidth] = useState(0);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const ro = new ResizeObserver(([e]) => setWidth(e.contentRect.width));
+    if (bodyRef.current) ro.observe(bodyRef.current);
+    return () => ro.disconnect();
+  }, []);
   const dayKeys = Object.keys(plan.days);
   const session = (date: string) => {
     const doc = docs['log:' + date] as LogDoc | undefined;
@@ -141,6 +150,10 @@ function History({ plan, docs, todayDate, activeDate, onPick }: { plan: Plan; do
     const s = session(date);
     return { date, count: s ? 1 : 0, level: s ? 1 : 0 };
   });
+  // Fit the week columns to the fold's width (32px ≈ weekday labels); the
+  // clamp keeps it legible on phones (it scrolls) and sane on huge screens.
+  const weeks = Math.ceil(((new Date(data[0].date).getUTCDay() + 6) % 7 + 365) / 7);
+  const blockSize = Math.max(10, Math.min(40, Math.floor((width - 32) / weeks) - BLOCK_GAP));
 
   return (
     <details className="tr-fold tr-hist">
@@ -154,14 +167,15 @@ function History({ plan, docs, todayDate, activeDate, onPick }: { plan: Plan; do
           ))}
         </span>
       </summary>
-      <div className="tr-fold-body">
+      <div className="tr-fold-body" ref={bodyRef}>
         <ActivityCalendar
           className="tr-heat"
           data={data}
           maxLevel={1}
           weekStart={1}
-          blockSize={12}
-          blockMargin={3}
+          blockSize={blockSize}
+          blockMargin={BLOCK_GAP}
+          blockRadius={Math.max(2, Math.round(blockSize / 6))}
           fontSize={11}
           showColorLegend={false}
           showWeekdayLabels={['mon', 'wed', 'fri']}
