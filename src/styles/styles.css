@@ -646,6 +646,19 @@ body[data-sidebar="light"] .sb-quick-capture .kbd {
 }
 .seg-fill .seg-btn { padding: 8px 0; font-size: 13px; font-weight: 600; border-radius: calc(var(--r-sm) - 3px); }
 
+/* Fold — <details> section with a +/− summary (Training History / Rules,
+   Journal History). */
+.fold { border: 1px solid var(--border-soft); border-radius: var(--r-md); }
+.fold summary {
+  cursor: pointer; padding: 12px 16px;
+  font-weight: 600; font-size: 13.5px; color: var(--fg);
+  list-style: none; display: flex; justify-content: space-between;
+}
+.fold summary::-webkit-details-marker { display: none; }
+.fold summary::after { content: "+"; color: var(--fg-faded); font-weight: 400; }
+.fold[open] summary::after { content: "−"; }
+.fold-body { padding: 0 16px 14px; }
+
 /* ── Responsive ─────────────────────────────────────────────────
    Below 1100px: two columns. Full panels keep spanning every column;
    row spans still apply, so tall panels stay tall. */

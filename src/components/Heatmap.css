@@ -1,0 +1,21 @@
+/* Heatmap.css — shared day heatmap / strip. Empty cells are --bg-card-soft;
+   callers color filled cells off their own data-* attrs (fill + background). */
+
+.heat-range { margin-bottom: 8px; }
+.heat { color: var(--fg-muted); }
+/* rtl scroller opens at the newest week on narrow screens */
+.heat .react-activity-calendar__scroll-container { direction: rtl; }
+.heat svg { direction: ltr; }
+.heat rect { fill: var(--bg-card-soft); cursor: pointer; }
+.heat rect[data-today] { stroke: var(--fg-muted); stroke-width: 1.5; }
+.heat rect[data-active] { stroke: var(--accent); stroke-width: 2; }
+/* 90d/30d strip: one button per day, columns share the width. */
+.heat-strip { --sg: 3px; font-size: 11px; color: var(--fg-muted); }
+.heat-strip[data-range="90"] { --sg: 1px; }
+.heat-strip-ticks, .heat-strip-cells { display: grid; column-gap: var(--sg); }
+.heat-strip-ticks { height: 1.4em; margin-bottom: 4px; }
+.heat-strip-ticks span { white-space: nowrap; }
+.heat-strip-cell { height: 32px; padding: 0; border: 0; border-radius: 3px; background: var(--bg-card-soft); cursor: pointer; }
+.heat-strip-cell[data-today] { outline: 1.5px solid var(--fg-muted); outline-offset: 1px; }
+.heat-strip-cell[data-active], .heat-strip-cell:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.heat-strip-foot { margin-top: 8px; }

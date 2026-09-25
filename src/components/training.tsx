@@ -3,10 +3,10 @@
 // /api/training — one JSON doc per key (`weights`, `log:YYYY-MM-DD`). One
 // day shows at a time behind a day switch (CSS hides the rest).
 
-import { cloneElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import yaml from 'js-yaml';
-import { ActivityCalendar, type Activity } from 'react-activity-calendar';
 import { Panel } from './Panel';
+import { Heatmap, type HeatDay } from './Heatmap';
 import { mockHint } from './mockHint';
 import { apiFetch } from '../lib/api';
 import { showToast } from '../lib/events';
@@ -50,9 +50,6 @@ const JSON_HEADERS = { 'content-type': 'application/json' };
 
 // ponytail: JST (+9h) hardcoded — single-user dashboard, user lives in JP.
 const todayKey = () => 'log:' + new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 10);
-
-const DAY_MS = 86400_000;
-const isoDay = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 
 const tickCount = (it: Item) => (it.type === 'superset' ? it.rounds : it.type === 'cardio' ? 1 : it.sets);
 // Clamped to the current plan: logs from before a set-count cut keep their
@@ -123,60 +120,22 @@ function TickRow({ n, arr, label, onToggle }: { n: number; arr?: boolean[]; labe
   );
 }
 
-const RANGES = [365, 90, 30];
-const BLOCK_GAP = 3;
-
-// Last N JST days: 365d as a heatmap, 90d/30d as a one-row strip filling the
-// width. A day counts once its log has ≥1 tick; done/total is in the cell
-// title. Derived client-side from the docs GET already fetched.
+// Last N JST days, colored by day type. A day counts once its log has ≥1
+// tick; done/total is in the cell title. Derived client-side from the docs
+// GET already fetched.
 function History({ plan, docs, todayDate, activeDate, onPick }: { plan: Plan; docs: Docs; todayDate: string; activeDate: string; onPick: (d: string) => void }) {
-  const [range, setRange] = useState(RANGES[0]);
-  const [width, setWidth] = useState(0);
-  const bodyRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const ro = new ResizeObserver(([e]) => setWidth(e.contentRect.width));
-    if (bodyRef.current) ro.observe(bodyRef.current);
-    return () => ro.disconnect();
-  }, []);
   const dayKeys = Object.keys(plan.days);
-  const session = (date: string) => {
+  const session = (date: string): HeatDay | null => {
     const doc = docs['log:' + date] as LogDoc | undefined;
     if (!doc?.day || !Object.values(doc.ticks ?? {}).some((a) => a.includes(true))) return null;
     const day = plan.days[doc.day];
     const done = day ? doneOf(day, doc.ticks) : 0;
     const total = day ? day.items.reduce((s, it) => s + tickCount(it), 0) : 0;
-    return { key: doc.day, name: day?.name ?? doc.day, done, total };
+    return { count: 1, title: `${date} · ${day?.name ?? doc.day} · ${done}/${total}`, attrs: { 'data-day': dayKeys.indexOf(doc.day) } };
   };
-  const cell = (date: string) => {
-    const s = session(date);
-    return {
-      'data-day': s ? dayKeys.indexOf(s.key) : undefined,
-      'data-today': date === todayDate || undefined,
-      'data-active': date === activeDate || undefined,
-      onClick: () => onPick(date),
-      title: s ? `${date} · ${s.name} · ${s.done}/${s.total}` : date,
-    };
-  };
-  const data: Activity[] = Array.from({ length: range }, (_, i) => {
-    const date = isoDay(Date.parse(todayDate) - (range - 1 - i) * DAY_MS);
-    const s = session(date);
-    return { date, count: s ? 1 : 0, level: s ? 1 : 0 };
-  });
-  const countLabel = `sessions in the last ${range} days`;
-  // Fit 365d's week columns to the fold's width (32px ≈ weekday labels); the
-  // clamp keeps it legible on phones (it scrolls) and sane on huge screens.
-  const weeks = Math.ceil(((new Date(data[0].date).getUTCDay() + 6) % 7 + range) / 7);
-  const blockSize = Math.max(10, Math.min(40, Math.floor((width - 32) / weeks) - BLOCK_GAP));
-  // Strip ticks: Mondays as M/D on 30d, month starts on 90d.
-  const tick = (date: string) => {
-    const d = new Date(date);
-    if (range === 30) return d.getUTCDay() === 1 ? `${d.getUTCMonth() + 1}/${d.getUTCDate()}` : null;
-    return d.getUTCDate() === 1 ? d.toLocaleString('en', { month: 'short', timeZone: 'UTC' }) : null;
-  };
-  const cols = { gridTemplateColumns: `repeat(${range}, minmax(0, 1fr))` };
 
   return (
-    <details className="tr-fold tr-hist">
+    <details className="fold tr-hist">
       <summary>
         History
         <span className="tr-hist-legend">
@@ -187,50 +146,8 @@ function History({ plan, docs, todayDate, activeDate, onPick }: { plan: Plan; do
           ))}
         </span>
       </summary>
-      <div className="tr-fold-body" ref={bodyRef}>
-        <div className="seg tr-hist-range" role="group" aria-label="Range">
-          {RANGES.map((n) => (
-            <button key={n} type="button" className="seg-btn" aria-pressed={range === n} onClick={() => setRange(n)}>
-              {n}d
-            </button>
-          ))}
-        </div>
-        {range === 365 ? (
-          <ActivityCalendar
-            className="tr-heat"
-            data={data}
-            maxLevel={1}
-            weekStart={1}
-            blockSize={blockSize}
-            blockMargin={BLOCK_GAP}
-            blockRadius={Math.max(2, Math.round(blockSize / 6))}
-            fontSize={11}
-            showColorLegend={false}
-            showWeekdayLabels={['mon', 'wed', 'fri']}
-            labels={{ totalCount: `{{count}} ${countLabel}` }}
-            renderBlock={(block, a) => {
-              const { title, ...attrs } = cell(a.date);
-              return cloneElement(block, { ...attrs, style: undefined } as Partial<typeof block.props>, <title>{title}</title>);
-            }}
-          />
-        ) : (
-          <div className="tr-strip" data-range={range}>
-            <div className="tr-strip-ticks" style={cols}>
-              {data.map((a, i) => {
-                const t = tick(a.date);
-                return t && <span key={a.date} style={{ gridColumn: i + 1 }}>{t}</span>;
-              })}
-            </div>
-            <div className="tr-strip-cells" style={cols}>
-              {data.map((a) => (
-                <button key={a.date} type="button" className="tr-strip-cell" {...cell(a.date)} />
-              ))}
-            </div>
-            <div className="tr-strip-foot">
-              {data.filter((a) => a.count).length} {countLabel}
-            </div>
-          </div>
-        )}
+      <div className="fold-body">
+        <Heatmap today={todayDate} active={activeDate} noun="sessions" day={session} onPick={onPick} />
       </div>
     </details>
   );
@@ -424,9 +341,9 @@ export function Training() {
         })}
       </div>
       {rulesHtml && (
-        <details className="tr-fold">
+        <details className="fold tr-rules">
           <summary>Rules &amp; schedule</summary>
-          <div className="tr-fold-body tr-md" dangerouslySetInnerHTML={{ __html: rulesHtml }} />
+          <div className="fold-body tr-md" dangerouslySetInnerHTML={{ __html: rulesHtml }} />
         </details>
       )}
     </Panel>

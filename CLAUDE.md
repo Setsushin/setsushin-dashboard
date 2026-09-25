@@ -59,6 +59,7 @@ src/
 │   └── home.tsx · finance.tsx · feed.tsx · journal.tsx · training.tsx · profile.tsx
 ├── components/
 │   ├── Panel.tsx             # card shell; size (large|wide|full) + rows → grid footprint
+│   ├── Heatmap.tsx           # 365d/90d/30d day heatmap (training + journal History)
 │   ├── Sidebar · TopBar · UserMenu · PageHeader · Toast · tweaks   # shell
 │   ├── <name>.tsx + <name>.css   # one per feature: tasks, calendar, markets,
 │   │                             #   bookmarks, feed, assets, journal, profile, training
@@ -121,7 +122,7 @@ A new feature component is `src/components/<name>.tsx` + co-located
    `body` so it follows tone and dark mode.
 6. **Shared style kits live in `styles.css`; component CSS only adds modifiers.**
    `.field` (inputs), `.chip` (+ `is-outline` / `is-active`), `.section-head`,
-   `.label-mono`, `.seg`/`.seg-btn` (+ `seg-fill`), `.panel-action` with
+   `.label-mono`, `.seg`/`.seg-btn` (+ `seg-fill`), `.fold`/`.fold-body`, `.panel-action` with
    `.btn-primary` / `.btn-danger`, `.empty`, `.muted`. No hex colors or font
    stacks outside `tokens.css` — the two exceptions are the assets chart
    palette and bookmark swatches, which are data, not chrome. Display type is

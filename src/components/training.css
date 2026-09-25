@@ -9,29 +9,11 @@
 .tr-switch { margin-bottom: 12px; }
 .tr-day[data-active="false"] { display: none; }
 
-/* ── History (react-activity-calendar heatmap inside .tr-fold) ── */
-.tr-hist.tr-fold { margin: 0 0 var(--gap); }
-.tr-hist-range { margin-bottom: 8px; }
-.tr-heat { color: var(--fg-muted); }
-/* rtl scroller opens at the newest week on narrow screens */
-.tr-heat .react-activity-calendar__scroll-container { direction: rtl; }
-.tr-heat svg { direction: ltr; }
-.tr-heat rect { fill: var(--bg-card-soft); cursor: pointer; }
+/* ── History (shared Heatmap inside a .fold); day types get their own hue ── */
+.tr-hist.fold { margin: 0 0 var(--gap); }
 .tr-hist [data-day="0"] { fill: var(--train-day-0); background: var(--train-day-0); }
 .tr-hist [data-day="1"] { fill: var(--train-day-1); background: var(--train-day-1); }
 .tr-hist [data-day="2"] { fill: var(--train-day-2); background: var(--train-day-2); }
-.tr-heat rect[data-today] { stroke: var(--fg-muted); stroke-width: 1.5; }
-.tr-heat rect[data-active] { stroke: var(--accent); stroke-width: 2; }
-/* 90d/30d strip: one button per day, columns share the width. */
-.tr-strip { --sg: 3px; font-size: 11px; color: var(--fg-muted); }
-.tr-strip[data-range="90"] { --sg: 1px; }
-.tr-strip-ticks, .tr-strip-cells { display: grid; column-gap: var(--sg); }
-.tr-strip-ticks { height: 1.4em; margin-bottom: 4px; }
-.tr-strip-ticks span { white-space: nowrap; }
-.tr-strip-cell { height: 32px; padding: 0; border: 0; border-radius: 3px; background: var(--bg-card-soft); cursor: pointer; }
-.tr-strip-cell[data-today] { outline: 1.5px solid var(--fg-muted); outline-offset: 1px; }
-.tr-strip-cell[data-active], .tr-strip-cell:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.tr-strip-foot { margin-top: 8px; }
 .tr-hist-legend { margin: 0 12px 0 auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 10px; font-size: 12.5px; font-weight: 400; color: var(--fg-muted); }
 .tr-hist-legend > span { white-space: nowrap; }
 .tr-swatch { width: 10px; height: 10px; display: inline-block; vertical-align: -1px; margin-right: 4px; border-radius: 3px; }
@@ -119,17 +101,7 @@
 .tr-tick[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
 .tr-tick:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-/* ── Collapsible sections (History, Rules) ─────────────────── */
-.tr-fold { margin-top: var(--gap); border: 1px solid var(--border-soft); border-radius: var(--r-md); }
-.tr-fold summary {
-  cursor: pointer; padding: 12px 16px;
-  font-weight: 600; font-size: 13.5px; color: var(--fg);
-  list-style: none; display: flex; justify-content: space-between;
-}
-.tr-fold summary::-webkit-details-marker { display: none; }
-.tr-fold summary::after { content: "+"; color: var(--fg-faded); font-weight: 400; }
-.tr-fold[open] summary::after { content: "−"; }
-.tr-fold-body { padding: 0 16px 14px; }
+.tr-rules { margin-top: var(--gap); }
 .tr-md { font-size: 13px; color: var(--fg); line-height: 1.5; }
 .tr-md h3 { margin: 12px 0 4px; font-size: 13px; }
 .tr-md p { margin: 0 0 6px; }
