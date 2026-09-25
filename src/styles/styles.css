@@ -414,15 +414,25 @@ body[data-sidebar="light"] .sb-item.is-active { box-shadow: var(--shadow-card); 
   margin-left: 6px;
   letter-spacing: 0.01em;
 }
+/* Button — every text action: panel-head actions, modal feet, inline row
+   actions. aria-pressed = toggled on (e.g. Training "Edit"). */
 .panel-action {
+  display: inline-flex; align-items: center; gap: 4px;
   margin-left: auto;
-  font-size: 12.5px; color: var(--fg-muted);
-  background: transparent; border: none; cursor: pointer;
-  padding: 4px 8px; border-radius: var(--r-sm);
-  font-weight: 500;
+  font: inherit; font-size: 12.5px; font-weight: 500; line-height: 1.2;
+  color: var(--fg);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 4px 10px;
+  cursor: pointer;
   flex-shrink: 0;
+  transition: background var(--dur-q) var(--ease-out-expo),
+              border-color var(--dur-q) var(--ease-out-expo),
+              color var(--dur-q) var(--ease-out-expo);
 }
-.panel-action:hover { background: var(--bg-hover); color: var(--fg); }
+.panel-action:hover { background: var(--bg-card-soft); border-color: var(--border-strong); }
+.panel-action[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 /* Counter in the action slot ("12 items"): never wraps, never squeezes. */
 .panel-head > .label-mono { margin-left: auto; flex-shrink: 0; white-space: nowrap; color: var(--fg-faded); }
 /* ── Header strip (bookmarks row above the grid) ─────────────── */
@@ -480,10 +490,10 @@ body[data-sidebar="light"] .sb-item.is-active { box-shadow: var(--shadow-card); 
 .pm-label { color: var(--fg-muted); font-weight: 500; font-size: 12px; }
 /* Primary / destructive actions sit on .panel-action (same box, sized
    for a modal foot); these only recolor. */
-.btn-primary { background: var(--accent); color: var(--accent-fg); }
-.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
-.btn-primary:not(:disabled):hover { background: var(--accent-hover); color: var(--accent-fg); }
-.btn-danger:hover { color: var(--danger); }
+.panel-action:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.btn-primary:not(:disabled):hover { background: var(--accent-hover); border-color: var(--accent-hover); color: var(--accent-fg); }
+.btn-danger:not(:disabled):hover { color: var(--danger); border-color: var(--danger); }
 
 /* ── Kits — shared pieces every page builds from. Component CSS may add
    a modifier on top; it must not restate these values. ────────────── */

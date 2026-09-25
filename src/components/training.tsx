@@ -255,7 +255,7 @@ export function Training() {
   }
 
   const action = (
-    <button type="button" className="panel-action tr-edit" aria-pressed={editing} onClick={() => setEditing((v) => !v)}>
+    <button type="button" className="panel-action" aria-pressed={editing} onClick={() => setEditing((v) => !v)}>
       {editing ? 'Done' : 'Edit weights'}
     </button>
   );

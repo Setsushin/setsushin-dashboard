@@ -106,7 +106,6 @@
 .journal-entry:hover { border-color: var(--border); }
 .journal-entry.is-openable { cursor: pointer; }
 .journal-entry-head { display: flex; align-items: center; gap: 8px; }
-.journal-entry-head .panel-action { padding: 2px 8px; }
 .journal-entry-head .panel-action + .panel-action { margin-left: 0; }
 .journal-entry-meta {
   font-family: var(--font-mono);

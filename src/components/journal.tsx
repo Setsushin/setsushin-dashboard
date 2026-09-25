@@ -5,6 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { createPortal } from 'react-dom';
 import { Panel } from './Panel';
 import { Heatmap } from './Heatmap';
+import { PlusIcon, XIcon } from './icons';
 import { renderMarkdown } from '../lib/markdown';
 import { apiFetch } from '../lib/api';
 import { showToast } from '../lib/events';
@@ -265,7 +266,7 @@ function Reader({
                 Edit
               </button>
               <button type="button" className="panel-action" onClick={onClose} aria-label="Close">
-                ✕
+                <XIcon />
               </button>
             </div>
             {entry.title && <h2 className="journal-entry-title">{entry.title}</h2>}
@@ -467,8 +468,8 @@ export function Journal() {
       size="full"
       rows={5}
       action={
-        <button type="button" className="panel-action btn-primary" onClick={() => setCreating(true)}>
-          + New post
+        <button type="button" className="panel-action" onClick={() => setCreating(true)}>
+          <PlusIcon /> New post
         </button>
       }
     >
