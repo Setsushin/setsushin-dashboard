@@ -21,7 +21,8 @@
 .tr-hist [data-day="2"] { fill: var(--train-day-2); background: var(--train-day-2); }
 .tr-heat rect[data-today] { stroke: var(--fg-muted); stroke-width: 1.5; }
 .tr-heat rect[data-active] { stroke: var(--accent); stroke-width: 2; }
-.tr-hist-legend { margin: 0 12px 0 auto; display: flex; gap: 10px; font-size: 12.5px; font-weight: 400; color: var(--fg-muted); }
+.tr-hist-legend { margin: 0 12px 0 auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 10px; font-size: 12.5px; font-weight: 400; color: var(--fg-muted); }
+.tr-hist-legend > span { white-space: nowrap; }
 .tr-swatch { width: 10px; height: 10px; display: inline-block; vertical-align: -1px; margin-right: 4px; border-radius: 3px; }
 .tr-editing {
   display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
