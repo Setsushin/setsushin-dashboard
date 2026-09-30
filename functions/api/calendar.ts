@@ -25,7 +25,7 @@ const CACHE_SECS = 600;
 const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 50;
 const LOOKBACK_HOURS = 12;
-const LOOKAHEAD_DAYS = 30;
+const LOOKAHEAD_DAYS = 365;
 
 interface SourceResult {
   key: string;
