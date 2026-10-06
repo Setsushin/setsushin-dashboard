@@ -15,29 +15,42 @@ const FEED_MOCK: FeedItem[] = [
 ];
 
 const PER_SOURCE = 20;
+const RANGES = [1, 7, 30];
+const DAY_MS = 86_400_000;
 
 const time = (iso: string) => Date.parse(iso) || 0;
 
 export function Feed({ size = 'large' }: { size?: PanelSize }) {
   const { data, loading, error } = useFetch<FeedItem[]>(`/api/feed?perSource=${PER_SOURCE}`, { ttl: 10 * 60_000, fallback: FEED_MOCK });
   const [tab, setTab] = useState('');
+  const [days, setDays] = useState(7);
 
   const items = data ?? FEED_MOCK;
   const showingMock = error || !data;
   const categories = [...new Set(items.map((x) => x.category))];
   const active = categories.includes(tab) ? tab : categories[0];
+  const since = Date.now() - days * DAY_MS;
   const shown = items
-    .filter((x) => x.category === active)
+    .filter((x) => x.category === active && time(x.published) >= since)
     .sort((a, b) => time(b.published) - time(a.published));
 
   const action = (
-    <div className="seg" role="group" aria-label="Category">
-      {categories.map((c) => (
-        <button key={c} type="button" className="seg-btn" aria-pressed={c === active} onClick={() => setTab(c)}>
-          {c}
-        </button>
-      ))}
-    </div>
+    <>
+      <div className="seg" role="group" aria-label="Category">
+        {categories.map((c) => (
+          <button key={c} type="button" className="seg-btn" aria-pressed={c === active} onClick={() => setTab(c)}>
+            {c}
+          </button>
+        ))}
+      </div>
+      <div className="seg" role="group" aria-label="Range">
+        {RANGES.map((n) => (
+          <button key={n} type="button" className="seg-btn" aria-pressed={n === days} onClick={() => setDays(n)}>
+            {n}d
+          </button>
+        ))}
+      </div>
+    </>
   );
 
   return (
@@ -53,7 +66,7 @@ function FeedList({ items, loading }: { items: FeedItem[]; loading: boolean }) {
       {items.map((item, i) => (
         <FeedRow key={i} item={item} />
       ))}
-      {loading && items.length === 0 && <div className="empty">Loading…</div>}
+      {items.length === 0 && <div className="empty">{loading ? 'Loading…' : 'Nothing in this range'}</div>}
     </div>
   );
 }
