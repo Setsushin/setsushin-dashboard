@@ -1,14 +1,15 @@
-// GET /api/feed?limit=15
+// GET /api/feed?perSource=20 (or ?limit=N for one global time-sorted cap)
 // Aggregates RSS + YouTube channel Atom feeds, returns time-sorted JSON.
 //
 // To add/remove subscriptions: edit SOURCES below + git push (CF Pages auto-deploys).
 
 type Source =
-  | { type: 'rss'; name: string; url: string }
-  | { type: 'youtube'; name: string; channelId: string };
+  | { type: 'rss'; name: string; category: string; url: string }
+  | { type: 'youtube'; name: string; category: string; channelId: string };
 
 export interface FeedItem {
   source: string;
+  category: string;
   kind: string;
   title: string;
   link: string;
@@ -16,12 +17,12 @@ export interface FeedItem {
 }
 
 const SOURCES: Source[] = [
-  { type: 'rss', name: 'Bloomberg Markets', url: 'https://feeds.bloomberg.com/markets/news.rss' },
-  { type: 'rss', name: 'Yahoo! ビジネス', url: 'https://news.yahoo.co.jp/rss/topics/business.xml' },
-  { type: 'rss', name: '36氪', url: 'https://36kr.com/feed' },
-  { type: 'rss', name: 'OpenAI News', url: 'https://openai.com/news/rss.xml' },
-  { type: 'rss', name: 'Google AI', url: 'https://blog.google/technology/ai/rss/' },
-  { type: 'rss', name: 'HuggingFace', url: 'https://huggingface.co/blog/feed.xml' },
+  { type: 'rss', name: 'Bloomberg Markets', category: 'Markets', url: 'https://feeds.bloomberg.com/markets/news.rss' },
+  { type: 'rss', name: 'Yahoo! ビジネス', category: 'Markets', url: 'https://news.yahoo.co.jp/rss/topics/business.xml' },
+  { type: 'rss', name: '36氪', category: 'Tech', url: 'https://36kr.com/feed' },
+  { type: 'rss', name: 'OpenAI News', category: 'AI', url: 'https://openai.com/news/rss.xml' },
+  { type: 'rss', name: 'Google AI', category: 'AI', url: 'https://blog.google/technology/ai/rss/' },
+  { type: 'rss', name: 'HuggingFace', category: 'AI', url: 'https://huggingface.co/blog/feed.xml' },
 ];
 
 const UA = 'Mozilla/5.0 (compatible; setsushin-dashboard-feed/1.0)';
@@ -64,15 +65,15 @@ async function fetchSource(src: Source): Promise<FeedItem[]> {
     });
     if (!r.ok) return [];
     const xml = await r.text();
-    return parseFeed(xml, src);
+    return parseFeed(xml, src).map((x) => ({ ...x, category: src.category }));
   } catch {
     return [];
   }
 }
 
 // Minimal Atom + RSS 2.0 parser. Atom (YouTube) uses <entry>; RSS uses <item>.
-export function parseFeed(xml: string, src: { name: string; type: string }): FeedItem[] {
-  const items: FeedItem[] = [];
+export function parseFeed(xml: string, src: { name: string; type: string }): Omit<FeedItem, 'category'>[] {
+  const items: Omit<FeedItem, 'category'>[] = [];
 
   // Atom <entry>
   for (const m of xml.matchAll(/<entry\b[^>]*>([\s\S]*?)<\/entry>/g)) {

@@ -87,12 +87,12 @@ export function installDemoMode(): void {
     { symbol: '^N225', price: 38924.55, previousClose: 38712.1, changePercent: 0.55, currency: 'JPY' },
   ];
   const feed = () => [
-    { source: 'Hacker News', title: 'Show HN: I built a no-build dashboard', link: 'https://news.ycombinator.com', published: offsetISO(-0.5), kind: 'rss' },
-    { source: 'Hacker News', title: 'The case for boring technology', link: 'https://news.ycombinator.com', published: offsetISO(-3), kind: 'rss' },
-    { source: 'Fireship', title: 'Cloudflare D1 in 100 seconds', link: 'https://youtube.com', published: offsetISO(-5), kind: 'youtube' },
-    { source: 'Lobsters', title: 'On Worker isolates and cold starts', link: 'https://lobste.rs', published: offsetISO(-8), kind: 'rss' },
-    { source: 'Lobsters', title: 'SQLite at the edge: lessons learned', link: 'https://lobste.rs', published: offsetISO(-14), kind: 'rss' },
-    { source: 'ThePrimeTime', title: 'I tried building without a bundler', link: 'https://youtube.com', published: offsetISO(-20), kind: 'youtube' },
+    { source: 'Hacker News', category: 'Tech', title: 'Show HN: I built a no-build dashboard', link: 'https://news.ycombinator.com', published: offsetISO(-0.5), kind: 'rss' },
+    { source: 'Hacker News', category: 'Tech', title: 'The case for boring technology', link: 'https://news.ycombinator.com', published: offsetISO(-3), kind: 'rss' },
+    { source: 'Fireship', category: 'Video', title: 'Cloudflare D1 in 100 seconds', link: 'https://youtube.com', published: offsetISO(-5), kind: 'youtube' },
+    { source: 'Lobsters', category: 'Tech', title: 'On Worker isolates and cold starts', link: 'https://lobste.rs', published: offsetISO(-8), kind: 'rss' },
+    { source: 'Lobsters', category: 'Tech', title: 'SQLite at the edge: lessons learned', link: 'https://lobste.rs', published: offsetISO(-14), kind: 'rss' },
+    { source: 'ThePrimeTime', category: 'Video', title: 'I tried building without a bundler', link: 'https://youtube.com', published: offsetISO(-20), kind: 'youtube' },
   ];
   const calendar = () => [
     { title: 'Design Review', start: offsetISO(1.5), location: 'Zoom', allDay: false },

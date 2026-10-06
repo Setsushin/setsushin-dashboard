@@ -96,6 +96,7 @@ export interface CalendarSource {
 
 export interface FeedItem {
   source: string;
+  category: string;
   kind: string;
   title: string;
   link: string;
