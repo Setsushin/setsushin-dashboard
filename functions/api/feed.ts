@@ -19,10 +19,14 @@ export interface FeedItem {
 const SOURCES: Source[] = [
   { type: 'rss', name: 'Bloomberg Markets', category: 'Markets', url: 'https://feeds.bloomberg.com/markets/news.rss' },
   { type: 'rss', name: 'Yahoo! ビジネス', category: 'Markets', url: 'https://news.yahoo.co.jp/rss/topics/business.xml' },
-  { type: 'rss', name: '36氪', category: 'Tech', url: 'https://36kr.com/feed' },
   { type: 'rss', name: 'OpenAI News', category: 'AI', url: 'https://openai.com/news/rss.xml' },
   { type: 'rss', name: 'Google AI', category: 'AI', url: 'https://blog.google/technology/ai/rss/' },
   { type: 'rss', name: 'HuggingFace', category: 'AI', url: 'https://huggingface.co/blog/feed.xml' },
+  // Anthropic has no official RSS; community scrape of anthropic.com/engineering.
+  { type: 'rss', name: 'Anthropic Engineering', category: 'AI', url: 'https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_engineering.xml' },
+  { type: 'youtube', name: 'Andrej Karpathy', category: 'AI', channelId: 'UCXUPKJO5MZQN11PqgIvyuvQ' },
+  { type: 'rss', name: 'CoinDesk', category: 'Crypto', url: 'https://www.coindesk.com/arc/outboundfeeds/rss/' },
+  { type: 'rss', name: 'Cointelegraph', category: 'Crypto', url: 'https://cointelegraph.com/rss' },
 ];
 
 const UA = 'Mozilla/5.0 (compatible; setsushin-dashboard-feed/1.0)';
