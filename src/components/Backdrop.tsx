@@ -54,6 +54,8 @@ export function Backdrop() {
         ]) => {
           if (cancelled) return;
           const { Engine, Bodies, Body, Composite } = Matter;
+          // Hits slower than this (default 2 px/step) skip restitution and glide along walls.
+          (Matter.Resolver as unknown as { _restingThresh: number })._restingThresh = 0.001;
           let renderer: import('three').WebGLRenderer;
           try {
             renderer = new WebGLRenderer({ canvas, alpha: true, antialias: true });
