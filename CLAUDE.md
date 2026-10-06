@@ -60,11 +60,11 @@ src/
 ├── components/
 │   ├── Panel.tsx             # card shell; size (large|wide|full) + rows → grid footprint
 │   ├── Heatmap.tsx           # 365d/90d/30d day heatmap (training + journal History)
-│   ├── Sidebar · TopBar · UserMenu · PageHeader · Toast · tweaks   # shell
+│   ├── Sidebar · TopBar · UserMenu · PageHeader · Toast · tweaks · Backdrop   # shell
 │   ├── <name>.tsx + <name>.css   # one per feature: tasks, calendar, markets,
 │   │                             #   bookmarks, feed, assets, journal, profile, training
 │   ├── TaskFormModal.tsx · bookmarks-edit.tsx · icons.tsx · mockHint.ts
-│   └── tasks-utils.ts · assets-utils.ts · journal-images.ts
+│   └── tasks-utils.ts · assets-utils.ts · backdrop-utils.ts · journal-images.ts
 ├── hooks/  useFetch.ts · useHashRoute.ts · useTasksList.ts · useTweaks.ts
 ├── lib/    api.ts · color.ts · markdown.ts · events.ts
 └── styles/ tokens.css · styles.css (shell, grid, kits, responsive)
@@ -124,10 +124,11 @@ A new feature component is `src/components/<name>.tsx` + co-located
    `.field` (inputs), `.chip` (+ `is-outline` / `is-active`), `.section-head`,
    `.label-mono`, `.seg`/`.seg-btn` (+ `seg-fill`), `.fold`/`.fold-body`, `.panel-action` with
    `.btn-primary` / `.btn-danger`, `.empty`, `.muted`. No hex colors or font
-   stacks outside `tokens.css` — the two exceptions are the assets chart
-   palette and bookmark swatches, which are data, not chrome. Type is IBM Plex
+   stacks outside `tokens.css` — the exceptions are the assets chart
+   palette, bookmark swatches and the Backdrop primaries, which are data, not chrome. Type is IBM Plex
    Sans for everything; `--font-mono` (IBM Plex Mono) is only for numbers,
-   timestamps, tickers and code. Panels get their depth from a 1px border, not a shadow.
+   timestamps, tickers and code. Panels get their depth from a 1px border, not a shadow, and are frosted
+   (translucent + `backdrop-filter`) over the Backdrop canvas.
 7. **Request bodies in Functions are untrusted at the boundary** — validate +
    coerce with zod (`functions/_lib/schemas.ts` through `parse.ts`, errors via
    `http.ts`). Component props are plain typed TypeScript.
