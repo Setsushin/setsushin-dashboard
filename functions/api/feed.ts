@@ -14,9 +14,10 @@ export interface FeedItem {
   title: string;
   link: string;
   published: string;
+  summary: string;
 }
 
-const SOURCES: Source[] = [
+export const SOURCES: Source[] = [
   { type: 'rss', name: 'Bloomberg Markets', category: 'Markets', url: 'https://feeds.bloomberg.com/markets/news.rss' },
   { type: 'rss', name: 'Yahoo! ビジネス', category: 'Markets', url: 'https://news.yahoo.co.jp/rss/topics/business.xml' },
   { type: 'rss', name: 'OpenAI News', category: 'AI', url: 'https://openai.com/news/rss.xml' },
@@ -57,7 +58,7 @@ export const onRequestGet: PagesFunction = async ({ request }) => {
   });
 };
 
-async function fetchSource(src: Source): Promise<FeedItem[]> {
+export async function fetchSource(src: Source): Promise<FeedItem[]> {
   try {
     const url = src.type === 'youtube'
       ? `https://www.youtube.com/feeds/videos.xml?channel_id=${src.channelId}`
@@ -91,6 +92,10 @@ export function parseFeed(xml: string, src: { name: string; type: string }): Omi
         extract(block, /<published>([^<]+)<\/published>/) ||
         extract(block, /<updated>([^<]+)<\/updated>/) ||
         '',
+      summary: summarize(
+        extract(block, /<summary[^>]*>([\s\S]*?)<\/summary>/) ||
+        extract(block, /<media:description[^>]*>([\s\S]*?)<\/media:description>/),
+      ),
     });
   }
   if (items.length) return items;
@@ -104,9 +109,15 @@ export function parseFeed(xml: string, src: { name: string; type: string }): Omi
       title: cleanText(extract(block, /<title[^>]*>([\s\S]*?)<\/title>/)),
       link: cleanText(extract(block, /<link>([\s\S]*?)<\/link>/)) || '',
       published: extract(block, /<pubDate>([^<]+)<\/pubDate>/) || '',
+      summary: summarize(extract(block, /<description[^>]*>([\s\S]*?)<\/description>/)),
     });
   }
   return items;
+}
+
+// Summaries are HTML, sometimes entity-escaped HTML (Google): strip twice, cap length.
+function summarize(raw: string): string {
+  return cleanText(cleanText(raw)).replace(/\s+/g, ' ').slice(0, 300);
 }
 
 export function extract(s: string, re: RegExp): string {

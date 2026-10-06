@@ -136,3 +136,19 @@ test('cleanText: strips HTML, decodes entities, unwraps CDATA', () => {
   assert.equal(cleanText('plain'), 'plain');
   assert.equal(cleanText(''), '');
 });
+
+test('parseFeed: summary strips (escaped) HTML from RSS <description> and Atom <media:description>', () => {
+  const rss = `<rss><channel><item>
+    <title>T</title><link>https://x</link>
+    <description>&lt;img src="a.png"&gt; Here are &lt;b&gt;three&lt;/b&gt; updates.</description>
+  </item></channel></rss>`;
+  assert.equal(parseFeed(rss, SRC_RSS)[0].summary, 'Here are three updates.');
+
+  const atom = `<feed><entry>
+    <title>V</title><link rel="alternate" href="https://y"/>
+    <published>2026-04-23T10:00:00+00:00</published>
+    <media:group><media:description>Line one
+    line two</media:description></media:group>
+  </entry></feed>`;
+  assert.equal(parseFeed(atom, SRC_YT)[0].summary, 'Line one line two');
+});
