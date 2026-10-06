@@ -165,8 +165,8 @@ function TickRow({ n, arr, label, onToggle }: { n: number; arr?: boolean[]; labe
 }
 
 // Last N JST days, colored by day type. A day counts once its log has ≥1
-// tick; done/total is in the cell title. Derived client-side from the docs
-// GET already fetched.
+// tick; an incomplete one fills only the top-left half. done/total is in the
+// cell title. Derived client-side from the docs GET already fetched.
 function History({ plan, docs, volume, todayDate, activeDate, onPick }: { plan: Plan; docs: Docs; volume: Volume; todayDate: string; activeDate: string; onPick: (d: string) => void }) {
   const dayKeys = Object.keys(plan.days);
   const session = (date: string): HeatDay | null => {
@@ -175,25 +175,40 @@ function History({ plan, docs, volume, todayDate, activeDate, onPick }: { plan: 
     const day = plan.days[doc.day];
     const done = day ? doneOf(day, doc.ticks, volume) : 0;
     const total = day ? day.items.reduce((s, it) => s + setsOf(it, volume), 0) : 0;
-    return { count: 1, title: `${date} · ${day?.name ?? doc.day} · ${done}/${total}`, attrs: { 'data-day': dayKeys.indexOf(doc.day) } };
+    return {
+      count: 1,
+      title: `${date} · ${day?.name ?? doc.day} · ${done}/${total}`,
+      attrs: { 'data-day': dayKeys.indexOf(doc.day), 'data-partial': done < total ? '' : undefined },
+    };
   };
 
   return (
-    <details className="fold tr-hist">
-      <summary>
-        History
-        <span className="tr-hist-legend">
-          {dayKeys.map((k, i) => (
-            <span key={k}>
-              <i className="tr-swatch" data-day={i} /> {plan.days[k].name}
-            </span>
-          ))}
-        </span>
-      </summary>
-      <div className="fold-body">
-        <Heatmap today={todayDate} active={activeDate} noun="sessions" day={session} onPick={onPick} />
-      </div>
-    </details>
+    <>
+      {/* SVG `fill` can't take a CSS gradient: half-filled 365d cells use these. */}
+      <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden>
+        {dayKeys.map((k, i) => (
+          <linearGradient key={k} id={`tr-half-${i}`} x2="1" y2="1">
+            <stop offset="50%" style={{ stopColor: `var(--train-day-${i})` }} />
+            <stop offset="50%" style={{ stopColor: 'var(--bg-card-soft)' }} />
+          </linearGradient>
+        ))}
+      </svg>
+      <details className="fold tr-hist">
+        <summary>
+          History
+          <span className="tr-hist-legend">
+            {dayKeys.map((k, i) => (
+              <span key={k}>
+                <i className="tr-swatch" data-day={i} /> {plan.days[k].name}
+              </span>
+            ))}
+          </span>
+        </summary>
+        <div className="fold-body">
+          <Heatmap today={todayDate} active={activeDate} noun="sessions" day={session} onPick={onPick} />
+        </div>
+      </details>
+    </>
   );
 }
 

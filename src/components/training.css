@@ -13,6 +13,10 @@
 .tr-hist [data-day="0"] { fill: var(--train-day-0); background: var(--train-day-0); }
 .tr-hist [data-day="1"] { fill: var(--train-day-1); background: var(--train-day-1); }
 .tr-hist [data-day="2"] { fill: var(--train-day-2); background: var(--train-day-2); }
+/* Incomplete session: top-left half only (gradients defined in training.tsx). */
+.tr-hist [data-day="0"][data-partial] { fill: url(#tr-half-0) var(--train-day-0); background: linear-gradient(to bottom right, var(--train-day-0) 50%, var(--bg-card-soft) 50%); }
+.tr-hist [data-day="1"][data-partial] { fill: url(#tr-half-1) var(--train-day-1); background: linear-gradient(to bottom right, var(--train-day-1) 50%, var(--bg-card-soft) 50%); }
+.tr-hist [data-day="2"][data-partial] { fill: url(#tr-half-2) var(--train-day-2); background: linear-gradient(to bottom right, var(--train-day-2) 50%, var(--bg-card-soft) 50%); }
 .tr-hist-legend { margin: 0 12px 0 auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 10px; font-size: 12.5px; font-weight: 400; color: var(--fg-muted); }
 .tr-hist-legend > span { white-space: nowrap; }
 .tr-swatch { width: 10px; height: 10px; display: inline-block; vertical-align: -1px; margin-right: 4px; border-radius: 3px; }
