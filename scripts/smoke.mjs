@@ -85,6 +85,18 @@ console.log('\n  functions');
   check('GET /api/calendar/sources (always 200, list of bound CALENDAR_*_ICS)',
         calSrc.ok && Array.isArray(calSrc.json),
         `${calSrc.status} ${JSON.stringify(calSrc.json)}`);
+  // Digests: the list is always 200 (empty before the first publish); a report
+  // page, even a missing one, must always be sandboxed.
+  const dgList = await fetchJSON('/api/digests');
+  check('GET /api/digests (always 200, list)',
+        dgList.ok && Array.isArray(dgList.json),
+        `${dgList.status} ${JSON.stringify(dgList.json)}`);
+  const dg = await fetch(BASE + '/api/digests/2000-01-01', { signal: AbortSignal.timeout(15000) })
+    .catch(e => ({ status: 0, headers: new Headers(), error: e.message }));
+  const csp = dg.headers.get('content-security-policy') || '';
+  check('GET /api/digests/2000-01-01 (404, CSP sandbox)',
+        dg.status === 404 && csp.startsWith('sandbox'),
+        `${dg.status} csp=${csp}`);
 }
 for (const p of ['/api/feed', '/api/calendar?source=primary&limit=2']) {
   const r = await fetch(BASE + p, { signal: AbortSignal.timeout(15000) }).catch(e => ({ status: 0, error: e.message }));

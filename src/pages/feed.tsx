@@ -1,6 +1,6 @@
 import { Bookmarks } from '../components/bookmarks';
+import { Digest } from '../components/digest';
 import { Feed } from '../components/feed';
-import { Markets } from '../components/markets';
 
 export function FeedPage() {
   return (
@@ -10,7 +10,7 @@ export function FeedPage() {
       </div>
       <div className="grid">
         <Feed size="wide" />
-        <Markets />
+        <Digest />
       </div>
     </>
   );

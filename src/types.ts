@@ -102,3 +102,8 @@ export interface FeedItem {
   link: string;
   published: string;
 }
+
+export interface DigestEntry {
+  date: string;
+  headline: string;
+}
