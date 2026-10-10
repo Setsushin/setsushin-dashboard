@@ -1,0 +1,12 @@
+/* digest.css — Digest reader modal (on the .modal kit) around the report iframe. */
+.digest-reader {
+  width: min(880px, calc(100vw - 32px));
+  height: calc(100dvh - 32px);
+  padding: 12px 14px 14px;
+  gap: 8px;
+}
+.digest-reader-head { display: flex; align-items: center; justify-content: space-between; }
+.digest-frame { flex: 1; min-height: 0; width: 100%; border: 0; border-radius: var(--r-md); }
+@media (max-width: 768px) {
+  .digest-reader { width: 100vw; height: 100dvh; border-radius: 0; }
+}
