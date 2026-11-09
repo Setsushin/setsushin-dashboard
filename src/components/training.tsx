@@ -219,6 +219,8 @@ export function Training() {
   const [editing, setEditing] = useState(false);
   const [active, setActive] = useState<string | null>(null);
   const [editDate, setEditDate] = useState<string | null>(null);
+  // In memory only: a page reload drops it.
+  const [undo, setUndo] = useState<{ key: string; day: string; prior: LogDoc | undefined } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -258,6 +260,7 @@ export function Training() {
         () => undefined,
         (err: Error) => {
           showToast(`${err.message} — reverted`, 'error');
+          setUndo(null);
           void reload();
         },
       );
@@ -291,7 +294,25 @@ export function Training() {
   const toggleTick = (day: string, id: string, n: number, i: number) => {
     const arr = Array.from({ length: Math.max(n, ticks[id]?.length ?? 0) }, (_, j) => ticks[id]?.[j] ?? false);
     arr[i] = !arr[i];
+    setUndo(null);
     save(logKey, { day, ticks: { ...ticks, [id]: arr } });
+  };
+  const completeDay = (day: string, items: Item[]) => {
+    const all = Object.fromEntries(
+      items.map((it) => {
+        const n = setsOf(it, volume);
+        const old = ticks[it.id] ?? [];
+        return [it.id, Array.from({ length: Math.max(n, old.length) }, (_, j) => j < n || !!old[j])];
+      }),
+    );
+    setUndo({ key: logKey, day, prior: log });
+    save(logKey, { day, ticks: { ...ticks, ...all } });
+  };
+  const undoComplete = () => {
+    if (!undo) return;
+    // No DELETE on /api/training; `{}` has no `day`, so every reader treats it as no log.
+    save(undo.key, undo.prior ?? {});
+    setUndo(null);
   };
   const setWeight = (id: string, v: number | null) => save('weights', { ...weights, [id]: v });
   const setVolume = (id: string, patch: { reps?: string; sets?: number }) => save('volume', { ...volume, [id]: { ...volume[id], ...patch } });
@@ -347,7 +368,20 @@ export function Training() {
                   {day.sub && <p className="tr-day-sub">{day.sub}</p>}
                 </div>
                 <div className="tr-day-meta">
-                  {done} / {total}
+                  <span>
+                    {done} / {total}
+                  </span>
+                  {undo?.key === logKey && undo.day === k ? (
+                    <button type="button" className="panel-action" onClick={undoComplete}>
+                      Undo
+                    </button>
+                  ) : (
+                    done < total && (
+                      <button type="button" className="panel-action" onClick={() => completeDay(k, day.items)}>
+                        Complete all
+                      </button>
+                    )
+                  )}
                 </div>
               </header>
               <ol className="tr-list">
