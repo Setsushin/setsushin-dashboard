@@ -8,7 +8,6 @@ import { PageHeader } from './components/PageHeader';
 import { TweaksPanel, TweakSection, TweakRadio, TweakColor, TweakText } from './components/tweaks';
 import { TaskFormModal } from './components/TaskFormModal';
 import { ToastHost } from './components/Toast';
-import { Backdrop } from './components/Backdrop';
 import { PAGES } from './pages';
 import { useHashRoute } from './hooks/useHashRoute';
 import { useTweaks } from './hooks/useTweaks';
@@ -124,7 +123,6 @@ export function App() {
     <div className="app">
       <Sidebar brand={displayName} pages={PAGES} activeId={page.id} open={navOpen} onClose={() => setNavOpen(false)} />
       <main className="main">
-        <Backdrop />
         <TopBar
           mode={t.mode}
           onToggleMode={() => {
